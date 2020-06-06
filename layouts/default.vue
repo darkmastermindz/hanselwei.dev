@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="app-default">
     <app-nav />
     <nuxt />
   </div>
@@ -91,5 +91,14 @@ h3 {
   border: 1px solid #0072b1;
   color: #fff;
   background-color: #0072b1;
+}
+
+@media (max-device-width: 480px) {
+  .app-default {
+      min-width: 0;
+      h1 {
+        font-size: 40px;
+      }
+    }
 }
 </style>

@@ -76,9 +76,13 @@ export default {};
 }
 @media screen and (min-width: 30em) {
         .pa4-ns {
+                text-align: center;
+                vertical-align: middle;
                 padding: 2rem;
         }
         .f5-ns {
+                text-align: center;
+                vertical-align: middle;
                 font-size: 1rem;
         }
 }
