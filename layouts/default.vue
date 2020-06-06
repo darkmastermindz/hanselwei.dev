@@ -16,7 +16,7 @@ export default {
 </script>
 
 
-<style>
+<style lang="scss" scoped>
 html {
   font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -97,7 +97,7 @@ h3 {
   .app-default {
       min-width: 0;
       h1 {
-        font-size: 40px;
+        font-size:40px;
       }
     }
 }
