@@ -13,7 +13,7 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "firebase": "^7.6.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "nuxt": "^2.10.2",
     "nuxt-fire": "^3.5.2",
     "primeicons": "^4.0.0-rc.2",

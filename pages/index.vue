@@ -13,7 +13,7 @@
         <div class="links">
           <a href="https://linkedin.com/in/hanselwei" target="_blank" class="button--blue">Linkedin</a>
           <a href="https://github.com/darkmastermindz" target="_blank" class="button--grey">GitHub</a>
-          <a href="http://hanselwei.me" target="_blank" class="button--green">Resume</a>
+          <a href="mailto:Hansel Wei (Resume Request) <resume@hanselwei.dev>?subject=Resume%20Request&body=Hello%20Hansel%2C%0A%0AMy%20name%20is%20%7Byour%20name%7D%2C%20I%20would%20like%20to%20request%20for%20your%20resume%3A%20%0A%0A%7Byour%20message%20here%7D" target="_blank" class="button--green">Request Resume</a>
         </div>
         <h2 class="subtitle">
           I am a
