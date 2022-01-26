@@ -3,7 +3,7 @@
     <section>
       <h1>Projects</h1>
       <div v-for="project in githubProjects" :key="project.id" class="project">
-        <h3>
+        <h3 class="text-purple-500 hover:text-green-300">
           <a target="_blank" :href="project.html_url">{{project.name}}</a>
         </h3>
         <p class="stars">🌟 {{ project.stargazers_count }}</p>

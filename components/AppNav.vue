@@ -1,7 +1,7 @@
 <template>
-    <nav class="pa3 pa4-ns">
-        <nuxt-link class="link dim white b f6 f5-ns dib mr3" exact to="/">{ 🏠 Home }</nuxt-link>
-        <nuxt-link class="link dim blue b f6 f5-ns dib mr3" exact to="/Projects">{ 👨🏻‍💻 Projects }</nuxt-link>
+    <nav class="relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left">
+        <nuxt-link class="link dim white b f6 f5-ns dib mr3" exact to="/">{ 🏠 Home }, </nuxt-link>
+        <nuxt-link class="link dim blue b f6 f5-ns dib mr3" exact to="/Projects">{ 👨🏻‍💻 Projects }, </nuxt-link>
         <nuxt-link class="link dim green b f6 f5-ns dib mr3" exact to="/StayCurious">{ 📖 Curiosity }</nuxt-link>
     </nav>
 </template>
