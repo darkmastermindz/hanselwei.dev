@@ -1,10 +1,10 @@
 <template>
   <main>
     <section>
-      <h1>Projects</h1>
+      <h1>Github Projects</h1>
       <div v-for="project in githubProjects" :key="project.id" class="project">
         <h3 class="text-purple-500 hover:text-green-300">
-          <a target="_blank" :href="project.html_url">{{project.name}}</a>
+          <a target="_blank" :href="project.html_url">{{ project.name }}</a>
         </h3>
         <p class="stars">🌟 {{ project.stargazers_count }}</p>
         <p>{{ project.homepage }}</p>
@@ -20,11 +20,11 @@ import { mapState } from "vuex";
 
 export default {
   computed: {
-    ...mapState(["githubProjects"])
+    ...mapState(["githubProjects"]),
   },
   mounted() {
     this.$store.dispatch("getGithubProjects");
-  }
+  },
 };
 </script>
 
