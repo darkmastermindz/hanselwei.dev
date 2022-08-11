@@ -33,12 +33,12 @@
     "consola": "^2.15.3",
     "css-loader": "^5.0.0",
     "fibers": "^5.0.1",
-    "node-sass": "^4.13.1",
     "npm-check-updates": "^4.0.1",
     "postcss": "^8.1.10",
     "postcss-import": "^13.0.0",
     "postcss-loader": "^4.1.0",
     "postcss-url": "^10.1.1",
+    "sass": "^1.54.4",
     "sass-loader": "^10.2.1",
     "vue": "2"
   }
