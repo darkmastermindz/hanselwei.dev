@@ -33,7 +33,7 @@
     "consola": "^2.15.3",
     "css-loader": "^5.0.0",
     "fibers": "^5.0.1",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.0",
     "npm-check-updates": "^4.0.1",
     "postcss": "^8.1.10",
     "postcss-import": "^13.0.0",
