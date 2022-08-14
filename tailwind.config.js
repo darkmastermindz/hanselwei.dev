@@ -7,6 +7,11 @@ module.exports = {
   },
   variants: {
     extend: {
+        colors: {
+          green: colors.emerald,
+          yellow: colors.amber,
+          purple: colors.violet,
+        },
       transitionProperty: ['responsive', 'motion-safe', 'motion-reduce'],
     },
   },
