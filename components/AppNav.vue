@@ -1,18 +1,57 @@
 <template>
-        <nav class="relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left">
+        <!-- <nav class="navbar bg-base-100 relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left"> -->
+        <div class="navbar bg-neutral text-neutral-content">
+                <div class="navbar-start">
+                        <div class="dropdown">
+                                <label tabindex="0" class="btn btn-ghost btn-circle">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                                viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M4 6h16M4 12h16M4 18h7" />
+                                        </svg>
+                                </label>
+                                <ul tabindex="0"
+                                        class="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
+                                        <nuxt-link class="btn btn-ghost normal-case text-sm dim white b " exact to="/">
+                                                Home
+                                        </nuxt-link>
+                                        <nuxt-link class="btn btn-ghost normal-case text-sm dim blue b" exact
+                                                to="/Projects">Projects
+                                        </nuxt-link>
+                                        <nuxt-link class="btn btn-ghost normal-case text-sm dim green b" exact
+                                                to="/gearClimbing">Gear
+                                        </nuxt-link>
+                                </ul>
+                        </div>
+                        <nuxt-link class="btn btn-ghost normal-case text-sm dim white b " exact to="/">{ 🏠 Home
+                                },
+                        </nuxt-link>
+                        <nuxt-link class="btn btn-ghost normal-case text-sm dim blue b" exact to="/Projects">{
+                                👨🏻‍💻
+                                Projects
+                                },
+                        </nuxt-link>
+                        <nuxt-link class="btn btn-ghost normal-case text-sm dim green b" exact to="/gearClimbing">{ 🧗
+                                Gear }
+                        </nuxt-link>
+                </div>
+
+        </div>
+
+        <!-- <nav class="relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left">
                 <nuxt-link class="link dim white b f6 f5-ns dib mr3" exact to="/">{ 🏠 Home },</nuxt-link>
                 <nuxt-link
                         class="link dim blue b f6 f5-ns dib mr3"
                         exact
                         to="/Projects"
                 >{ 👨🏻‍💻 Projects },</nuxt-link>
-                <!-- <nuxt-link class="link dim green b f6 f5-ns dib mr3" exact to="/StayCurious">{ 📖 Notes }</nuxt-link> -->
+                <nuxt-link class="link dim green b f6 f5-ns dib mr3" exact to="/StayCurious">{ 📖 Notes }</nuxt-link>
                 <nuxt-link
                         class="link dim green b f6 f5-ns dib mr3"
                         exact
                         to="/gearClimbing"
                 >{ 🧗 Gear }</nuxt-link>
-        </nav>
+        </nav> -->
 </template>
 
 <script>
@@ -20,75 +59,71 @@ export default {};
 </script>
 
 <style lang="scss" scoped>
-.dib {
-        display: inline-block;
-}
 .b {
         font-weight: bold;
 }
+
 .link {
         text-decoration: none;
         transition: color 0.15s ease-in;
+
         &:link {
                 transition: color 0.15s ease-in;
         }
+
         &:visited {
                 transition: color 0.15s ease-in;
         }
+
         &:hover {
                 transition: color 0.15s ease-in;
         }
+
         &:active {
                 transition: color 0.15s ease-in;
         }
+
         &:focus {
                 transition: color 0.15s ease-in;
                 outline: 1px dotted currentColor;
         }
 }
+
 .blue {
         color: #00b8ff;
 }
+
 .black {
         color: #000;
 }
+
 .gray {
         color: #777;
 }
+
 .green {
         color: #41b883;
 }
+
 .pa3 {
         padding: 1rem;
 }
+
 .mr3 {
         margin-right: 1rem;
 }
+
 .f6 {
         font-size: 0.875rem;
 }
-.dim {
-        opacity: 1;
-        transition: opacity 0.15s ease-in;
-        &:hover {
-                opacity: 0.5;
-                transition: opacity 0.15s ease-in;
-        }
-        &:focus {
-                opacity: 0.5;
-                transition: opacity 0.15s ease-in;
-        }
-        &:active {
-                opacity: 0.8;
-                transition: opacity 0.15s ease-out;
-        }
-}
-@media screen and (min-width: 30em) {
-        .pa4-ns {
-                padding: 2rem;
-        }
-        .f5-ns {
-                font-size: 1rem;
-        }
-}
+
+// @media screen and (min-width: 30em) {
+//         .pa4-ns {
+//                 padding: 2rem;
+//         }
+
+//         .f5-ns {
+//                 font-size: 1rem;
+//         }
+// }
 </style>
