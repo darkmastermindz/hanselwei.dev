@@ -1,6 +1,5 @@
 <template>
-  <!-- <nav class="navbar bg-base-100 relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left"> -->
-  <div class="navbar bg-neutral text-neutral-content">
+  <div class="navbar bg-neutral text-neutral-content relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left">
     <div class="navbar-start">
       <div class="dropdown">
         <label tabindex="0" class="btn btn-ghost btn-circle">
@@ -165,13 +164,13 @@ export default {};
   font-size: 0.875rem;
 }
 
-// @media screen and (min-width: 30em) {
-//         .pa4-ns {
-//                 padding: 2rem;
-//         }
+@media screen and (min-width: 30em) {
+        .pa4-ns {
+                padding: 2rem;
+        }
 
-//         .f5-ns {
-//                 font-size: 1rem;
-//         }
-// }
+        .f5-ns {
+                font-size: 1rem;
+        }
+}
 </style>
