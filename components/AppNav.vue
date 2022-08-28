@@ -59,7 +59,7 @@
         </ul>
       </div>
       <nuxt-link
-        class="btn btn-ghost normal-case text-sm dim white b"
+        class="btn btn-ghost normal-case text-sm dim white b f6 f5-ns dib mr3"
         role="navigation"
         aria-label="Home"
         exact
@@ -67,7 +67,7 @@
         >{ 🏠 Home },
       </nuxt-link>
       <nuxt-link
-        class="btn btn-ghost normal-case text-sm dim blue b"
+        class="btn btn-ghost normal-case text-sm dim blue b f6 f5-ns dib mr3"
         role="navigation"
         aria-label="Projects"
         exact
@@ -75,7 +75,7 @@
         >{ 👨🏻‍💻 Projects },
       </nuxt-link>
       <nuxt-link
-        class="btn btn-ghost normal-case text-sm dim green b"
+        class="btn btn-ghost normal-case text-sm dim green b f6 f5-ns dib mr3"
         role="navigation"
         aria-label="Gear"
         exact
@@ -84,21 +84,6 @@
       </nuxt-link>
     </div>
   </div>
-
-  <!-- <nav class="relative z-0 p-8 md:inline-flex sm:flex-column sm:text-left">
-                <nuxt-link class="link dim white b f6 f5-ns dib mr3" exact to="/">{ 🏠 Home },</nuxt-link>
-                <nuxt-link
-                        class="link dim blue b f6 f5-ns dib mr3"
-                        exact
-                        to="/Projects"
-                >{ 👨🏻‍💻 Projects },</nuxt-link>
-                <nuxt-link class="link dim green b f6 f5-ns dib mr3" exact to="/StayCurious">{ 📖 Notes }</nuxt-link>
-                <nuxt-link
-                        class="link dim green b f6 f5-ns dib mr3"
-                        exact
-                        to="/gearClimbing"
-                >{ 🧗 Gear }</nuxt-link>
-        </nav> -->
 </template>
 
 <script>
