@@ -36,7 +36,7 @@
         class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 grow motion-reduce:transition-none motion-reduce:transform-none">
         <ul class="list-none tracking-wider antialiased sm:subpixel-antialiased md:antialiased font-bold">
           <li
-            class=" grid h-20 flex-grow card bg-base-300 rounded-box place-items-center text-green-200 animate-bounce ease-in-out infinite">
+            class=" grid h-20 flex-grow card bg-base-300 rounded-box place-items-center text-green-200 animate-pulse ease-in-out infinite">
             { "I am a" : [ "Full Stack Developer",
             "Secured
             Infrastructure Professional", "Data Scientist", "Emerging Tech Fanactic!", "✨" ] },</li>
