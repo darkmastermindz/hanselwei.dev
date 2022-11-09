@@ -12,14 +12,14 @@
      
     <Socials/>
  </div>
-      <h2 class="m-3 p-4 flex md:flex-col sm:flex-row motion-reduce:transition-none motion-reduce:transform-none">
-        <ul class="antialiased sm:subpixel-antialiased md:antialiased">
+      <h2 class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 motion-reduce:transition-none motion-reduce:transform-none touch-auto">
+        <ul class="antialiased sm:subpixel-antialiased md:antialiased p-5 mb-5">
           <li
-            class="p-4 md:flex mb-2 tracking-tight rounded-box place-items-center text-green-200 animate-bounce ease-in-out infinite touch-auto">
+            class="p-4 md:flex mb-2 place-items-center text-green-200 animate-bounce ease-in-out infinite touch-auto">
             { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
             "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
-            class="p-4 md:flex mb-2 tracking-tight rounded-box place-items-center text-purple-300 animate-pulse ease-in-out infinite touch-auto">
+            class="p-4 md:flex mb-2  place-items-center text-purple-300 animate-pulse ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Playing
             Video Games", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />
