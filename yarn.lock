@@ -8328,10 +8328,10 @@ number-is-nan@^1.0.0:
   resolved "https://registry.npmjs.org/number-is-nan/-/number-is-nan-1.0.1.tgz"
   integrity sha1-CXtgK1NCKlIsGvuHkDGDNpQaAR0=
 
-nuxt-fire@^3.5.2:
-  version "3.5.2"
-  resolved "https://registry.npmjs.org/nuxt-fire/-/nuxt-fire-3.5.2.tgz"
-  integrity sha512-PDQOvHV7qrP7Xga6kWM9zRJCc1H0obnYP/ux2f1B3qKfc1+Aaf4Qb/eKya3FiLxyWgGw0M/KARXW+S0vJhK4NA==
+nuxt-fire@^3.5.4:
+  version "3.5.4"
+  resolved "https://registry.yarnpkg.com/nuxt-fire/-/nuxt-fire-3.5.4.tgz#a798349b3340c425997a9ce0bd1fa2446bed2d10"
+  integrity sha512-GJszD0vO2h7oq7+Y+lC288zlc/FaKSkzDTtkvYNOzBZv5MqDRjWXGNhxFMT6vQsGe7TWfLULc2UepKrRqaqFwg==
   dependencies:
     firebase-admin "^8.8.0"
     jwt-decode "^2.2.0"
