@@ -11,7 +11,7 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "core-js": "^2.0.0",
+    "core-js": "^3.26.0",
     "daisyui": "^2.24.0",
     "firebase": "^7.6.0",
     "font-awesome": "^4.7.0",
