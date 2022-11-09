@@ -7,10 +7,10 @@
       <strong>Hansel Wei</strong>
     </h1>
 
-    <div class="text-center max-w-7xl mx-auto py-8 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4">
-      <div>
+    <div class="text-center max-w-7xl mx-auto p-2 m-3 md:flex-col sm:shrink">
+      <div class="shrink">
         <span
-          class="relative z-0 justify-center px-8 sm:flex-row shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
+          class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
           <a href="https://github.com/darkmastermindz" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
           <a href="https://twitter.com/darkmastermindz" target="_blank"
@@ -18,8 +18,7 @@
           <a href="https://snapchat.com/add/darkmastermindz" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib gray-50 bg-yellow-300 relative inline-flex items-center px-8 py-2 rounded-l-md border">Snapchat</a>
           <a href="https://m.me/hanselwei" target="_blank"
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-blue-600 relative inline-flex items-center px-8 py-2 rounded-l-md border">Facebook
-            Messenger</a>
+            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-blue-600 relative inline-flex items-center px-8 py-2 rounded-l-md border">Messenger</a>
           <a href="https://instagram.com/darkmastermindz" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-red relative inline-flex items-center px-8 py-2 rounded-l-md border">Instagram</a>
           <a href="https://polywork.com/darkmastermindz" target="_blank"
@@ -32,16 +31,14 @@
         </span>
       </div>
 
-      <h2
-        class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 grow motion-reduce:transition-none motion-reduce:transform-none">
-        <ul class="list-none tracking-wider antialiased sm:subpixel-antialiased md:antialiased">
+      <h2 class="m-3 p-4 flex md:flex-col sm:flex-row motion-reduce:transition-none motion-reduce:transform-none">
+        <ul class="antialiased sm:subpixel-antialiased md:antialiased">
           <li
-            class=" grid h-20 flex-grow card bg-base-300 rounded-box place-items-center text-green-200 animate-pulse ease-in-out infinite">
-            { "I am a" : [ "Full Stack Developer",
-            "Secured
-            Infrastructure Professional", "Data Scientist", "Emerging Tech Fanactic!", "✨" ] },</li>
+            class="p-4 md:flex bg-base-300 mb-2 tracking-tight rounded-box place-items-center text-green-200 animate-bounce ease-in-out infinite touch-auto">
+            { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
+            "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
-            class=" grid h-20 flex-grow card bg-base-300 rounded-box place-items-center text-purple-300 animate-pulse ease-in-out infinite">
+            class="p-4 md:flex bg-base-300 mb-2 tracking-tight rounded-box place-items-center text-purple-300 animate-pulse ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Playing
             Video Games", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />

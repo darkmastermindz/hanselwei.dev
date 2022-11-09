@@ -11,18 +11,12 @@
     "generate": "nuxt generate"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-common-types": "^0.2.36",
-    "@fortawesome/fontawesome-svg-core": "^6.1.2",
-    "@fortawesome/free-brands-svg-icons": "^5.15.4",
-    "@fortawesome/free-regular-svg-icons": "^6.1.2",
-    "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "core-js": "^2.0.0",
     "daisyui": "^2.24.0",
     "firebase": "^7.6.0",
     "font-awesome": "^4.7.0",
     "nuxt": "^2.15.0",
     "nuxt-fire": "^3.5.2",
-    "nuxt-fontawesome": "^0.4.0",
     "tachyons": "^4.12.0",
     "vue-typed-js": "^0.1.2",
     "webpack": "^4.46.0"
