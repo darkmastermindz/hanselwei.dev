@@ -35,9 +35,8 @@
         <ul class="antialiased sm:subpixel-antialiased md:antialiased">
           <li
             class="p-4 md:flex bg-base-300 mb-2 tracking-tight rounded-box place-items-center text-green-200 animate-bounce ease-in-out infinite touch-auto">
-            { "I am a" : [ "Senior Software Developer", "Full Stack Developer",
-            "Secured
-            Infrastructure Professional", "Data Scientist", "Emerging Tech Fanactic!", "Developer Experience Nerd", "✨" ] },</li>
+            { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
+            "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
             class="p-4 md:flex bg-base-300 mb-2 tracking-tight rounded-box place-items-center text-purple-300 animate-pulse ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Playing
