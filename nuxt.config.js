@@ -42,21 +42,7 @@ export default {
    ** Nuxt.js dev-modules
    */
   buildModules: [
-    '@nuxtjs/tailwindcss',
-    ['nuxt-fontawesome', {
-      component: 'fa', //customize component name
-      imports: [{
-          set: '@fortawesome/free-solid-svg-icons',
-          icons: ['faLightbulb']
-          },
-          {set: '@fortawesome/free-brands-svg-icons',
-          icons: ['faGithub']
-          },
-          {set: '@fortawesome/free-regular-svg-icons',
-          icons: ['faLightbulb']
-          },
-      ]
-   }]
+    '@nuxtjs/tailwindcss'
   ],
   /*
    ** Nuxt.js modules
