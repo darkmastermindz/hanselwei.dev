@@ -1,6 +1,6 @@
 <template>
   <div class="navbar bg-neutral text-neutral-content relative">
-        <div class="inline sm:inline-block flex-col">
+        <div class="inline sm:inline-block md:flex-col lg:flex-row">
           <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim white"
             role="navigation"
