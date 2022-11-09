@@ -8,18 +8,17 @@
     </h1>
     
     <div class="p-2 m-3 shrink">
-       
-     
-    <Socials/>
- </div>
-      <h2 class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 motion-reduce:transition-none motion-reduce:transform-none touch-auto">
-        <ul class="antialiased sm:subpixel-antialiased md:antialiased p-5 mb-5">
+      <Socials/>
+    </div>
+    
+      <h2 class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 motion-reduce:transition-none motion-reduce:transform-none motion-reduce:animate-none touch-auto">
+        <ul class="place-items-center antialiased sm:subpixel-antialiased md:antialiased p-5 mb-5">
           <li
-            class="p-4 md:flex mb-2 place-items-center text-green-200 animate-bounce ease-in-out infinite touch-auto">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-green-200 animate-bounce ease-in-out infinite touch-auto">
             { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
             "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
-            class="p-4 md:flex mb-2  place-items-center text-purple-300 animate-pulse ease-in-out infinite touch-auto">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Playing
             Video Games", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />
