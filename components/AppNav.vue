@@ -1,29 +1,38 @@
 <template>
   <div class="navbar bg-neutral text-neutral-content relative">
-        <div class="inline sm:inline-block md:flex-col lg:flex-row">
-          <nuxt-link
+        <div class="inline sm:inline-block md:flex-col lg:flex-row z-0 ">
+        
+            <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim white"
             role="navigation"
             aria-label="Home"
+           
             exact
             to="/"
-            >{ 🏠 Home },
+            >
+            <div tabindex="0"> { 🏠 Home },</div>
           </nuxt-link>
+     
+       
           <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim blue"
             role="navigation"
             aria-label="Projects"
+            tabindex="1"
             exact
             to="/Projects"
-            >{ 👨🏻‍💻 Projects },
+            > <div tabindex="1">{ 👨🏻‍💻 Projects },</div> 
           </nuxt-link>
+     
+        
           <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim green"
             role="navigation"
             aria-label="Gear"
+            tabindex="2"
             exact
             to="/gearClimbing"
-            >{ 🧗 Gear }
+            ><div tabindex="2"> { 🧗 Gear }</div>
           </nuxt-link>
        </div>
   </div>
