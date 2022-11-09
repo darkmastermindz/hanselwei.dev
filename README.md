@@ -7,4 +7,4 @@
 - [Hosted on Netlify](https://www.hanselwei.dev)
 
 # Dev Branch Site Link:
-- Develop Branch, Test Build Site: [Hosted on Netlify](https://develop.hanselwei.dev/)
+- [Hosted on Netlify](https://develop.hanselwei.dev/)
