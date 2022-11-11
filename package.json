@@ -30,7 +30,7 @@
     "css-loader": "^5.0.0",
     "fibers": "^5.0.2",
     "npm-check-updates": "^16.0.5",
-    "postcss": "^8.1.10",
+    "postcss": "^8.4.19",
     "postcss-import": "^13.0.0",
     "postcss-loader": "^4.1.0",
     "postcss-url": "^10.1.1",
