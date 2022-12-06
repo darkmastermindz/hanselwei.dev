@@ -39,7 +39,7 @@
             class="btn btn-ghost normal-case md:text-sm dim purple"
             role="navigation"
             aria-label="Save as Contact"
-            tabindex="2"
+            tabindex="3"
             exact
             to="https://hansel.run/connect"
             ><div tabindex="2"> { Save as Contact }</div>
