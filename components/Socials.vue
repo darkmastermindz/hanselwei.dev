@@ -13,7 +13,7 @@
           <a href="https://hansel.run/tw" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#1da1f2] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Twitter</a>
           <a href="https://snapchat.com/add/darkmastermindz" target="_blank" tabindex="7"
-            class="color: black -webkit-text-stroke: 1px black -webkit-text-fill-color: white f6 grow no-underline br-pill ph3 pv2 mb2 dib text-[#ffffff] bg-[#fffc00] relative inline-flex items-center px-8 py-2 rounded-l-md border">Snapchat</a>
+            class="color: black -webkit-text-stroke: 1px black -webkit-text-fill-color: white text-grey f6 grow no-underline br-pill ph3 pv2 mb2 dib text-[#ffffff] bg-[#fffc00] relative inline-flex items-center px-8 py-2 rounded-l-md border">Snapchat</a>
           <a href="https://m.me/hanselwei" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-blue-600 relative inline-flex items-center px-8 py-2 rounded-l-md border">Messenger</a>
           <a href="https://hansel.rocks" target="_blank" 
