@@ -40,8 +40,7 @@
             role="navigation"
             aria-label="Save as Contact"
             tabindex="3"
-            exact
-            to="https://hansel.run/connect"
+            href="https://hansel.run/connect"
             ><div tabindex="2"> { 💾 Save as Contact }</div>
           </nuxt-link>
        </div>
