@@ -20,7 +20,7 @@
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-green relative inline-flex items-center px-4 py-2 rounded-l-md border">Send
             Email</a>
         </span>
-        </br>
+        <br>
         <span
           class="relative z-0 justify-center px-8 shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
           <a href="https://hansel.run/connect" target="_blank" tabindex="12"
