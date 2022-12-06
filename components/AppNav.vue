@@ -6,7 +6,6 @@
             class="btn btn-ghost normal-case md:text-sm dim white"
             role="navigation"
             aria-label="Home"
-           
             exact
             to="/"
             >
@@ -32,7 +31,7 @@
             tabindex="2"
             exact
             to="/gearClimbing"
-            ><div tabindex="2"> { 🧗 Climbing Gear },</div>
+            ><div tabindex="2"> { 🧗 Climbing Gear }</div>
           </nuxt-link>
        </div>
   </div>
