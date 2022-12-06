@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="justify-center md:px-16">
         <span
           class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
           <a href="https://github.com/darkmastermindz" target="_blank" 
@@ -21,7 +21,7 @@
             Email</a>
         </span>
         <span
-          class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
+          class="relative z-0 justify-center px-8 shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
           <a href="https://hansel.run/connect" target="_blank" tabindex="12"
             class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-purple-300 relative inline-flex items-center px-4 py-2 rounded-l-md border">💾 Save to Contacts</a>
         </span>
