@@ -4,9 +4,8 @@
           class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
           <a href="https://github.com/darkmastermindz" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
-         
           <a href="https://hansel.run/mastodon" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#563acc] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Twitter</a>
+            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#563acc] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Mastodon</a>
           <a href="https://hansel.run/tw" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#1da1f2] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Twitter</a>
           <a href="https://snapchat.com/add/darkmastermindz" target="_blank" tabindex="7"
