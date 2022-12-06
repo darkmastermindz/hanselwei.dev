@@ -34,15 +34,6 @@
             to="/gearClimbing"
             ><div tabindex="2"> { 🧗 Climbing Gear },</div>
           </nuxt-link>
-          
-          <nuxt-link
-            class="btn btn-ghost normal-case md:text-sm dim purple"
-            role="navigation"
-            aria-label="Save as Contact"
-            tabindex="3"
-            href="https://hansel.run/connect"
-            ><div tabindex="2"> { 💾 Save as Contact }</div>
-          </nuxt-link>
        </div>
   </div>
 </template>
