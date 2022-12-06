@@ -42,7 +42,7 @@
             tabindex="3"
             exact
             to="https://hansel.run/connect"
-            ><div tabindex="2"> { Save as Contact }</div>
+            ><div tabindex="2"> { 💾 Save as Contact }</div>
           </nuxt-link>
        </div>
   </div>
