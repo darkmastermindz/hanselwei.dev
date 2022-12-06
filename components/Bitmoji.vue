@@ -11,6 +11,17 @@
  
   background-image: linear-gradient(45deg,#fff 25%,red, 25.5%,lawngreen 50%,#fff 50.5%,white 75%,transparent 75.5%,red);
   background-size: 40px 40px;
+  
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: .5;
+    }
+  }
 
   border: 7px red;
   display: inline-block;
