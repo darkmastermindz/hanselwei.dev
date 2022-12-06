@@ -32,7 +32,7 @@
             tabindex="2"
             exact
             to="/gearClimbing"
-            ><div tabindex="2"> { 🧗 Gear }</div>
+            ><div tabindex="2"> { 🧗 Climbing Gear },</div>
           </nuxt-link>
           
           <nuxt-link
