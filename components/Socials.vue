@@ -4,7 +4,7 @@
           class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
    
           <a href="https://hansel.run/connect" target="_blank" tabindex="12"
-            class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">💾 Save to Contacts</a>
+            class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">💾 Save Contact Card</a>
           <br>
           <a href="https://github.com/darkmastermindz" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
