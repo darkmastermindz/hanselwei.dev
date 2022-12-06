@@ -5,7 +5,7 @@
           <a href="https://github.com/darkmastermindz" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
           <a href="https://hansel.run/darkmastermindz" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-blue-400 relative inline-flex items-center px-8 py-2 rounded-l-md border">Twitter</a>
+            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#1da1f2] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Twitter</a>
           <a href="https://snapchat.com/add/darkmastermindz" target="_blank" tabindex="7"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib grey bg-yellow-300 relative inline-flex items-center px-8 py-2 rounded-l-md border">Snapchat</a>
           <a href="https://m.me/hanselwei" target="_blank"
