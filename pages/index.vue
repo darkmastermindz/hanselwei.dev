@@ -1,31 +1,30 @@
 <template>
-  <div class="outer">
+  <div class="outer" role="main">
     <div class="text-center justify-center py-4">
       <Bitmoji />
     </div>
-    <h1 class="title sm:text-4xl md:text-5xl lg:text-6xl grow" tabindex="3">
+    <h1 class="title sm:text-4xl md:text-5xl lg:text-6xl grow">
       <strong>Hansel Wei</strong>
     </h1>
     
-    <div class="p-2 m-3 shrink" tabindex="4">
+    <div class="p-2 m-3 shrink">
       <Socials/>
     </div>
 
       <h2 class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 motion-reduce:transition-none motion-reduce:transform-none motion-reduce:animate-none touch-auto">
         <ul class="place-items-center antialiased sm:subpixel-antialiased md:antialiased p-5 mb-5">
           <li
-            class="sm:p-4 md:flex-inline sm:mb-5 text-green-200 animate-bounce ease-in-out infinite touch-auto" tabindex="12">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-green-200 animate-bounce ease-in-out infinite touch-auto">
             { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
             "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
-            class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse ease-in-out infinite touch-auto" tabindex="13">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Playing
             Video Games", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />
         </ul>
       </h2>
     </div>
-  </div>
 </template>
 
 <script>

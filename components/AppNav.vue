@@ -1,26 +1,23 @@
 <template>
   <div class="navbar bg-neutral text-neutral-content relative">
-        <div class="inline sm:inline-block md:flex-col lg:flex-row z-0 ">
+        <div class="inline sm:inline-block md:flex-col lg:flex-row z-0">
         
             <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim white"
-            role="navigation"
             aria-label="Home"
             exact
             to="/"
             >
-            <div tabindex="0"> { 🏠 Home },</div>
+            <span> { 🏠 Home },</span>
           </nuxt-link>
      
        
           <nuxt-link
             class="btn btn-ghost normal-case md:text-sm dim blue"
-            role="navigation"
             aria-label="Projects"
-            tabindex="1"
             exact
             to="/Projects"
-            > <div tabindex="1">{ 👨🏻‍💻 Projects },</div> 
+            > <span>{ 👨🏻‍💻 Projects },</span> 
           </nuxt-link>
      
         
@@ -28,10 +25,9 @@
             class="btn btn-ghost normal-case md:text-sm dim green"
             role="navigation"
             aria-label="Gear"
-            tabindex="2"
             exact
             to="/gearClimbing"
-            ><div tabindex="2"> { 🧗 Climbing Gear }</div>
+            ><span> { 🧗 Climbing Gear }</span>
           </nuxt-link>
        </div>
   </div>
