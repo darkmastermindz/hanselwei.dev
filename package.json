@@ -13,7 +13,7 @@
   "dependencies": {
     "core-js": "^3.26.0",
     "daisyui": "^2.24.0",
-    "firebase": "^7.6.0",
+    "firebase": "^7.24.0",
     "font-awesome": "^4.7.0",
     "nuxt": "^2.15.0",
     "nuxt-fire": "^3.5.2",
