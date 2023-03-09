@@ -17,13 +17,13 @@
           <a href="https://m.me/hanselwei" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-blue-600 relative inline-flex items-center px-8 py-2 rounded-l-md border">Messenger</a>
           <a href="https://hansel.rocks" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#f46f30] relative inline-flex items-center px-8 py-2 rounded-l-md border">Instagram</a>
+            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#fa7e1e] relative inline-flex items-center px-8 py-2 rounded-l-md border">Instagram</a>
           <a href="https://polywork.com/darkmastermindz" target="_blank"
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-[#582BE8] relative inline-flex items-center px-8 py-2 rounded-l-md border">Polywork</a>
           <a href="https://linkedin.com/in/hanselwei" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#0a66c2] relative inline-flex items-center px-8 py-2 rounded-l-md border">Linkedin</a>
           <a href="mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-green relative inline-flex items-center px-4 py-2 rounded-l-md border">Send
+            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#008856] relative inline-flex items-center px-4 py-2 rounded-l-md border">Send
             Email</a>
           </div>
     </div>
