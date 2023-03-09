@@ -3,5 +3,7 @@
   [plugins.inputs]
     # Do not fail the build if a11y issues are found
     failWithIssues = false
+    # Ignore any accessibility issues associated with this rule code or type
+    ignoreGuidelines = ['WCAG2AA.Principle1.Guideline1_4.1_4_6.G17']
     # Perform a11y check against WCAG 2.1 AAA
     wcagLevel = 'WCAG2AAA'
