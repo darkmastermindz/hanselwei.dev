@@ -19,8 +19,7 @@
             "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
             class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse ease-in-out infinite touch-auto">
-            { "My hobbies include" : [ "Hiking", "Playing
-            Video Games", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
+            { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />
         </ul>
       </h2>
