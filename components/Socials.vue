@@ -7,7 +7,7 @@
             class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">Open  Contact Card ✨</a>
           <br><br>
               <a href="https://gist.github.com/darkmastermindz/8df2a44f4743dcef39efffcded7b2c28#file-raleigh_nc_food_recs-md" target="_blank" 
-            class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">Raliegh, NC Food/Entertainment Recs around ATO2023</a>
+            class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">Raleigh, NC Food/Entertainment Recs around ATO2023</a>
           <br><br>
           <a href="https://github.com/darkmastermindz" target="_blank" 
             class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
