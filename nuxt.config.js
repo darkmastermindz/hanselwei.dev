@@ -1,4 +1,7 @@
 export default defineNuxtConfig({
+  nitro: {
+    preset: 'static'
+  },
   /*
    ** Headers of the page
    */

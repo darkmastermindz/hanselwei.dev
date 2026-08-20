@@ -4,6 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "24"
+  NITRO_PRESET = "static"
 
 [[plugins]]
   package = "@netlify/plugin-a11y"
