@@ -20,7 +20,7 @@ import { useProjectsStore } from '~/stores/projects'
 
 const store = useProjectsStore()
 
-onMounted(() => store.fetchGithubProjects())
+await callOnce(() => store.fetchGithubProjects())
 
 const githubProjects = computed(() => store.githubProjects)
 </script>

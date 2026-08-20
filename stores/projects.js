@@ -23,7 +23,7 @@ export const useProjectsStore = defineStore('projects', {
             ({
               id,
               name,
-              languages,
+              language,
               license,
               description,
               stargazers_count,
@@ -32,7 +32,7 @@ export const useProjectsStore = defineStore('projects', {
             }) => ({
               id,
               name,
-              languages,
+              language,
               license,
               description,
               stargazers_count,
