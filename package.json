@@ -11,6 +11,9 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
     "daisyui": "^3.9.4",
