@@ -6,6 +6,10 @@ name: Rebase Pull Requests
 on:
   push:
     branches: [main]
+
+permissions:
+  contents: read
+  
 jobs:
   rebase:
     runs-on: ubuntu-latest
