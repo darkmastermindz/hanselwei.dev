@@ -26,16 +26,9 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import Bitmoji from "~/components/Bitmoji.vue";
 import Socials from '~/components/Socials.vue';
-
-export default {
-  components: {
-    Bitmoji,
-    Socials
-  }
-};
 </script>
 
 <style lang="scss">
