@@ -15,17 +15,14 @@
   </main>
 </template>
 
-<script>
-import { mapState } from "vuex";
+<script setup>
+import { useProjectsStore } from '~/stores/projects'
 
-export default {
-  computed: {
-    ...mapState(["githubProjects"]),
-  },
-  mounted() {
-    this.$store.dispatch("getGithubProjects");
-  },
-};
+const store = useProjectsStore()
+
+await callOnce(() => store.fetchGithubProjects())
+
+const githubProjects = computed(() => store.githubProjects)
 </script>
 
 <style lang="scss" scoped>

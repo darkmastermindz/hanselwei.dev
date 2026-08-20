@@ -2,39 +2,38 @@
   <div class="navbar bg-neutral text-neutral-content relative">
         <div class="inline sm:inline-block md:flex-col lg:flex-row z-0">
         
-            <nuxt-link
+        <NuxtLink
             class="btn btn-ghost normal-case md:text-sm dim white"
             aria-label="Home"
             exact
             to="/"
             >
             <span> { 🏠 Home },</span>
-          </nuxt-link>
+          </NuxtLink>
      
        
-          <nuxt-link
+          <NuxtLink
             class="btn btn-ghost normal-case md:text-sm dim blue"
             aria-label="Projects"
             exact
-            to="/Projects"
+            to="/projects"
             > <span>{ 👨🏻‍💻 Projects },</span> 
-          </nuxt-link>
+          </NuxtLink>
      
         
-          <nuxt-link
+          <NuxtLink
             class="btn btn-ghost normal-case md:text-sm dim green"
             role="navigation"
             aria-label="Gear"
             exact
             to="/gearClimbing"
             ><span> { 🧗 Climbing Gear }</span>
-          </nuxt-link>
+          </NuxtLink>
        </div>
   </div>
 </template>
 
-<script>
-export default {};
+<script setup>
 </script>
 
 <style lang="scss" scoped>
