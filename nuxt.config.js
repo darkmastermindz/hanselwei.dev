@@ -20,10 +20,27 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         {
-          rel: 'stylesheet',
+          rel: 'preload',
+          as: 'style',
+          onload: "this.onload=null;this.rel='stylesheet'",
           href: 'https://fonts.googleapis.com/css?family=Nova+Mono&display=swap'
         },
-        { rel: 'stylesheet', href: 'https://use.typekit.net/rej0haw.css' }
+        {
+          rel: 'preload',
+          as: 'style',
+          onload: "this.onload=null;this.rel='stylesheet'",
+          href: 'https://use.typekit.net/rej0haw.css'
+        }
+      ],
+      noscript: [
+        {
+          children:
+            '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nova+Mono&display=swap">'
+        },
+        {
+          children:
+            '<link rel="stylesheet" href="https://use.typekit.net/rej0haw.css">'
+        }
       ]
     }
   },
