@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@pinia/nuxt": "^0.5.1",
-    "daisyui": "^3.9.4",
+    "daisyui": "^5.7.18",
     "nuxt": "^3.8.0",
     "pinia": "^4.0.3",
     "tachyons": "^4.12.0"
