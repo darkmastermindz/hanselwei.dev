@@ -75,4 +75,38 @@ main {
     font-size: 25px;
   }
 }
+
+@media (max-width: 767px) {
+  main {
+    width: auto;
+    margin: 1rem;
+    display: block;
+
+    section {
+      padding: 1.25rem;
+    }
+
+    aside {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  main h1 {
+    padding: 1rem;
+  }
+
+  .project {
+    padding: 1rem 0;
+
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    p {
+      font-size: 1.05rem;
+    }
+  }
+}
 </style>

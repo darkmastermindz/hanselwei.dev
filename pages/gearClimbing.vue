@@ -195,4 +195,32 @@ main {
     list-style-type: circle;
   }
 }
+
+@media (max-width: 767px) {
+  main {
+    width: auto;
+    margin: 1rem;
+    display: block;
+
+    section {
+      padding: 1.25rem;
+    }
+
+    aside {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  main section h1 {
+    width: auto;
+    padding: 1rem;
+  }
+
+  main li {
+    margin-left: 1rem;
+    padding: 0.4rem 0;
+  }
+}
 </style>

@@ -14,11 +14,11 @@
       <h2 class="text-center justify-center d-flex flex-column text-base p-10 sm:space-x-2 sm:space-y-2 lg:space-x-4 lg:space-y-4 motion-reduce:transition-none motion-reduce:transform-none motion-reduce:animate-none touch-auto">
         <ul class="place-items-center antialiased sm:subpixel-antialiased md:antialiased p-5 mb-5">
           <li
-            class="sm:p-4 md:flex-inline sm:mb-5 text-green-200 animate-bounce ease-in-out infinite touch-auto">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-green-200 animate-bounce motion-reduce:animate-none ease-in-out infinite touch-auto">
             { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
             "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanactic!", "✨" ] },</li>
           <li
-            class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse ease-in-out infinite touch-auto">
+            class="sm:p-4 md:flex-inline sm:mb-5 text-purple-300 animate-pulse motion-reduce:animate-none ease-in-out infinite touch-auto">
             { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "🧗🏻‍♂️" ] }</li>
           <br />
         </ul>

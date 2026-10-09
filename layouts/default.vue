@@ -21,6 +21,15 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   background-color: #2c2f33;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background-color: #2c2f33;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  overflow-wrap: anywhere;
 }
 
 h1,

@@ -11,7 +11,11 @@ export default defineNuxtConfig({
       title: 'hanselwei.dev',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
+        { name: 'theme-color', content: '#2a303c' },
+        { name: 'color-scheme', content: 'dark' },
+        { name: 'apple-mobile-web-app-title', content: 'Hansel Wei' },
+        { name: 'format-detection', content: 'telephone=no' },
         {
           name: 'description',
           content: 'Hello Hansel!'
@@ -19,6 +23,7 @@ export default defineNuxtConfig({
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         {
           rel: 'preload',
           as: 'style',

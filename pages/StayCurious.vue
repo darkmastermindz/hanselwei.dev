@@ -91,4 +91,28 @@ main {
         grid-area: 1 / 2 / 2 / 3;
     }
 }
+
+@media (max-width: 767px) {
+  main {
+    width: auto;
+    margin: 1rem;
+    display: block;
+
+    section {
+      padding: 1.25rem;
+    }
+
+    aside {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  li a {
+    display: inline-block;
+    min-height: 44px;
+    line-height: 44px;
+  }
+}
 </style>
