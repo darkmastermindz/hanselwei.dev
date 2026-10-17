@@ -31,7 +31,8 @@
     </ul>
 
     <div class="flex flex-wrap justify-center gap-3 px-4 pb-10">
-      <NuxtLink to="/feed" class="button--green">Read the Curiosity Feed ✍️</NuxtLink>
+      <NuxtLink to="/feed" class="button--green">Curiosity Feed 📰</NuxtLink>
+      <NuxtLink to="/blog" class="button--green">Read the blog ✍️</NuxtLink>
       <NuxtLink to="/gear" class="button--grey">Browse my gear lists 🏔️</NuxtLink>
     </div>
   </main>

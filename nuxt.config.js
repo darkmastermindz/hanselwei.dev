@@ -3,13 +3,15 @@ import { fileURLToPath } from 'node:url'
 export default defineNuxtConfig({
   nitro: {
     preset: 'static',
-    // Markdown posts (local + mirrored from dev.to) are read at build time
+    // Markdown read at build time: blog posts (local + mirrored from dev.to)
+    // and short Curiosity Feed entries
     serverAssets: [
-      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) }
+      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) },
+      { baseName: 'feed', dir: fileURLToPath(new URL('./content/feed', import.meta.url)) }
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/feed', '/gear', '/projects', '/rss.xml'],
+      routes: ['/', '/feed', '/blog', '/gear', '/projects', '/rss.xml', '/feed.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }
@@ -46,7 +48,8 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/icons/favicon-32.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'alternate', type: 'application/rss+xml', title: 'Curiosity Feed · hanselwei.dev', href: '/rss.xml' },
+        { rel: 'alternate', type: 'application/rss+xml', title: 'Blog · hanselwei.dev', href: '/rss.xml' },
+        { rel: 'alternate', type: 'application/rss+xml', title: 'Curiosity Feed · hanselwei.dev', href: '/feed.xml' },
         {
           rel: 'preload',
           as: 'style',

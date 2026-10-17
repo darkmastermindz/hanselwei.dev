@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Mirrors published dev.to articles into content/blog/devto/*.md so they show up
-// in the site's Curiosity Feed (/feed). Runs before every build (see "pregenerate" in package.json).
+// in the site's blog (/blog). Runs before every build (see "pregenerate" in package.json).
 //
 //   DEVTO_USERNAME  dev.to username to mirror (default: hansel)
 //   DEVTO_API_KEY   optional; only needed to raise rate limits

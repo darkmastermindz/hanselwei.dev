@@ -68,14 +68,16 @@ const toPost = (key, source) => {
     cover: data.cover_image || null,
     source: data.source || 'hanselwei.dev',
     canonical: data.canonical_url || null,
+    link: data.link || null, // feed entries can share an external link
     draft: data.draft === true,
     readingTime: readingTime(content),
     content
   }
 }
 
-export const getPosts = async () => {
-  const storage = useStorage('assets:blog')
+// collection: 'blog' (content/blog, long-form) or 'feed' (content/feed, short notes)
+export const getPosts = async (collection = 'blog') => {
+  const storage = useStorage(`assets:${collection}`)
   const keys = (await storage.getKeys()).filter(key => key.endsWith('.md'))
   const posts = await Promise.all(keys.map(async key => toPost(key, String(await storage.getItem(key)))))
 

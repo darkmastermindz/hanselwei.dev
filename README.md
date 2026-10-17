@@ -17,8 +17,12 @@ npm run generate       # static build into .output/public (what Netlify deploys)
 netlify dev            # run the site *and* the Netlify functions locally
 ```
 
-## Curiosity Feed (`/feed`)
-- Write posts as Markdown in `content/blog/*.md` with front matter:
+## Curiosity Feed (`/feed`) vs Blog (`/blog`)
+- **Feed**: newsletter-style stream of short notes and shared links, shown in full and
+  grouped by month. Add `content/feed/*.md` (front matter: `title`, `date`, `tags`,
+  optional `link` to the thing you're sharing). RSS at `/feed.xml`.
+- **Blog**: long-form, evergreen posts you click into, at `/blog/<slug>`. Add
+  `content/blog/*.md` with front matter:
   ```md
   ---
   title: "My post"
@@ -29,10 +33,10 @@ netlify dev            # run the site *and* the Netlify functions locally
   draft: true                # optional, hides the post
   ---
   ```
-- Posts are rendered at build time (`server/api/blog`) and also published at `/rss.xml`.
+  RSS at `/rss.xml`.
 - **dev.to mirror:** `npm run sync:devto` pulls published dev.to articles into
   `content/blog/devto/`. It runs automatically before every build and mirrors
-  [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`). Mirrored posts link back to dev.to as the canonical URL.
+  [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`).
 
 ## Gear inventory (Netlify Functions)
 - Edit inventories in `data/inventory.mjs`.
