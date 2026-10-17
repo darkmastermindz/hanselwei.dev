@@ -11,21 +11,12 @@
       </template>
       <template v-else>press &amp; hold the token ✨</template>
     </p>
-    <SpinFact :fact="current" class="mb-6" />
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
     </h1>
     <ContactCardButton :unlocked="humanVerified" />
 
-    <ul class="about">
-      <li class="text-green-200">
-        { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
-        "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanatic!", "✨" ] },
-      </li>
-      <li class="text-purple-300 motion-safe:animate-pulse">
-        { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "🧗🏻‍♂️" ] }
-      </li>
-    </ul>
+    <AboutCard :fact="current" :reveal-count="reveals" />
 
     <Socials />
 
@@ -42,8 +33,10 @@ const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useS
 // Spinning the token (with real input) proves there's a human here, which
 // unlocks the contact card. Deliberately not persisted: every visit re-checks.
 const humanVerified = ref(false)
+const reveals = ref(0)
 const onRelease = spins => {
   reveal(spins)
+  reveals.value++
   humanVerified.value = true
 }
 </script>
@@ -70,19 +63,5 @@ const onRelease = spins => {
 
 .outer {
   text-align: center;
-}
-
-.about {
-  max-width: 44rem;
-  margin: 2rem auto 2.25rem;
-  padding: 0 1.25rem;
-  font-family: "Nova Mono", monospace;
-  font-size: clamp(0.95rem, 3.6vw, 1.15rem);
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-
-  li {
-    margin-bottom: 1.5rem;
-  }
 }
 </style>
