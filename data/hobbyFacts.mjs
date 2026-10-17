@@ -6,7 +6,10 @@ const hobbies = {
   anime: { label: 'Anime', emoji: '🍥' },
   coffee: { label: 'Coffee', emoji: '☕' },
   boardgames: { label: 'Board Games', emoji: '🎲' },
-  climbing: { label: 'Rock Climbing', emoji: '🧗' }
+  climbing: { label: 'Rock Climbing', emoji: '🧗' },
+  yoga: { label: 'Yoga', emoji: '🧘' },
+  running: { label: 'Running', emoji: '🏃' },
+  community: { label: 'Community Building', emoji: '🤝' }
 }
 
 const fact = (id, hobby, text) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text })
@@ -52,5 +55,22 @@ export const hobbyFacts = [
   fact('board-senet', 'boardgames', 'Senet, from ancient Egypt, is one of the oldest known board games: over 5,000 years old.'),
   fact('board-shannon', 'boardgames', 'There are an estimated 10^120 possible chess games, far more than the ~10^80 atoms in the observable universe.'),
   fact('board-catan', 'boardgames', 'Catan was first published in Germany in 1995 as "Die Siedler von Catan".'),
-  quote('board-chernev', 'boardgames', 'Every chess master was once a beginner.', 'Irving Chernev')
+  quote('board-chernev', 'boardgames', 'Every chess master was once a beginner.', 'Irving Chernev'),
+
+  // Yoga
+  fact('yoga-yuj', 'yoga', '"Yoga" comes from the Sanskrit root "yuj", meaning to yoke or unite.'),
+  fact('yoga-day', 'yoga', 'The United Nations declared June 21 the International Day of Yoga in 2014.'),
+  quote('yoga-gita', 'yoga', 'Yoga is the journey of the self, through the self, to the self.', 'The Bhagavad Gita'),
+
+  // Running
+  fact('run-marathon', 'running', 'The marathon was fixed at 26.2 miles (42.195 km) in 1921, based on the 1908 London Olympics course.'),
+  fact('run-kipchoge', 'running', 'In 2019 Eliud Kipchoge ran a marathon distance in 1:59:40, the first ever under two hours (not record-eligible).'),
+  quote('run-bingham', 'running', "The miracle isn't that I finished. The miracle is that I had the courage to start.", 'John Bingham'),
+  quote('run-karnazes', 'running', 'Run when you can, walk if you have to, crawl if you must; just never give up.', 'Dean Karnazes'),
+
+  // Community building
+  fact('community-dunbar', 'community', "Anthropologist Robin Dunbar estimated people can keep about 150 stable relationships: \"Dunbar's number\"."),
+  fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.'),
+  quote('community-mead', 'community', 'Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it\'s the only thing that ever has.', 'Margaret Mead'),
+  quote('community-proverb', 'community', 'If you want to go fast, go alone. If you want to go far, go together.', 'African proverb')
 ]
