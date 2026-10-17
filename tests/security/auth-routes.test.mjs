@@ -106,7 +106,9 @@ test('the callback logs only the outcome and the email domain, never the token',
   globalThis.fetch = async url => (url.includes('access_token') ? Response.json({ access_token: 'gho_secret' }) : Response.json([{ email: 'x@example.com', verified: true }]))
   await callback(req(`/api/auth/github/callback?code=abc&state=${STATE}`, { cookie: `${STATE_COOKIE}=${STATE}` }))
   assert.equal(logged.length, 1)
-  assert.ok(logged[0].includes('example.com'))
+  const [, entry] = JSON.parse(logged[0])
+  assert.equal(entry.domain, 'example.com')
+  assert.equal(entry.reason, 'denied')
   assert.equal(logged[0].includes('gho_secret'), false)
 })
 
