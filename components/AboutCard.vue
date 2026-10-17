@@ -48,7 +48,7 @@
         </p>
         <p v-else key="hobbies" class="json json--hobbies motion-safe:animate-pulse">
           { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games",
-          "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "🧗🏻‍♂️" ] }
+          "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "Stained Glass", "🧗🏻‍♂️" ] }
         </p>
       </Transition>
     </div>
