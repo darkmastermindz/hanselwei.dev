@@ -1,6 +1,7 @@
 <template>
   <div class="app-shell">
     <AppNav />
+    <PullToRefresh />
     <slot />
   </div>
 </template>
@@ -26,6 +27,13 @@ html {
 
 body {
   overflow-x: hidden;
+}
+
+/* The in-app pull-down (components/PullToRefresh.vue) handles pulling at the top,
+   instead of the browser's own pull-to-refresh where it can be turned off */
+html,
+body {
+  overscroll-behavior-y: contain;
 }
 
 .app-shell {

@@ -71,6 +71,12 @@ watch(
 
 const avatar = computed(() => safeUrl(user.value?.pictureUrl))
 
+// Hidden again by a pull-down hard refresh: close the menu with it
+const { revealed } = useOwnerGate()
+watch(revealed, shown => {
+  if (!shown) open.value = false
+})
+
 const firstName = computed(() => user.value?.name?.split(' ')[0] || user.value?.email?.split('@')[0] || 'Me')
 
 const leave = async () => {

@@ -39,6 +39,18 @@ export const useSpinStats = () => {
     loaded.value = true
   })
 
+  // Pull-down hard refresh (composables/useHardRefresh.js): start over
+  const resetAt = useState('token:resetAt', () => 0)
+  watch(resetAt, () => {
+    count.value = 0
+    best.value = 0
+    seen.value = []
+    current.value = null
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {}
+  })
+
   const addSpin = () => {
     count.value++
     save()

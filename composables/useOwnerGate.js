@@ -18,9 +18,10 @@ const remembered = () => {
   }
 }
 
+let armedAt = 0 // set by a long hold, completed by a quick tap
+
 export const useOwnerGate = () => {
   const revealed = useState('owner-gate:revealed', () => false)
-  let armedAt = 0
 
   // Call with each token release: (spins, heldMs)
   const onTokenRelease = (spins, heldMs = 0) => {
@@ -43,5 +44,14 @@ export const useOwnerGate = () => {
     if (remembered()) revealed.value = true
   }
 
-  return { revealed, onTokenRelease, restore }
+  // Back to hidden (pull-down hard refresh)
+  const hide = () => {
+    revealed.value = false
+    armedAt = 0
+    try {
+      sessionStorage.removeItem(KEY)
+    } catch {}
+  }
+
+  return { revealed, onTokenRelease, restore, hide }
 }
