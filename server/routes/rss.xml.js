@@ -9,8 +9,8 @@ export default defineEventHandler(async event => {
     .map(
       post => `    <item>
       <title>${escape(post.title)}</title>
-      <link>${SITE}/blog/${post.slug}</link>
-      <guid>${SITE}/blog/${post.slug}</guid>
+      <link>${SITE}/feed/${post.slug}</link>
+      <guid>${SITE}/feed/${post.slug}</guid>
       ${post.date ? `<pubDate>${new Date(post.date).toUTCString()}</pubDate>` : ''}
       <description>${escape(post.description)}</description>
     </item>`
@@ -21,8 +21,8 @@ export default defineEventHandler(async event => {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>hanselwei.dev blog</title>
-    <link>${SITE}/blog</link>
+    <title>Curiosity Feed · hanselwei.dev</title>
+    <link>${SITE}/feed</link>
     <description>Notes, dev logs and posts by Hansel Wei</description>
 ${items}
   </channel>

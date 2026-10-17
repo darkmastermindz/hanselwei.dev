@@ -17,7 +17,7 @@ npm run generate       # static build into .output/public (what Netlify deploys)
 netlify dev            # run the site *and* the Netlify functions locally
 ```
 
-## Blog
+## Curiosity Feed (`/feed`)
 - Write posts as Markdown in `content/blog/*.md` with front matter:
   ```md
   ---

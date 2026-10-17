@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/blog', '/gear', '/projects', '/rss.xml'],
+      routes: ['/', '/feed', '/gear', '/projects', '/rss.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }
@@ -46,7 +46,7 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', sizes: '32x32', href: '/icons/favicon-32.png' },
         { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        { rel: 'alternate', type: 'application/rss+xml', title: 'hanselwei.dev blog', href: '/rss.xml' },
+        { rel: 'alternate', type: 'application/rss+xml', title: 'Curiosity Feed · hanselwei.dev', href: '/rss.xml' },
         {
           rel: 'preload',
           as: 'style',
