@@ -45,7 +45,7 @@
           <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
         </p>
         <h3 class="entry__title">
-          <NuxtLink :to="`/blog/feed/${entry.slug}`">{{ entry.title }}</NuxtLink>
+          <NuxtLink :to="`/blog/${entry.slug}`">{{ entry.title }}</NuxtLink>
         </h3>
         <div class="prose prose-invert prose-purple max-w-none entry__body" v-html="entry.html" />
         <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="entry__link">
@@ -59,7 +59,7 @@
 <script setup>
 useHead({ title: 'Curiosity Feed · hanselwei.dev' })
 
-const { data: entries } = await useFetch('/api/feed', { default: () => [] })
+const { data: entries } = await useFetch('/api/blog/feed', { default: () => [] })
 
 const activeTag = ref(null)
 const activeSeries = ref(null)

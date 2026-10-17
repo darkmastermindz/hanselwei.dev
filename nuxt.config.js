@@ -3,11 +3,10 @@ import { fileURLToPath } from 'node:url'
 export default defineNuxtConfig({
   nitro: {
     preset: 'static',
-    // Markdown read at build time: blog posts (local + mirrored from dev.to)
-    // and short Curiosity Feed entries
+    // Blog markdown (local + mirrored from dev.to) is read at build time.
+    // Posts with a `series` form the Curiosity Feed; the rest are one-shot posts.
     serverAssets: [
-      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) },
-      { baseName: 'feed', dir: fileURLToPath(new URL('./content/feed', import.meta.url)) }
+      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) }
     ],
     prerender: {
       crawlLinks: true,

@@ -3,8 +3,9 @@ const SITE = 'https://www.hanselwei.dev'
 const escape = s =>
   String(s ?? '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c])
 
-// RSS 2.0 for a list of posts from getPosts(); `path` is where the items live (e.g. /blog)
-export const buildRss = ({ title, description, path, posts }) => {
+// RSS 2.0 for a list of posts from getPosts(); `path` is where the items live (e.g. /blog),
+// `home` the page the channel links to (defaults to `path`)
+export const buildRss = ({ title, description, path, home = path, posts }) => {
   const items = posts
     .map(
       post => `    <item>
@@ -21,7 +22,7 @@ export const buildRss = ({ title, description, path, posts }) => {
 <rss version="2.0">
   <channel>
     <title>${escape(title)}</title>
-    <link>${SITE}${path}</link>
+    <link>${SITE}${home}</link>
     <description>${escape(description)}</description>
 ${items}
   </channel>

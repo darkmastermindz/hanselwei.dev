@@ -69,16 +69,15 @@ const toPost = (key, source) => {
     source: data.source || 'hanselwei.dev',
     canonical: data.canonical_url || null,
     link: data.link || null, // feed entries can share an external link
-    series: data.series || null, // feed entries: the recurring series they belong to
+    series: data.series || null, // recurring series => Curiosity Feed; none => one-shot post
     draft: data.draft === true,
     readingTime: readingTime(content),
     content
   }
 }
 
-// collection: 'blog' (content/blog, long-form) or 'feed' (content/feed, short notes)
-export const getPosts = async (collection = 'blog') => {
-  const storage = useStorage(`assets:${collection}`)
+export const getPosts = async () => {
+  const storage = useStorage('assets:blog')
   const keys = (await storage.getKeys()).filter(key => key.endsWith('.md'))
   const posts = await Promise.all(keys.map(async key => toPost(key, String(await storage.getItem(key)))))
 
