@@ -1,22 +1,28 @@
 <template>
-  <main>
-    <section>
-      <h1>Github Projects</h1>
-      <div v-for="project in githubProjects" :key="project.id" class="project">
-        <h3 class="text-purple-500 hover:text-green-300">
-          <a target="_blank" :href="project.html_url">{{ project.name }}</a>
-        </h3>
-        <p class="stars">🌟 {{ project.stargazers_count }}</p>
-        <p>{{ project.homepage }}</p>
-        <p>{{ project.description }}</p>
-      </div>
-    </section>
-    <aside></aside>
+  <main class="page">
+    <h1 class="page-title text-[#00b8ff]">GitHub Projects</h1>
+    <div class="projects">
+      <article v-for="project in githubProjects" :key="project.id" class="project">
+        <h2>
+          <a target="_blank" rel="noopener" :href="project.html_url">{{ project.name }}</a>
+        </h2>
+        <p class="meta">
+          <span class="stars">🌟 {{ project.stargazers_count }}</span>
+          <span v-if="project.language">· {{ project.language }}</span>
+        </p>
+        <p v-if="project.description">{{ project.description }}</p>
+        <a v-if="project.homepage" class="homepage" :href="project.homepage" target="_blank" rel="noopener">
+          {{ project.homepage }}
+        </a>
+      </article>
+    </div>
   </main>
 </template>
 
 <script setup>
 import { useProjectsStore } from '~/stores/projects'
+
+useHead({ title: 'Projects · hanselwei.dev' })
 
 const store = useProjectsStore()
 
@@ -26,53 +32,52 @@ const githubProjects = computed(() => store.githubProjects)
 </script>
 
 <style lang="scss" scoped>
-main {
-  width: 80vw;
-  margin: 2% 5%;
+.projects {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  grid-template-rows: 1fr;
-  grid-column-gap: 50px;
-  grid-row-gap: 0px;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+}
 
-  section {
-    grid-area: 1 / 1 / 2 / 2;
-    color: black;
-    padding: 30px;
-    background: #eee;
+.project {
+  background: #eee;
+  color: #171515;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  overflow-wrap: anywhere;
+
+  h2 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #7e22ce;
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+    a:hover {
+      color: #16a34a;
+    }
   }
 
-  aside {
-    grid-area: 1 / 2 / 2 / 3;
+  p {
+    margin-top: 0.4rem;
   }
+}
 
-  h1 {
-    color: #00b8ff;
-    font-weight: 300;
-    padding: 25px;
-    background: #2c2f33;
-    box-shadow: 5px 5px;
-  }
+.meta {
+  font-size: 0.9rem;
+  color: #555;
 }
 
 .stars {
   color: orangered;
 }
 
-.project {
-  padding: 30px;
-  color: #171515;
-
-  h3 {
-    a {
-      text-decoration: none;
-    }
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    font-size: 35px;
-  }
-  p {
-    font-size: 25px;
-  }
+.homepage {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: #0369a1;
+  font-size: 0.9rem;
 }
 </style>

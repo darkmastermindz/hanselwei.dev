@@ -1,30 +1,83 @@
 <template>
-    <div class="justify-center md:px-16">
-        <div
-          class="relative z-0 justify-center px-8  shadow-sm rounded-md font-bold md:antialiased sm:subpixel-antialiased">
-          <br><br>
-          <a href="https://hansel.run/connect" target="_blank" 
-            class="visible md:invisible f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">Open  Apple Contact Card ✨</a>
-          <br><br>
-         <!-- <br><br>
-              <a href="https://gist.github.com/darkmastermindz/8df2a44f4743dcef39efffcded7b2c28#file-raleigh_nc_food_recs-md" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#00b489] relative inline-flex items-center px-4 py-2 rounded-l-md border">Raleigh, NC Food/Entertainment Recs around ATO2023</a>
-          <br><br> -->
-          <a href="https://github.com/darkmastermindz" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-grey-700 relative inline-flex items-center px-8 py-2 rounded-l-md border">Github</a>
-          <a href="https://hansel.run/mastodon" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib bg-[#563acc] text-white relative inline-flex items-center px-8 py-2 rounded-l-md border">Mastodon</a>
-          <a href="https://m.me/hanselwei" target="_blank"
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-blue-600 relative inline-flex items-center px-8 py-2 rounded-l-md border">Messenger</a>
-          <a href="https://hansel.rocks" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#fa7e1e] relative inline-flex items-center px-8 py-2 rounded-l-md border">Instagram</a>
-          <a href="https://profile.hanselwei.dev" target="_blank"
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib white bg-[#582BE8] relative inline-flex items-center px-8 py-2 rounded-l-md border">Polywork</a>
-          <a href="https://linkedin.com/in/hanselwei" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#0a66c2] relative inline-flex items-center px-8 py-2 rounded-l-md border">Linkedin</a>
-          <a href="mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>" target="_blank" 
-            class="f6 grow no-underline br-pill ph3 pv2 mb2 dib text-white bg-[#008856] relative inline-flex items-center px-4 py-2 rounded-l-md border">Send
-            Email</a>
-          </div>        
+  <div class="socials">
+    <a
+      href="https://hansel.run/connect"
+      target="_blank"
+      rel="noopener"
+      class="social md:hidden bg-[#00b489]"
+    >Open Apple Contact Card ✨</a>
+    <div class="socials__grid">
+      <a
+        v-for="link in links"
+        :key="link.label"
+        :href="link.href"
+        target="_blank"
+        rel="noopener"
+        :class="['social', link.bg]"
+      >{{ link.label }}</a>
     </div>
+  </div>
 </template>
+
+<script setup>
+const links = [
+  { label: 'GitHub', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]' },
+  { label: 'Mastodon', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
+  { label: 'Messenger', href: 'https://m.me/hanselwei', bg: 'bg-blue-600' },
+  { label: 'Instagram', href: 'https://hansel.rocks', bg: 'bg-[#c7501a]' },
+  { label: 'Polywork', href: 'https://profile.hanselwei.dev', bg: 'bg-[#582BE8]' },
+  { label: 'LinkedIn', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
+  { label: 'Send Email', href: 'mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>', bg: 'bg-[#008856]' }
+]
+</script>
+
+<style scoped>
+.socials {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem auto;
+  max-width: 48rem;
+}
+
+.socials__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.social {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px; /* comfortable touch target */
+  padding: 0.5rem 1.4rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.social:hover,
+.social:focus-visible {
+  transform: scale(1.05);
+}
+
+@media (max-width: 480px) {
+  .socials__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .socials__grid .social:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}
+</style>

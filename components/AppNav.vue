@@ -1,69 +1,57 @@
 <template>
-  <div class="navbar bg-neutral text-neutral-content relative">
-        <div class="inline sm:inline-block md:flex-col lg:flex-row z-0">
-        
-        <NuxtLink
-            class="btn btn-ghost normal-case md:text-sm dim white"
-            aria-label="Home"
-            exact
-            to="/"
-            >
-            <span> { 🏠 Home },</span>
-          </NuxtLink>
-     
-       
-          <NuxtLink
-            class="btn btn-ghost normal-case md:text-sm dim blue"
-            aria-label="Projects"
-            exact
-            to="/projects"
-            > <span>{ 👨🏻‍💻 Projects },</span> 
-          </NuxtLink>
-     
-        
-          <NuxtLink
-            class="btn btn-ghost normal-case md:text-sm dim green"
-            role="navigation"
-            aria-label="Gear"
-            exact
-            to="/gearClimbing"
-            ><span> { 🧗 Climbing Gear }</span>
-          </NuxtLink>
-       </div>
-  </div>
+  <nav class="app-nav bg-neutral text-neutral-content" aria-label="Main">
+    <div class="app-nav__links">
+      <NuxtLink
+        v-for="link in links"
+        :key="link.to"
+        :to="link.to"
+        :class="['btn btn-ghost btn-sm md:btn-md normal-case dim', link.color]"
+        :aria-label="link.label"
+      >
+        <span>{ {{ link.emoji }} {{ link.label }} }</span>
+      </NuxtLink>
+    </div>
+  </nav>
 </template>
 
 <script setup>
+const links = [
+  { to: '/', label: 'Home', emoji: '🏠', color: 'white' },
+  { to: '/projects', label: 'Projects', emoji: '👨🏻‍💻', color: 'blue' },
+  { to: '/blog', label: 'Blog', emoji: '✍️', color: 'purple' },
+  { to: '/gear/climbing', label: 'Climbing Gear', emoji: '🧗', color: 'green' }
+]
 </script>
 
 <style lang="scss" scoped>
-.b {
-  font-weight: bold;
+.app-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* Keep clear of the notch / status bar when installed as an app */
+  padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
+    max(env(safe-area-inset-left), 0.5rem);
 }
 
-.link {
-  text-decoration: none;
-  transition: color 0.15s ease-in;
+.app-nav__links {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 
-  &:link {
-    transition: color 0.15s ease-in;
+  &::-webkit-scrollbar {
+    display: none;
   }
 
-  &:visited {
-    transition: color 0.15s ease-in;
+  a {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
-  &:hover {
-    transition: color 0.15s ease-in;
-  }
-
-  &:active {
-    transition: color 0.15s ease-in;
-  }
-
-  &:focus {
-    transition: color 0.15s ease-in;
-    outline: 1px dotted currentColor;
+  .router-link-active:not([href='/']),
+  .router-link-exact-active {
+    background-color: rgba(255, 255, 255, 0.08);
   }
 }
 
@@ -71,16 +59,11 @@
   color: #00b8ff;
 }
 
-.black {
-  color: #000;
-}
-
-.gray {
-  color: #777;
-}
-
 .green {
   color: #41b883;
 }
 
+.purple {
+  color: #c084fc;
+}
 </style>

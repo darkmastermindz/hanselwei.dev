@@ -1,13 +1,17 @@
-# Hello World! 
-> May the JAM spark curiosity at first sight!
+---
+title: "Hello World!"
+date: "2020-05-01"
+description: "May the JAM spark curiosity at first sight!"
+tags: [jamstack, netlify, devlog]
+---
 
-`Dev Log: Friday May 1st, 2020`
+> May the JAM spark curiosity at first sight!
 
 Hello World! I'm using JAMStack for (specifically) journal entries now! This journal entry content is built in markdown, populates vue component and served on [Netlify](https://netlify.com/)!
 
 
 _What is JAMstack? - you might ask..._
-It's JavaScript, APIs, and Markup. Any project that relies on a tight coupling between client and server is not built with the Jamstack This page is not built witha server-side CMS like WordPress, Drupal, Joomla, or Squarespace!
+It's JavaScript, APIs, and Markup. Any project that relies on a tight coupling between client and server is not built with the Jamstack This page is not built with a server-side CMS like WordPress, Drupal, Joomla, or Squarespace!
 You might be surprised that the content management system (CMS) is completely headless.
 
 Reasons why:
