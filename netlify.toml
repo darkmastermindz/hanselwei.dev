@@ -6,5 +6,25 @@
   NODE_VERSION = "24"
   NITRO_PRESET = "static"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+# Old route kept working for existing links
+[[redirects]]
+  from = "/gearClimbing"
+  to = "/gear/climbing"
+  status = 301
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+
 [[plugins]]
   package = "@netlify/plugin-lighthouse"

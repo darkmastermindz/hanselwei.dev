@@ -6,8 +6,11 @@
   "private": true,
   "scripts": {
     "dev": "nuxt dev",
+    "sync:devto": "node scripts/sync-devto.mjs",
+    "prebuild": "npm run sync:devto",
     "build": "nuxt build",
     "start": "nuxt start",
+    "pregenerate": "npm run sync:devto",
     "generate": "nuxt generate",
     "preview": "nuxt preview"
   },
@@ -17,6 +20,7 @@
   "dependencies": {
     "@pinia/nuxt": "^1.0.2",
     "daisyui": "^3.9.4",
+    "marked": "^14.1.4",
     "nuxt": "^3.8.0",
     "pinia": "^4.0.3",
     "tachyons": "^4.12.0"
@@ -25,6 +29,7 @@
     "@netlify/plugin-a11y": "^1.0.0-beta.1",
     "@netlify/plugin-lighthouse": "^6.0.4",
     "@nuxtjs/tailwindcss": "^6.8.1",
+    "@tailwindcss/typography": "^0.5.20",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
     "sass": "^1.69.5"

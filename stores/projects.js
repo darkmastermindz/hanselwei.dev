@@ -13,6 +13,10 @@ export const useProjectsStore = defineStore('projects', {
           'https://api.github.com/users/darkmastermindz/repos?page=1&per_page=100'
         ).then(res => res.json())
 
+        if (!Array.isArray(githubProjects)) {
+          throw new Error(githubProjects?.message || 'Unexpected GitHub API response')
+        }
+
         githubProjects = githubProjects
           .filter(
             el =>

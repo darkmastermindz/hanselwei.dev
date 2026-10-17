@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="app-shell">
     <AppNav />
     <slot />
   </div>
@@ -21,6 +21,43 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   background-color: #2c2f33;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* Room for the home indicator when installed as an app */
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Shared responsive content panel used by the inner pages */
+.page {
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .page {
+    padding: 2rem;
+  }
+}
+
+.page-title {
+  color: #eee;
+  font-weight: 300;
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  padding: 1rem 1.25rem;
+  background: #23262a;
+  box-shadow: 5px 5px currentColor;
+  margin-bottom: 1.5rem;
+  overflow-wrap: anywhere;
 }
 
 h1,

@@ -1,0 +1,22 @@
+{
+  "name": "Hansel Wei — hanselwei.dev",
+  "short_name": "Hansel",
+  "description": "Hansel Wei's corner of the web: projects, blog, and climbing gear.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2c2f33",
+  "theme_color": "#2c2f33",
+  "categories": ["personalization", "lifestyle", "developer"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Blog", "url": "/blog", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Climbing Gear", "url": "/gear", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

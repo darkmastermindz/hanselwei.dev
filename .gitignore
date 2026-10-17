@@ -85,7 +85,8 @@ dist
 .editorconfig
 
 # Service worker
-sw.*
+# (public/sw.js is the hand-written PWA service worker)
+/sw.*
 
 # Mac OSX
 .DS_Store
