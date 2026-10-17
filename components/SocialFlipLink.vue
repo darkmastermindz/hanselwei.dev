@@ -1,13 +1,18 @@
 <template>
   <a
+    ref="root"
     :href="href"
     target="_blank"
     rel="noopener"
     class="flip-link"
-    :class="{ 'is-spinning': spinning, 'is-galloping': galloping, [`flip-link--${effect}`]: effect }"
+    :class="{ 'is-spinning': spinning, 'is-galloping': galloping, 'is-held': holding, 'is-intro': intro, [`flip-link--${effect}`]: effect }"
     :style="{ '--i': index }"
     :aria-label="label"
-    @pointerdown="burst"
+    @pointerdown="press"
+    @pointerup="endPress"
+    @pointercancel="endPress"
+    @pointerleave="endPress"
+    @contextmenu="onContextMenu"
     @click="openAfterAnimation"
     @pointerenter="shuffleBack"
     @focus="shuffleBack"
@@ -38,7 +43,11 @@
 <script setup>
 // A social link that flips over to a glittery back face on hover/focus, and
 // throws a burst of sparkles (plus a quick spin) wherever it's tapped.
+// A quick tap opens the link once the animation has played; pressing and
+// holding keeps the show going and does not open the link.
 const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
+const HOLD_AFTER = 350 // ms of pressing before it counts as a hold
+const HOLD_BURST_EVERY = 300 // ms between sparkle bursts while held
 
 const props = defineProps({
   label: { type: String, required: true },
@@ -57,7 +66,16 @@ const GLYPHS = ['✦', '✧', '•', '★', '✶']
 const particles = ref([])
 const spinning = ref(false)
 const galloping = ref(false)
+const holding = ref(false)
+// The load-time flip wave runs once; dropping the class afterwards stops it from
+// restarting (and re-applying its start delay) whenever another animation ends
+const intro = ref(true)
+const root = ref(null)
 let nextId = 0
+let pressed = false
+let holdTimer = null
+let holdInterval = null
+let suppressClick = false
 
 // Prerendered HTML always uses `back`; random picks only happen in the browser
 const backText = ref(props.back)
@@ -65,11 +83,17 @@ const shuffleBack = () => {
   const options = props.backs.filter(text => text !== backText.value)
   if (options.length) backText.value = options[Math.floor(Math.random() * options.length)]
 }
-onMounted(shuffleBack)
-
-const burst = event => {
+onMounted(() => {
   shuffleBack()
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  setTimeout(() => (intro.value = false), 1600 + props.index * 120 + 1200)
+})
+
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+// Sparkles from the tap point; `spin` adds the quick spin (and a unicorn lap)
+const burst = (event, { shuffle = true, spin = true } = {}) => {
+  if (shuffle) shuffleBack()
+  if (reducedMotion()) return
   const rect = event.currentTarget.getBoundingClientRect()
   // Keyboard activation has no pointer position: burst from the middle
   const x = event.clientX ? event.clientX - rect.left : rect.width / 2
@@ -93,11 +117,16 @@ const burst = event => {
   particles.value.push(...fresh)
   const ids = new Set(fresh.map(p => p.id))
   setTimeout(() => (particles.value = particles.value.filter(p => !ids.has(p.id))), 800)
+  if (!spin) return
 
   spinning.value = false
   requestAnimationFrame(() => (spinning.value = true))
   setTimeout(() => (spinning.value = false), 650)
 
+  gallop()
+}
+
+const gallop = () => {
   if (props.effect === 'unicorn') {
     galloping.value = false
     requestAnimationFrame(() => (galloping.value = true))
@@ -105,9 +134,55 @@ const burst = event => {
   }
 }
 
+const press = event => {
+  if (event.button !== 0) return // let right-clicks show the normal menu
+  pressed = true
+  suppressClick = false
+  burst(event)
+
+  holdTimer = setTimeout(() => {
+    // Held long enough: keep the animation going and don't open on release
+    holding.value = true
+    suppressClick = true
+    navigator.vibrate?.(15)
+    let ticks = 0
+    holdInterval = setInterval(() => {
+      if (reducedMotion()) return
+      burst({ currentTarget: root.value }, { shuffle: false, spin: false })
+      if (++ticks % 4 === 0) gallop() // another unicorn lap
+    }, HOLD_BURST_EVERY)
+  }, HOLD_AFTER)
+}
+
+const endPress = () => {
+  if (!pressed) return
+  pressed = false
+  holding.value = false
+  clearTimeout(holdTimer)
+  clearInterval(holdInterval)
+  // Some browsers never fire click after a long press; don't let the flag linger
+  if (suppressClick) setTimeout(() => (suppressClick = false), 600)
+}
+
+// A long press on a touch screen would pop up the link preview / copy menu
+const onContextMenu = event => {
+  if (pressed || holding.value) event.preventDefault()
+}
+
+onBeforeUnmount(() => {
+  clearTimeout(holdTimer)
+  clearInterval(holdInterval)
+})
+
 // Hold the navigation briefly so the tap animation is visible before the
 // link opens. Modified clicks (new tab/window shortcuts) behave normally.
 const openAfterAnimation = event => {
+  if (suppressClick) {
+    // The link was pressed and held: that's for the animation, not to open it
+    event.preventDefault()
+    suppressClick = false
+    return
+  }
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
@@ -137,6 +212,8 @@ const openAfterAnimation = event => {
   text-decoration: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none; /* no iOS link preview on long press */
+  user-select: none;
 
   &:focus-visible {
     outline: none;
@@ -152,7 +229,10 @@ const openAfterAnimation = event => {
   display: block;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
-  /* One-time flip wave when the page loads, staggered per button */
+}
+
+/* One-time flip wave when the page loads, staggered per button */
+.flip-link.is-intro .flip-link__inner {
   animation: intro-flip 1.1s ease-in-out calc(1.6s + var(--i) * 0.12s) backwards;
 }
 
@@ -228,6 +308,24 @@ const openAfterAnimation = event => {
 
 .flip-link:focus-visible .flip-link__inner {
   transform: rotateX(180deg);
+}
+
+/* Pressed and held: stay flipped to the glittery side and glow */
+.flip-link.is-held .flip-link__inner {
+  transform: rotateX(180deg) scale(1.06);
+}
+
+.flip-link.is-held .flip-link__face--back {
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.75);
+}
+
+.flip-link--unicorn.is-held .flip-link__face--back {
+  box-shadow: 0 0 0 2px #ff3b3b, 0 0 0 4px #ffe14d, 0 0 0 6px #3da5ff, 0 0 22px rgba(162, 89, 255, 0.8);
+}
+
+.flip-link.is-held .twinkle {
+  animation-play-state: running;
+  opacity: 1;
 }
 
 .flip-link.is-spinning .flip-link__inner {
