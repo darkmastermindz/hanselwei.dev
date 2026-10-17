@@ -46,9 +46,16 @@
           "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate",
           "Emerging Tech Fanatic!", "✨" ] }
         </p>
-        <p v-else key="hobbies" class="json json--hobbies motion-safe:animate-pulse">
+        <p v-else-if="view === 'hobbies'" key="hobbies" class="json json--hobbies motion-safe:animate-pulse">
           { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games",
           "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "Stained Glass", "🧗🏻‍♂️" ] }
+        </p>
+        <p v-else key="edu" class="json json--edu">
+          { "Education" : [
+          <span class="json__line">"2026 · Single Pitch Instructor Course · Pisgah Climbing School · Brevard, NC",</span>
+          <span class="json__line">"2025 · Chakra Flow University · YTT200 · Whitewater Center · Charlotte, NC",</span>
+          <span class="json__line">"2019 · UNC Charlotte · Computer Science, BS / Communication Studies Minor · Charlotte, NC"</span>
+          ] }
         </p>
       </Transition>
     </div>
@@ -58,18 +65,19 @@
 
 <script setup>
 // One card under the contact button: the token's latest fact, or the "I am a"
-// (skills) and hobbies JSON, switched with the toggle on top.
+// (skills), hobbies and education JSON, switched with the toggle on top.
 const props = defineProps({
   fact: { type: Object, default: null },
   // Bumped by the parent whenever the token reveals a new fact
   revealCount: { type: Number, default: 0 }
 })
 
-// Two-way (Skills / Hobbies) until the token has revealed a fact, then three-way
+// Skills / Hobbies / Edu, plus Fact once the token has revealed one
 const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
-  { id: 'hobbies', label: '🧗 Hobbies' }
+  { id: 'hobbies', label: '🧗 Hobbies' },
+  { id: 'edu', label: '🎓 Edu' }
 ])
 
 // Prerender shows Skills; each visit then opens on Skills or Hobbies at random
@@ -217,6 +225,16 @@ cite {
 
 .json--hobbies {
   color: #d8b4fe;
+}
+
+.json--edu {
+  color: #bae6fd;
+}
+
+/* One school per line, indented inside the array */
+.json__line {
+  display: block;
+  padding-left: 1.25rem;
 }
 
 .swap-enter-active,
