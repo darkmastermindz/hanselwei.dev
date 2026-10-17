@@ -70,9 +70,9 @@ export const inventories = {
     sections: ['Video'],
     items: [
       item('Video', 'Cameras', 'OBSBOT Me / iPhone 11', { tags: ['Phone'] }),
-      item('Video', 'Cameras', 'Spectacles v1 (Black)', { brand: 'Snap', tags: ['Wearable'] }),
-      item('Video', 'Cameras', 'Spectacles v1 (Cyan)', { brand: 'Snap', tags: ['Wearable'] }),
-      item('Video', 'Cameras', 'Spectacles v2 (Nico)', { brand: 'Snap', tags: ['Wearable'] }),
+      item('Video', 'Cameras', 'Spectacles v1 (Black)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
+      item('Video', 'Cameras', 'Spectacles v1 (Cyan)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
+      item('Video', 'Cameras', 'Spectacles v2 (Nico)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
       item('Video', 'Cameras', 'Snap Digital Instant Camera (Red)', { brand: 'Polaroid', tags: ['Instant'] }),
       item('Video', 'Cameras', 'BRIO 4K Ultra HD Webcam', { brand: 'Logitech', tags: ['Webcam', '4K'] }),
       item('Video', 'Capture', 'ShadowCast Capture', { brand: 'Genki', qty: 2, tags: ['Capture Card'] }),
