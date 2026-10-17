@@ -93,19 +93,33 @@ const arrange = () => {
   }
   if (best) return apply(best.grid)
 
-  // Narrow screens: a lens, where only the middle rows hold two
+  // Narrow screens: a lens, where only the middle rows hold two. The last link
+  // (Send Email) always closes the bottom row.
+  const last = pills.length - 1
   for (let rows = 3; rows <= pills.length; rows++) {
     for (const counts of lensProfiles(pills.length, rows)) {
-      // Narrowest pills go to the busiest rows
-      const byWidth = widths.map((w, i) => i).sort((a, b) => widths[a] - widths[b])
-      const rowOrder = counts.map((c, r) => r).sort((a, b) => counts[b] - counts[a])
+      const bottom = rows - 1
       const grid = counts.map(() => [])
-      for (const r of rowOrder) grid[r] = byWidth.splice(0, counts[r]).sort((a, b) => a - b)
+      const used = counts.map(() => 0)
+      grid[bottom].push(last)
+      used[bottom] = widths[last]
+
+      // Widest first, each into the emptiest row with room (single-pill rows take
+      // the widest; two-pill rows pair a wide pill with a narrow one)
+      const byWidth = indexes.filter(i => i !== last).sort((a, b) => widths[b] - widths[a])
+      for (const i of byWidth) {
+        const open = counts.map((c, r) => r).filter(r => grid[r].length < counts[r])
+        const r = open.sort((a, b) => used[a] - used[b] || counts[a] - counts[b])[0]
+        grid[r].push(i)
+        used[r] += widths[i]
+      }
+      grid.forEach(row => row.sort((a, b) => a - b))
       if (!grid.every(fits)) continue
 
-      // Rows of equal length (mirror images) take links in their original order, top first
+      // Rows of equal length (mirror images) take links in their original order, top
+      // first; the bottom row stays put so Send Email stays last
       for (const size of new Set(counts)) {
-        const slots = counts.map((c, r) => r).filter(r => counts[r] === size)
+        const slots = counts.map((c, r) => r).filter(r => r !== bottom && counts[r] === size)
         const sets = slots.map(r => grid[r]).sort((a, b) => a[0] - b[0])
         slots.forEach((r, k) => (grid[r] = sets[k]))
       }
