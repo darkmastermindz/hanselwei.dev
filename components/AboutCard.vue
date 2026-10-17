@@ -1,5 +1,5 @@
 <template>
-  <section class="about-card">
+  <section ref="cardEl" class="about-card">
     <div class="about-card__tabs" role="tablist" aria-label="About Hansel">
       <button
         v-for="tab in tabs"
@@ -19,6 +19,7 @@
 
     <div
       :id="`about-panel-${view}`"
+      ref="panelEl"
       class="about-card__panel"
       role="tabpanel"
       tabindex="0"
@@ -27,7 +28,7 @@
       title="Tap to switch, press and hold for plain English"
       @click="onTap"
       @keydown.enter.space.exact.prevent="next"
-      @keydown.shift.enter.prevent="toggleReadable"
+      @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
       @pointerup="cancelHold"
       @pointercancel="cancelHold"
@@ -35,7 +36,7 @@
       @contextmenu.prevent
     >
       <!-- type="transition": the bounce/pulse animations are infinite, so never wait on them -->
-      <Transition name="swap" mode="out-in" type="transition">
+      <Transition :name="transitionName" mode="out-in" type="transition" @after-enter="transitionName = 'swap'">
         <figure v-if="view === 'fact' && fact" :key="fact.id" class="fact">
           <figcaption class="fact__label">
             <span class="fact__emoji">{{ fact.emoji }}</span>
@@ -47,22 +48,23 @@
           </blockquote>
           <p v-else>{{ fact.text }}</p>
         </figure>
-        <p v-else-if="view === 'skills'" :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
+        <p v-else-if="view === 'skills'" data-content :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
           <template v-if="readable">I'm a {{ sentence(skills) }}. ✨</template>
           <template v-else>{ "I am a" : [ {{ quoted([...skills, '✨']) }} ] }</template>
         </p>
         <p
           v-else-if="view === 'hobbies'"
+          data-content
           :key="`hobbies-${readable}`"
           :class="['json--hobbies motion-safe:animate-pulse', readable ? 'prose-line' : 'json']"
         >
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
-        <ul v-else-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
+        <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
           <li v-for="entry in education" :key="entry.year"><strong>{{ entry.year }}</strong> · {{ entry.readable }}</li>
         </ul>
-        <p v-else key="edu" class="json json--edu">
+        <p v-else key="edu" data-content class="json json--edu">
           { "Education" : [
           <span v-for="(entry, i) in education" :key="entry.year" class="json__line">
             "{{ [entry.year, ...entry.parts].join(' · ') }}"{{ i < education.length - 1 ? ',' : '' }}
@@ -70,6 +72,23 @@
           ] }
         </p>
       </Transition>
+
+      <!-- The old text falling away, and a sparkle burst where the press happened -->
+      <div v-if="falling.length" :class="['poof-words', fallingClass]" aria-hidden="true">
+        <span
+          v-for="word in falling"
+          :key="word.id"
+          class="poof-word"
+          :style="{ '--dx': `${word.dx}px`, '--rot': `${word.rot}deg`, animationDelay: `${word.delay}ms` }"
+        >{{ word.text }}</span>
+      </div>
+      <span
+        v-for="spark in sparkles"
+        :key="spark.id"
+        class="poof-sparkle"
+        :style="{ left: `${spark.x}px`, top: `${spark.y}px`, '--dx': `${spark.dx}px`, '--dy': `${spark.dy}px` }"
+        aria-hidden="true"
+      >{{ spark.char }}</span>
     </div>
     <p class="about-card__hint" aria-hidden="true">
       tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
@@ -140,31 +159,113 @@ const sentence = items => {
   return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0]
 }
 
-// Press and hold (or Shift+Enter) flips the JSON views into plain English and back
+// Press and hold (or Shift+Enter) flips the JSON views into plain English with a
+// "poof": the old words fall away and sparkles burst from the press. Holding again,
+// or moving on (tap/tab elsewhere, scroll the card away, leave the page), flips back.
 const HOLD_MS = 500
 const readable = ref(false)
+const transitionName = ref('swap')
+const cardEl = ref(null)
+const panelEl = ref(null)
+const falling = ref([])
+const fallingClass = ref('')
+const sparkles = ref([])
 let holdTimer = null
+let holdOrigin = null
 let held = false
+let fxId = 0
+let fxTimer = null
 
-const toggleReadable = () => {
-  if (view.value === 'fact') return
-  readable.value = !readable.value
+const prefersReducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+const poof = origin => {
+  const panel = panelEl.value
+  const content = panel?.querySelector('[data-content]')
+  if (!content) return
+  const box = panel.getBoundingClientRect()
+  const x = origin ? origin.x - box.left : box.width / 2
+  const y = origin ? origin.y - box.top : box.height / 2
+
+  // Same look as the text being replaced, minus its looping animation
+  fallingClass.value = content.className.replace(/json-bounce|motion-safe:animate-pulse/g, '')
+  falling.value = content.innerText.split(/\s+/).filter(Boolean).map(text => ({
+    id: fxId++,
+    text,
+    dx: (Math.random() - 0.5) * 70,
+    rot: (Math.random() - 0.5) * 80,
+    delay: Math.random() * 240
+  }))
+  sparkles.value = Array.from({ length: 12 }, (_, i) => {
+    const angle = (i / 12) * Math.PI * 2 + Math.random() * 0.4
+    const distance = 35 + Math.random() * 45
+    return { id: fxId++, x, y, dx: Math.cos(angle) * distance, dy: Math.sin(angle) * distance, char: i % 3 ? '✦' : '✨' }
+  })
+  clearTimeout(fxTimer)
+  fxTimer = setTimeout(() => {
+    falling.value = []
+    sparkles.value = []
+  }, 1300)
 }
 
-const startHold = () => {
+const setReadable = (value, { animate = true, origin } = {}) => {
+  if (readable.value === value || view.value === 'fact') return
+  const magic = animate && !prefersReducedMotion()
+  if (magic) poof(origin)
+  transitionName.value = magic ? 'poof' : 'swap'
+  readable.value = value
+}
+
+const toggleReadable = options => setReadable(!readable.value, options)
+const revert = options => setReadable(false, options)
+
+const startHold = event => {
   held = false
+  holdOrigin = { x: event.clientX, y: event.clientY }
   clearTimeout(holdTimer)
   holdTimer = setTimeout(() => {
     if (view.value === 'fact') return
     held = true
-    toggleReadable()
+    toggleReadable({ origin: holdOrigin })
     navigator.vibrate?.(15)
   }, HOLD_MS)
 }
 
 const cancelHold = () => clearTimeout(holdTimer)
 
-onBeforeUnmount(cancelHold)
+// Back to JSON once attention leaves the card
+const onPointerDownAnywhere = event => {
+  if (!cardEl.value?.contains(event.target)) revert()
+}
+const onFocusOut = event => {
+  if (event.relatedTarget && !cardEl.value?.contains(event.relatedTarget)) revert()
+}
+const onVisibility = () => {
+  if (document.hidden) revert({ animate: false })
+}
+let observer = null
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.addEventListener('visibilitychange', onVisibility)
+  cardEl.value?.addEventListener('focusout', onFocusOut)
+  // Mostly scrolled out of view counts as moving on
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.intersectionRatio < 0.25) revert({ animate: false })
+    },
+    { threshold: [0, 0.25] }
+  )
+  if (cardEl.value) observer.observe(cardEl.value)
+})
+
+onBeforeUnmount(() => {
+  cancelHold()
+  clearTimeout(fxTimer)
+  document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.removeEventListener('visibilitychange', onVisibility)
+  cardEl.value?.removeEventListener('focusout', onFocusOut)
+  observer?.disconnect()
+})
 
 // Tapping the card cycles through whatever views are available
 const next = () => {
@@ -234,6 +335,7 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 }
 
 .about-card__panel {
+  position: relative;
   min-height: 4.5rem;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -334,6 +436,77 @@ cite {
 .json__line {
   display: block;
   padding-left: 1.25rem;
+}
+
+/* Plain-English swap: the old words tumble away while the new text materialises */
+.poof-words {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  column-gap: 0.4em;
+  pointer-events: none;
+}
+
+.poof-word {
+  display: inline-block;
+  animation: word-fall 0.95s cubic-bezier(0.55, 0, 1, 0.45) both;
+}
+
+@keyframes word-fall {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  20% {
+    transform: translateY(-6px) rotate(calc(var(--rot) * 0.2));
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), 140px) rotate(var(--rot));
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+.poof-sparkle {
+  position: absolute;
+  pointer-events: none;
+  font-size: 0.95rem;
+  color: #fde68a;
+  text-shadow: 0 0 8px #c084fc;
+  animation: sparkle-poof 0.75s ease-out forwards;
+}
+
+@keyframes sparkle-poof {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.2) rotate(90deg);
+  }
+}
+
+.poof-enter-active {
+  transition: opacity 0.5s ease 0.2s, filter 0.5s ease 0.2s, transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) 0.2s;
+}
+
+.poof-enter-from {
+  opacity: 0;
+  filter: blur(8px);
+  transform: scale(0.94);
+}
+
+/* The falling copy stands in for the old text, so it leaves instantly */
+.poof-leave-active {
+  transition: none;
+}
+
+.poof-leave-to {
+  opacity: 0;
 }
 
 .swap-enter-active,
