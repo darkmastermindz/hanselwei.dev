@@ -46,5 +46,8 @@ test('only executable inline scripts and handlers are hashed', () => {
     <script src="/_nuxt/a.js"></script><script type="module">import "/a.js"</script>
     <link rel="preload" onload="this.onload=null;this.rel='stylesheet'">`
   assert.equal(inlineScriptHashes(html).size, 2)
+  // End tags browsers accept with whitespace or junk before ">" still close the script
+  assert.deepEqual([...inlineScriptHashes('<script>window.b=1</script >')], [...inlineScriptHashes('<script>window.b=1</script>')])
+  assert.equal(inlineScriptHashes('<SCRIPT>window.c=1</SCRIPT\n foo>').size, 1)
   assert.deepEqual([...handlerHashes(html)], ["'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM='"])
 })
