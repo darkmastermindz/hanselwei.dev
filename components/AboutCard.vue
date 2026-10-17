@@ -154,7 +154,7 @@ const education = [
   {
     year: 2019,
     parts: ['UNC Charlotte', 'Computer Science, BS / Communication Studies Minor', 'Charlotte, NC'],
-    readable: 'BS in Computer Science with a minor in Communication Studies from UNC Charlotte'
+    readable: 'Bachelor of Science in Computer Science with a minor in Communication Studies from UNC Charlotte'
   }
 ]
 
