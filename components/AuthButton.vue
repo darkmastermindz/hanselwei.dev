@@ -21,10 +21,9 @@
         <button type="button" role="menuitem" class="auth__item" @click="leave">Sign out</button>
       </template>
       <template v-else-if="status === 'ready' && providers.length">
-        <p v-if="invite" class="auth__notice auth__notice--top">{{ INVITED }}</p>
         <p class="auth__invite">
           <span class="auth__badge">🔒 Invite only</span>
-          Only the site's code owners and invited people can sign in.
+          Only the site's code owners can sign in.
         </p>
         <button
           v-for="provider in providers"
@@ -49,22 +48,20 @@
 </template>
 
 <script setup>
-// Nav sign-in for the site owner, through Netlify Identity's single sign-on
-// (GitHub/Google/... — whichever providers are enabled in the Identity settings)
-// (plugins/auth.client.js starts the session check on page load)
-import { INVITED } from '~/utils/authMessages.js'
+// Nav sign-in for the site owner, with GitHub (see composables/useAuth.js).
+// plugins/auth.client.js starts the session check on page load.
 import { safeUrl } from '~/utils/safeUrl.js'
 
-const { user, providers, status, error, notice, invite, signIn, signOut } = useAuth()
+const { user, providers, status, error, notice, signIn, signOut } = useAuth()
 const open = ref(false)
 const root = ref(null)
 
-// Coming back from a refused sign-in, signed out for inactivity, or arriving from an
-// invite link: open the menu so the reason (or next step) is visible
+// Coming back from a refused sign-in, or signed out for inactivity: open the menu so the
+// reason is visible
 watch(
-  [error, notice, invite],
-  ([message, note, invited]) => {
-    if (message || note || invited) open.value = true
+  [error, notice],
+  ([message, note]) => {
+    if (message || note) open.value = true
   },
   { immediate: true }
 )

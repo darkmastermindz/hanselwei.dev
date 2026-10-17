@@ -23,7 +23,6 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@netlify/identity": "^2.0.0",
     "@pinia/nuxt": "^1.0.2",
     "daisyui": "^3.9.4",
     "marked": "^14.1.4",
