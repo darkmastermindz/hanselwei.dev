@@ -9,7 +9,8 @@ const hobbies = {
   climbing: { label: 'Rock Climbing', emoji: '🧗' },
   yoga: { label: 'Yoga', emoji: '🧘' },
   running: { label: 'Running', emoji: '🏃' },
-  community: { label: 'Community Building', emoji: '🤝' }
+  community: { label: 'Community Building', emoji: '🤝' },
+  maker: { label: 'Maker', emoji: '🛠️' }
 }
 
 const fact = (id, hobby, text) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text })
@@ -72,5 +73,13 @@ export const hobbyFacts = [
   fact('community-dunbar', 'community', "Anthropologist Robin Dunbar estimated people can keep about 150 stable relationships: \"Dunbar's number\"."),
   fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.'),
   quote('community-mead', 'community', 'Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it\'s the only thing that ever has.', 'Margaret Mead'),
-  quote('community-proverb', 'community', 'If you want to go fast, go alone. If you want to go far, go together.', 'African proverb')
+  quote('community-proverb', 'community', 'If you want to go fast, go alone. If you want to go far, go together.', 'African proverb'),
+
+  // Maker
+  fact('maker-faire', 'maker', 'The first Maker Faire was held in San Mateo, California, in 2006.'),
+  fact('maker-arduino', 'maker', 'Arduino was created in 2005 at the Interaction Design Institute Ivrea in Italy as a cheap board for student projects.'),
+  fact('maker-pi', 'maker', 'The Raspberry Pi launched in 2012 to get more kids into computer science; the original Model B cost $35.'),
+  fact('maker-reprap', 'maker', 'The RepRap project (2005) set out to build a 3D printer that could print most of its own parts.'),
+  quote('maker-kay', 'maker', 'The best way to predict the future is to invent it.', 'Alan Kay'),
+  quote('maker-whole-earth', 'maker', 'Stay hungry. Stay foolish.', 'Whole Earth Catalog (1974)')
 ]

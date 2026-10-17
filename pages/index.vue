@@ -26,7 +26,7 @@
         "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate", "Emerging Tech Fanatic!", "✨" ] },
       </li>
       <li class="text-purple-300 motion-safe:animate-pulse">
-        { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "Yoga", "Running", "Community Building", "🧗🏻‍♂️" ] }
+        { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games", "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "🧗🏻‍♂️" ] }
       </li>
     </ul>
 
