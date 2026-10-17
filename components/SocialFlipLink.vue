@@ -8,11 +8,13 @@
     :style="{ '--i': index }"
     :aria-label="label"
     @pointerdown="burst"
+    @pointerenter="shuffleBack"
+    @focus="shuffleBack"
   >
     <span class="flip-link__inner">
       <span :class="['flip-link__face flip-link__face--front', bg]">{{ label }}</span>
       <span :class="['flip-link__face flip-link__face--back', bg]" aria-hidden="true">
-        <span class="flip-link__back-text">{{ back }}</span>
+        <span class="flip-link__back-text">{{ backText }}</span>
       </span>
     </span>
     <span v-if="effect === 'unicorn'" class="unicorn" aria-hidden="true">
@@ -38,6 +40,8 @@
 const props = defineProps({
   label: { type: String, required: true },
   back: { type: String, required: true },
+  // Optional alternatives for the back face; one is picked at random on every flip
+  backs: { type: Array, default: () => [] },
   href: { type: String, required: true },
   bg: { type: String, default: '' },
   index: { type: Number, default: 0 }, // staggers the intro flip wave
@@ -52,7 +56,16 @@ const spinning = ref(false)
 const galloping = ref(false)
 let nextId = 0
 
+// Prerendered HTML always uses `back`; random picks only happen in the browser
+const backText = ref(props.back)
+const shuffleBack = () => {
+  const options = props.backs.filter(text => text !== backText.value)
+  if (options.length) backText.value = options[Math.floor(Math.random() * options.length)]
+}
+onMounted(shuffleBack)
+
 const burst = event => {
+  shuffleBack()
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const rect = event.currentTarget.getBoundingClientRect()
   const x = event.clientX - rect.left
