@@ -1,43 +1,60 @@
 <template>
-  <button
-    type="button"
-    class="token"
-    :class="{ 'is-pressed': pressed, 'is-intro': intro }"
-    aria-label="Hansel's profile picture. Press and hold to spin the token."
-    @pointerdown="press"
-    @pointerup="release"
-    @pointercancel="release"
-    @lostpointercapture="release"
-    @keydown.space.enter.prevent="press"
-    @keyup.space.enter.prevent="release"
-    @contextmenu.prevent
-  >
-    <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
-      <span class="token__face token__face--front">
-        <img src="~/assets/hanselbitmoji.svg" alt="" draggable="false" />
-        <span class="token__shine" />
+  <div class="token-wrap">
+    <button
+      type="button"
+      class="token"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
+      aria-label="Hansel's profile picture. Press and hold to spin the token."
+      @pointerdown="press"
+      @pointerup="release"
+      @pointercancel="release"
+      @lostpointercapture="release"
+      @keydown.space.enter.prevent="press"
+      @keyup.space.enter.prevent="release"
+      @contextmenu.prevent
+    >
+      <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
+        <span class="token__face token__face--front">
+          <img src="~/assets/hanselbitmoji.svg" alt="" draggable="false" />
+          <span class="token__shine" />
+        </span>
+        <span class="token__face token__face--back" aria-hidden="true">
+          <span class="token__monogram">HW</span>
+          <span class="token__caption">hanselwei.dev</span>
+        </span>
+        <span class="token__edge" />
       </span>
-      <span class="token__face token__face--back" aria-hidden="true">
-        <span class="token__monogram">HW</span>
-        <span class="token__caption">hanselwei.dev</span>
-      </span>
-      <span class="token__edge" />
-    </span>
-  </button>
+    </button>
+    <span
+      v-for="pop in pops"
+      :key="pop.id"
+      class="token__pop"
+      :style="{ left: `${pop.x}%` }"
+      aria-hidden="true"
+    >+1</span>
+  </div>
 </template>
 
 <script setup>
 // A collectible-style token: it spins (and speeds up) while it is held down,
 // then settles on whichever face it is closest to when released.
+// Emits `spin` for every full turn (a quick tap counts as one) and `release`
+// with the number of spins in that hold.
+const emit = defineEmits(['spin', 'release'])
+
 const MAX_SPEED = 24 // degrees per frame
 const angle = ref(0)
 const pressed = ref(false)
 const intro = ref(true)
 const transition = ref('none')
+const pops = ref([])
 
 let speed = 0
 let frame = null
 let reducedMotion = false
+let pressStartAngle = 0
+let spinsThisHold = 0
+let popId = 0
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -46,9 +63,18 @@ onMounted(() => {
 
 onBeforeUnmount(() => cancelAnimationFrame(frame))
 
+const countSpin = () => {
+  spinsThisHold++
+  emit('spin')
+  const pop = { id: popId++, x: 30 + Math.random() * 40 }
+  pops.value.push(pop)
+  setTimeout(() => (pops.value = pops.value.filter(p => p.id !== pop.id)), 900)
+}
+
 const spin = () => {
   speed = Math.min(MAX_SPEED, speed + 0.6)
   angle.value += speed
+  if (Math.floor((angle.value - pressStartAngle) / 360) > spinsThisHold) countSpin()
   frame = requestAnimationFrame(spin)
 }
 
@@ -57,6 +83,8 @@ const press = event => {
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   intro.value = false
+  pressStartAngle = angle.value
+  spinsThisHold = 0
   navigator.vibrate?.(12)
 
   if (reducedMotion) {
@@ -73,6 +101,8 @@ const release = () => {
   if (!pressed.value) return
   pressed.value = false
   cancelAnimationFrame(frame)
+  if (!spinsThisHold) countSpin()
+  emit('release', spinsThisHold)
   if (reducedMotion) return
 
   // Coast to the next face, taking longer the faster it was spinning
@@ -85,6 +115,37 @@ const release = () => {
 </script>
 
 <style lang="scss" scoped>
+.token-wrap {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+}
+
+.token__pop {
+  position: absolute;
+  top: 30%;
+  z-index: 2;
+  font-family: 'Nova Mono', monospace;
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #fff;
+  -webkit-text-stroke: 1px #3d1f5c;
+  text-shadow: 0 2px 0 #3d1f5c, 0 0 10px #7cfc00;
+  pointer-events: none;
+  animation: pop-up 0.9s ease-out forwards;
+}
+
+@keyframes pop-up {
+  from {
+    transform: translate(-50%, 0) scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -64px) scale(1.2);
+    opacity: 0;
+  }
+}
+
 .token {
   --size: clamp(170px, 55vw, 230px);
   width: var(--size);
@@ -212,6 +273,21 @@ const release = () => {
   .token.is-intro .token__coin,
   .token__shine {
     animation: none;
+  }
+
+  .token__pop {
+    animation-name: pop-fade;
+  }
+}
+
+@keyframes pop-fade {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 0;
   }
 }
 </style>
