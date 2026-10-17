@@ -30,8 +30,9 @@ const links = [
   { label: 'Send Email', back: '✉️ Drop me a line', href: 'mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>', bg: 'bg-[#008856]' }
 ]
 
-// Lay the pills out as a lens: short top and bottom rows, wider rows in the middle.
-// Uses the pills' real widths, so it adapts from phone (1·2·2·2·1) to desktop (2·4·2).
+// Arrange the pills from their real widths: where three rows fit (tablet/desktop) the
+// links keep their order over three evenly filled rows; on phones they form a lens,
+// short top and bottom rows with wider ones in the middle (1·2·2·2·1).
 // Only flex `order` and line breaks change, so the links are never re-created.
 const nav = ref(null)
 const layout = ref(null)
@@ -71,8 +72,28 @@ const arrange = () => {
   const room = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
   const gap = parseFloat(style.columnGap) || 0
   const widths = pills.map(pill => pill.offsetWidth)
-  const fits = row => row.reduce((sum, i) => sum + widths[i], 0) + gap * (row.length - 1) <= room
+  const rowWidth = row => row.reduce((sum, i) => sum + widths[i], 0) + gap * (row.length - 1)
+  const fits = row => rowWidth(row) <= room
+  const apply = grid => {
+    const order = []
+    grid.forEach((row, r) => row.forEach((i, k) => (order[i] = r * 100 + k)))
+    layout.value = { order, breaks: grid.slice(0, -1).map((row, r) => r * 100 + 99) }
+  }
 
+  // Wide screens: the links in their usual order over three evenly filled rows
+  const indexes = widths.map((w, i) => i)
+  let best = null
+  for (let a = 1; a < pills.length - 1; a++) {
+    for (let b = a + 1; b < pills.length; b++) {
+      const grid = [indexes.slice(0, a), indexes.slice(a, b), indexes.slice(b)]
+      if (!grid.every(fits)) continue
+      const widest = Math.max(...grid.map(rowWidth))
+      if (!best || widest < best.widest) best = { grid, widest }
+    }
+  }
+  if (best) return apply(best.grid)
+
+  // Narrow screens: a lens, where only the middle rows hold two
   for (let rows = 3; rows <= pills.length; rows++) {
     for (const counts of lensProfiles(pills.length, rows)) {
       // Narrowest pills go to the busiest rows
@@ -89,10 +110,7 @@ const arrange = () => {
         slots.forEach((r, k) => (grid[r] = sets[k]))
       }
 
-      const order = []
-      grid.forEach((row, r) => row.forEach((i, k) => (order[i] = r * 100 + k)))
-      layout.value = { order, breaks: grid.slice(0, -1).map((row, r) => r * 100 + 99) }
-      return
+      return apply(grid)
     }
   }
   layout.value = null // nothing lens-shaped fits: plain centered wrapping
