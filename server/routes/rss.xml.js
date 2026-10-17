@@ -1,31 +1,9 @@
-const SITE = 'https://www.hanselwei.dev'
-
-const escape = s =>
-  String(s ?? '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c])
-
 export default defineEventHandler(async event => {
-  const posts = await getPosts()
-  const items = posts
-    .map(
-      post => `    <item>
-      <title>${escape(post.title)}</title>
-      <link>${SITE}/feed/${post.slug}</link>
-      <guid>${SITE}/feed/${post.slug}</guid>
-      ${post.date ? `<pubDate>${new Date(post.date).toUTCString()}</pubDate>` : ''}
-      <description>${escape(post.description)}</description>
-    </item>`
-    )
-    .join('\n')
-
   setHeader(event, 'content-type', 'application/rss+xml; charset=utf-8')
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
-  <channel>
-    <title>Curiosity Feed · hanselwei.dev</title>
-    <link>${SITE}/feed</link>
-    <description>Notes, dev logs and posts by Hansel Wei</description>
-${items}
-  </channel>
-</rss>
-`
+  return buildRss({
+    title: 'Blog · hanselwei.dev',
+    description: 'Long-form posts by Hansel Wei',
+    path: '/blog',
+    posts: await getPosts('blog')
+  })
 })

@@ -1,21 +1,16 @@
 <template>
   <main class="page">
-    <article v-if="post" class="post">
+    <article v-if="entry" class="entry">
       <NuxtLink to="/feed" class="back">← Curiosity Feed</NuxtLink>
-      <img v-if="post.cover" :src="post.cover" alt="" class="cover" />
-      <h1>{{ post.title }}</h1>
+      <h1>{{ entry.title }}</h1>
       <p class="meta">
-        <time v-if="post.date" :datetime="post.date">{{ formatDate(post.date) }}</time>
-        · {{ post.readingTime }} min read
-        <template v-if="post.tags.length">
-          · <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
+        <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
+        <template v-if="entry.tags.length">
+          · <span v-for="tag in entry.tags" :key="tag" class="tag">#{{ tag }}</span>
         </template>
       </p>
-      <p v-if="post.source === 'dev.to'" class="mirror">
-        Originally published on
-        <a :href="post.canonical" target="_blank" rel="noopener">dev.to</a>.
-      </p>
-      <div class="prose prose-invert prose-purple max-w-none" v-html="post.html" />
+      <div class="prose prose-invert prose-purple max-w-none" v-html="entry.html" />
+      <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="link">🔗 {{ entry.link }}</a>
     </article>
   </main>
 </template>
@@ -24,15 +19,14 @@
 const route = useRoute()
 const slug = String(route.params.slug)
 
-const { data: post, error } = await useFetch(`/api/blog/${slug}`)
-if (error.value || !post.value) {
-  throw createError({ statusCode: 404, statusMessage: 'Post not found', fatal: true })
+const { data: entry, error } = await useFetch(`/api/feed/${slug}`)
+if (error.value || !entry.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Entry not found', fatal: true })
 }
 
 useHead({
-  title: `${post.value.title} · hanselwei.dev`,
-  meta: [{ name: 'description', content: post.value.description }],
-  link: post.value.canonical ? [{ rel: 'canonical', href: post.value.canonical }] : []
+  title: `${entry.value.title} · Curiosity Feed`,
+  meta: [{ name: 'description', content: entry.value.description }]
 })
 
 const formatDate = iso =>
@@ -40,20 +34,16 @@ const formatDate = iso =>
 </script>
 
 <style lang="scss" scoped>
-.post {
+.entry {
   max-width: 46rem;
   margin: 0 auto;
   color: #ddd;
   overflow-wrap: anywhere;
 
   h1 {
-    font-size: clamp(1.8rem, 7vw, 2.75rem);
+    font-size: clamp(1.6rem, 6vw, 2.3rem);
     line-height: 1.2;
     margin: 1rem 0 0.5rem;
-  }
-
-  :deep(pre) {
-    overflow-x: auto;
   }
 
   :deep(img) {
@@ -63,13 +53,12 @@ const formatDate = iso =>
 }
 
 .back,
-.mirror a {
+.link {
   color: #c084fc;
 }
 
-.cover {
-  width: 100%;
-  border-radius: 0.75rem;
+.link {
+  display: inline-block;
   margin-top: 1rem;
 }
 
@@ -81,13 +70,5 @@ const formatDate = iso =>
 
 .tag {
   margin-right: 0.35rem;
-}
-
-.mirror {
-  font-size: 0.85rem;
-  padding: 0.6rem 0.9rem;
-  border-left: 3px solid #c084fc;
-  background: rgba(192, 132, 252, 0.08);
-  margin-bottom: 1.5rem;
 }
 </style>

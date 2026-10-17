@@ -2,9 +2,9 @@
   <main class="page">
     <h1 class="page-title text-purple-300">Curiosity Feed</h1>
     <p class="intro">
-      Dev logs and notes, written in Markdown. Posts from
-      <a href="https://dev.to" target="_blank" rel="noopener">dev.to</a> are mirrored here too.
-      <a href="/rss.xml" class="rss">RSS</a>
+      A newsletter-style stream of short notes, links and things I'm curious about.
+      Longer write-ups live on the <NuxtLink to="/blog">blog</NuxtLink>.
+      <a href="/feed.xml" class="rss">Subscribe via RSS</a>
     </p>
 
     <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
@@ -20,38 +20,61 @@
       </button>
     </div>
 
-    <p v-if="!filtered.length" class="intro">No posts yet.</p>
+    <p v-if="!filtered.length" class="intro">Nothing here yet.</p>
 
-    <div class="posts">
-      <NuxtLink v-for="post in filtered" :key="post.slug" :to="`/feed/${post.slug}`" class="post-card">
-        <img v-if="post.cover" :src="post.cover" alt="" loading="lazy" class="cover" />
-        <div class="body">
-          <p class="meta">
-            <time v-if="post.date" :datetime="post.date">{{ formatDate(post.date) }}</time>
-            · {{ post.readingTime }} min read
-            <span v-if="post.source === 'dev.to'" class="badge badge-sm badge-neutral">dev.to</span>
-          </p>
-          <h2>{{ post.title }}</h2>
-          <p class="desc">{{ post.description }}</p>
-        </div>
-      </NuxtLink>
-    </div>
+    <section v-for="group in grouped" :key="group.month" class="issue">
+      <h2 class="issue__month">{{ group.month }}</h2>
+      <article v-for="entry in group.entries" :id="entry.slug" :key="entry.slug" class="entry">
+        <p class="entry__meta">
+          <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
+          <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
+        </p>
+        <h3 class="entry__title">
+          <NuxtLink :to="`/feed/${entry.slug}`">{{ entry.title }}</NuxtLink>
+        </h3>
+        <div class="prose prose-invert prose-purple max-w-none entry__body" v-html="entry.html" />
+        <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="entry__link">
+          🔗 {{ hostname(entry.link) }}
+        </a>
+      </article>
+    </section>
   </main>
 </template>
 
 <script setup>
 useHead({ title: 'Curiosity Feed · hanselwei.dev' })
 
-const { data: posts } = await useFetch('/api/blog', { default: () => [] })
+const { data: entries } = await useFetch('/api/feed', { default: () => [] })
 
 const activeTag = ref(null)
-const tags = computed(() => [...new Set(posts.value.flatMap(p => p.tags))].sort())
+const tags = computed(() => [...new Set(entries.value.flatMap(e => e.tags))].sort())
 const filtered = computed(() =>
-  activeTag.value ? posts.value.filter(p => p.tags.includes(activeTag.value)) : posts.value
+  activeTag.value ? entries.value.filter(e => e.tags.includes(activeTag.value)) : entries.value
 )
 
+// Newsletter-style: one "issue" per month
+const grouped = computed(() => {
+  const groups = new Map()
+  for (const entry of filtered.value) {
+    const month = entry.date
+      ? new Date(entry.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' })
+      : 'Undated'
+    if (!groups.has(month)) groups.set(month, [])
+    groups.get(month).push(entry)
+  }
+  return [...groups].map(([month, entries]) => ({ month, entries }))
+})
+
 const formatDate = iso =>
-  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })
+  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+
+const hostname = url => {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -70,6 +93,7 @@ const formatDate = iso =>
   padding: 0.1rem 0.5rem;
   border: 1px solid currentColor;
   border-radius: 9999px;
+  white-space: nowrap;
 }
 
 .tags {
@@ -79,65 +103,75 @@ const formatDate = iso =>
   margin-bottom: 1.5rem;
 }
 
-.posts {
-  display: grid;
-  gap: 1rem;
+.issue {
+  max-width: 46rem;
+  margin: 0 auto 2rem;
 }
 
-.post-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border-radius: 0.75rem;
-  background: #eee;
-  color: #171515;
-  text-decoration: none;
-  transition: transform 0.15s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  @media (min-width: 640px) {
-    flex-direction: row;
-
-    .cover {
-      width: 14rem;
-      height: auto;
-    }
-  }
+.issue__month {
+  font-size: 1.1rem;
+  color: #9dff5c;
+  border-bottom: 2px dashed #653496;
+  padding-bottom: 0.25rem;
+  margin-bottom: 1rem;
 }
 
-.cover {
-  width: 100%;
-  height: 10rem;
-  object-fit: cover;
-  flex-shrink: 0;
-}
+.entry {
+  position: relative;
+  padding: 0 0 1.5rem 1.25rem;
+  margin-left: 0.4rem;
+  border-left: 2px solid #3a3f45;
+  color: #ddd;
+  overflow-wrap: anywhere;
+  scroll-margin-top: 4.5rem;
 
-.body {
-  padding: 1rem 1.25rem;
-  min-width: 0;
-
-  h2 {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #6b21a8;
-    overflow-wrap: anywhere;
+  /* timeline dot */
+  &::before {
+    content: '';
+    position: absolute;
+    left: -7px;
+    top: 0.35rem;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #c084fc;
+    box-shadow: 0 0 0 3px #2c2f33;
   }
 }
 
-.meta {
-  font-size: 0.8rem;
-  color: #555;
+.entry__meta {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #999;
 }
 
-.desc {
-  margin-top: 0.35rem;
+.entry__title {
+  font-size: 1.2rem;
+  margin: 0.15rem 0 0.4rem;
+
+  a {
+    color: #eee;
+    text-decoration: none;
+  }
+  a:hover {
+    color: #c084fc;
+  }
+}
+
+.entry__body :deep(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+.entry__link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 9999px;
+  background: rgba(192, 132, 252, 0.12);
+  color: #c084fc;
 }
 </style>
