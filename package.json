@@ -20,7 +20,7 @@
     "preview": "nuxt preview"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "dependencies": {
     "@netlify/identity": "^2.0.0",
