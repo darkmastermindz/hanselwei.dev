@@ -11,14 +11,11 @@
       </template>
       <template v-else>press &amp; hold the token ✨</template>
     </p>
-    <SpinFact :fact="current" class="mb-4" />
+    <SpinFact :fact="current" class="mb-6" />
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
     </h1>
-
-    <div class="px-2 md:px-6">
-      <Socials :unlocked="humanVerified" />
-    </div>
+    <ContactCardButton :unlocked="humanVerified" />
 
     <ul class="about">
       <li class="text-green-200">
@@ -30,7 +27,9 @@
       </li>
     </ul>
 
-    <div class="flex flex-wrap justify-center gap-3 px-4 pb-10">
+    <Socials />
+
+    <div class="flex flex-wrap justify-center gap-3 px-4 pt-10 pb-12">
       <NuxtLink to="/blog" class="button--green">Read the blog 📰</NuxtLink>
       <NuxtLink to="/gear" class="button--grey">Browse my gear lists 🏔️</NuxtLink>
     </div>
@@ -74,8 +73,8 @@ const onRelease = spins => {
 }
 
 .about {
-  max-width: 48rem;
-  margin: 1.5rem auto;
+  max-width: 44rem;
+  margin: 2rem auto 2.25rem;
   padding: 0 1.25rem;
   font-family: "Nova Mono", monospace;
   font-size: clamp(0.95rem, 3.6vw, 1.15rem);
@@ -83,7 +82,7 @@ const onRelease = spins => {
   overflow-wrap: anywhere;
 
   li {
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
   }
 }
 </style>
