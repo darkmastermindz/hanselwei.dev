@@ -1,7 +1,7 @@
 {
   "name": "Hansel Wei — hanselwei.dev",
   "short_name": "Hansel",
-  "description": "Hansel Wei's corner of the web: projects, blog, curiosity feed, and outdoor gear.",
+  "description": "Hansel Wei's corner of the web: projects, blog, and outdoor gear.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
@@ -16,7 +16,6 @@
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Feed", "url": "/feed", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Blog", "url": "/blog", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
     { "name": "Gear Lists", "url": "/gear", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]

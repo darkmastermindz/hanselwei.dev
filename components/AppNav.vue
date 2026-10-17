@@ -5,7 +5,8 @@
         v-for="link in links"
         :key="link.to"
         :to="link.to"
-        :class="['btn btn-ghost btn-sm md:btn-md normal-case dim', link.color]"
+        :class="['btn btn-ghost btn-sm md:btn-md normal-case dim', link.color, { 'is-current': isCurrent(link.to) }]"
+        :aria-current="isCurrent(link.to) ? 'page' : undefined"
         :aria-label="link.label"
       >
         <span>{ {{ link.emoji }} {{ link.label }} }</span>
@@ -15,11 +16,15 @@
 </template>
 
 <script setup>
+// Highlight a section for its own pages too (e.g. Blog on /blog/feed/…),
+// which router-link-active misses because those pages aren't nested routes
+const route = useRoute()
+const isCurrent = to => (to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`))
+
 const links = [
   { to: '/', label: 'Home', emoji: '🏠', color: 'white' },
   { to: '/projects', label: 'Projects', emoji: '👨🏻‍💻', color: 'blue' },
-  { to: '/feed', label: 'Feed', emoji: '📰', color: 'purple' },
-  { to: '/blog', label: 'Blog', emoji: '✍️', color: 'purple' },
+  { to: '/blog', label: 'Blog', emoji: '📰', color: 'purple' },
   { to: '/gear', label: 'Gear Lists', emoji: '🏔️', color: 'green' }
 ]
 </script>
@@ -36,22 +41,15 @@ const links = [
 
 .app-nav__links {
   display: flex;
+  flex-wrap: wrap; /* wraps onto a second line on small screens, like before */
   gap: 0.25rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 
   a {
     flex: 0 0 auto;
     white-space: nowrap;
   }
 
-  .router-link-active:not([href='/']),
-  .router-link-exact-active {
+  .is-current {
     background-color: rgba(255, 255, 255, 0.08);
   }
 }

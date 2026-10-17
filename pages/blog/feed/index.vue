@@ -1,9 +1,10 @@
 <template>
   <main class="page">
     <h1 class="page-title text-purple-300">Curiosity Feed</h1>
+    <BlogTabs />
     <p class="intro">
       Short, recurring updates over time: series I post to regularly, newsletter style.
-      One-off write-ups live on the <NuxtLink to="/blog">blog</NuxtLink>.
+      One-off write-ups are under <NuxtLink to="/blog">Posts</NuxtLink>.
       <a href="/feed.xml" class="rss">Subscribe via RSS</a>
     </p>
 
@@ -44,7 +45,7 @@
           <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
         </p>
         <h3 class="entry__title">
-          <NuxtLink :to="`/feed/${entry.slug}`">{{ entry.title }}</NuxtLink>
+          <NuxtLink :to="`/blog/feed/${entry.slug}`">{{ entry.title }}</NuxtLink>
         </h3>
         <div class="prose prose-invert prose-purple max-w-none entry__body" v-html="entry.html" />
         <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="entry__link">

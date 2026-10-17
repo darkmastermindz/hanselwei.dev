@@ -3,7 +3,7 @@ export default defineEventHandler(async event => {
   return buildRss({
     title: 'Curiosity Feed · hanselwei.dev',
     description: 'Short notes, links and things Hansel Wei is curious about',
-    path: '/feed',
+    path: '/blog/feed',
     posts: await getPosts('feed')
   })
 })
