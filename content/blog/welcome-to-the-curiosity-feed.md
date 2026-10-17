@@ -1,6 +1,7 @@
 ---
 title: "Welcome to the Curiosity Feed"
 date: "2026-10-17"
+series: "Site Updates"
 tags: [meta]
 ---
 

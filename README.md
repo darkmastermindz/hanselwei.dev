@@ -17,24 +17,27 @@ npm run generate       # static build into .output/public (what Netlify deploys)
 netlify dev            # run the site *and* the Netlify functions locally
 ```
 
-## Blog (`/blog`): Posts and the Curiosity Feed (`/blog/feed`)
-- **Curiosity Feed** (`/blog/feed`): time-series posts: short, recurring updates (newsletter style), shown in
-  full and grouped by month. Add `content/feed/*.md` (front matter: `title`, `date`,
-  `tags`, optional `series: "Climbing Log"` to number entries in a recurring series,
-  optional `link` to something you're sharing). RSS at `/feed.xml`.
-- **Posts**: one-shot posts that stand on their own, at `/blog/<slug>`. Add
-  `content/blog/*.md` with front matter:
-  ```md
-  ---
-  title: "My post"
-  date: "2026-10-17"
-  description: "One-line summary"
-  tags: [netlify, nuxt]
-  cover_image: "https://…"   # optional
-  draft: true                # optional, hides the post
-  ---
-  ```
-  RSS at `/rss.xml`.
+## Blog (`/blog`): Posts and the Curiosity Feed
+One collection: every post is a Markdown file in `content/blog/` and lives at `/blog/<slug>`.
+A `series` label decides where it's listed:
+- **Posts** (`/blog`): one-shots, no `series`.
+- **Curiosity Feed** (`/blog/feed`): time-series updates. Give the post a `series`
+  (e.g. `series: "Climbing Log"`); entries are numbered in date order and shown in
+  full, newsletter style.
+
+```md
+---
+title: "My post"
+date: "2026-10-17"
+description: "One-line summary"
+tags: [netlify, nuxt]
+series: "Climbing Log"     # optional: puts it in the Curiosity Feed
+link: "https://…"          # optional: something you're sharing
+cover_image: "https://…"   # optional
+draft: true                # optional, hides the post
+---
+```
+RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 - **dev.to mirror:** `npm run sync:devto` pulls published dev.to articles into
   `content/blog/devto/`. It runs automatically before every build and mirrors
   [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`).

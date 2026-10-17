@@ -46,10 +46,13 @@ useHead({ title: 'Blog · hanselwei.dev' })
 
 const { data: posts } = await useFetch('/api/blog', { default: () => [] })
 
+// Same collection as the Curiosity Feed: posts without a series are the one-shots
+const oneShots = computed(() => posts.value.filter(p => !p.series))
+
 const activeTag = ref(null)
-const tags = computed(() => [...new Set(posts.value.flatMap(p => p.tags))].sort())
+const tags = computed(() => [...new Set(oneShots.value.flatMap(p => p.tags))].sort())
 const filtered = computed(() =>
-  activeTag.value ? posts.value.filter(p => p.tags.includes(activeTag.value)) : posts.value
+  activeTag.value ? oneShots.value.filter(p => p.tags.includes(activeTag.value)) : oneShots.value
 )
 
 const formatDate = iso =>

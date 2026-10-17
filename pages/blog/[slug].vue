@@ -1,12 +1,15 @@
 <template>
   <main class="page">
     <article v-if="post" class="post">
-      <NuxtLink to="/blog" class="back">← All posts</NuxtLink>
+      <NuxtLink :to="post.series ? '/blog/feed' : '/blog'" class="back">
+        ← {{ post.series ? 'Curiosity Feed' : 'All posts' }}
+      </NuxtLink>
       <img v-if="post.cover" :src="post.cover" alt="" class="cover" />
       <h1>{{ post.title }}</h1>
       <p class="meta">
         <time v-if="post.date" :datetime="post.date">{{ formatDate(post.date) }}</time>
         · {{ post.readingTime }} min read
+        <span v-if="post.series" class="series">· 🔁 {{ post.series }} #{{ post.seriesNumber }}</span>
         <template v-if="post.tags.length">
           · <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
         </template>
@@ -81,6 +84,10 @@ const formatDate = iso =>
 
 .tag {
   margin-right: 0.35rem;
+}
+
+.series {
+  color: #9dff5c;
 }
 
 .mirror {
