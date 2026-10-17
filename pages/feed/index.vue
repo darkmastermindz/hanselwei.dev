@@ -2,10 +2,23 @@
   <main class="page">
     <h1 class="page-title text-purple-300">Curiosity Feed</h1>
     <p class="intro">
-      A newsletter-style stream of short notes, links and things I'm curious about.
-      Longer write-ups live on the <NuxtLink to="/blog">blog</NuxtLink>.
+      Short, recurring updates over time: series I post to regularly, newsletter style.
+      One-off write-ups live on the <NuxtLink to="/blog">blog</NuxtLink>.
       <a href="/feed.xml" class="rss">Subscribe via RSS</a>
     </p>
+
+    <div v-if="seriesList.length" class="tags" role="group" aria-label="Filter by series">
+      <button
+        v-for="name in seriesList"
+        :key="name"
+        type="button"
+        :class="['badge badge-lg', activeSeries === name ? 'badge-success' : 'badge-outline text-gray-300']"
+        :aria-pressed="activeSeries === name"
+        @click="activeSeries = activeSeries === name ? null : name"
+      >
+        🔁 {{ name }}
+      </button>
+    </div>
 
     <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
       <button
@@ -27,6 +40,7 @@
       <article v-for="entry in group.entries" :id="entry.slug" :key="entry.slug" class="entry">
         <p class="entry__meta">
           <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
+          <span v-if="entry.series" class="entry__series">🔁 {{ entry.series }} #{{ entry.seriesNumber }}</span>
           <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
         </p>
         <h3 class="entry__title">
@@ -47,9 +61,13 @@ useHead({ title: 'Curiosity Feed · hanselwei.dev' })
 const { data: entries } = await useFetch('/api/feed', { default: () => [] })
 
 const activeTag = ref(null)
+const activeSeries = ref(null)
 const tags = computed(() => [...new Set(entries.value.flatMap(e => e.tags))].sort())
+const seriesList = computed(() => [...new Set(entries.value.map(e => e.series).filter(Boolean))].sort())
 const filtered = computed(() =>
-  activeTag.value ? entries.value.filter(e => e.tags.includes(activeTag.value)) : entries.value
+  entries.value.filter(
+    e => (!activeTag.value || e.tags.includes(activeTag.value)) && (!activeSeries.value || e.series === activeSeries.value)
+  )
 )
 
 // Newsletter-style: one "issue" per month
@@ -145,6 +163,10 @@ const hostname = url => {
   gap: 0.5rem;
   font-size: 0.8rem;
   color: #999;
+}
+
+.entry__series {
+  color: #9dff5c;
 }
 
 .entry__title {
