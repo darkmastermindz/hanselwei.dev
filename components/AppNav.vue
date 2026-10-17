@@ -26,13 +26,10 @@ const route = useRoute()
 const isCurrent = to => (to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`))
 
 // Sign in only appears after the secret token gesture, or for a signed-in owner (so
-// they can sign out), when coming back from a refused sign-in (to say why), or from an
-// invite link (to accept it)
+// they can sign out), or when coming back from a refused or ended sign-in (to say why)
 const { revealed, restore } = useOwnerGate()
-const { user, error, notice, invite } = useAuth()
-const showSignIn = computed(
-  () => revealed.value || Boolean(user.value) || Boolean(error.value) || Boolean(notice.value) || Boolean(invite.value)
-)
+const { user, error, notice } = useAuth()
+const showSignIn = computed(() => revealed.value || Boolean(user.value) || Boolean(error.value) || Boolean(notice.value))
 onMounted(restore)
 
 const links = [

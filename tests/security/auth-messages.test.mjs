@@ -1,19 +1,16 @@
-// The sign-in menu explains failed sign-ins using text from the URL; it must only ever
-// show one of its own fixed messages.
+// The sign-in menu shows only its own fixed messages; the callback sends one of two reasons
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { explainAuthError, NOT_INVITED, SIGN_IN_FAILED } from '../../utils/authMessages.js'
-import { XSS_HTML, JS_BREAKOUTS, REDOS } from './payloads.mjs'
+import { JS_BREAKOUTS, REDOS, XSS_HTML } from './payloads.mjs'
 
-test('refusals read as not invited', () => {
-  for (const reason of ['access_denied', '401 Unauthorized', '403', 'unauthorized_client Signups not allowed for this instance', 'Forbidden']) {
-    assert.equal(explainAuthError(reason), NOT_INVITED, reason)
-  }
+test('a denied sign-in explains the invite list', () => {
+  assert.equal(explainAuthError('denied'), NOT_INVITED)
 })
 
-test('attacker-supplied text is never shown', () => {
-  const spoofs = ['Your account is locked, call +1 555 0100', 'Visit https://evil.example to verify', ...XSS_HTML, ...JS_BREAKOUTS, REDOS, null, undefined, {}]
+test('anything else shows the generic message, whatever the text', () => {
+  const spoofs = ['failed', 'Your account is locked, call +1 555 0100', 'Visit https://evil.example to verify', ...XSS_HTML, ...JS_BREAKOUTS, REDOS, null, undefined, {}]
   for (const reason of spoofs) {
-    assert.ok([NOT_INVITED, SIGN_IN_FAILED].includes(explainAuthError(reason)), String(reason).slice(0, 60))
+    assert.equal(explainAuthError(reason), SIGN_IN_FAILED, String(reason).slice(0, 60))
   }
 })

@@ -52,6 +52,17 @@
   [headers.values]
     X-Robots-Tag = "noindex"
 
+# Sign-in and who's signed in are never cached
+[[headers]]
+  for = "/api/me"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
+[[headers]]
+  for = "/api/auth/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
 [[headers]]
   for = "/sw.js"
   [headers.values]

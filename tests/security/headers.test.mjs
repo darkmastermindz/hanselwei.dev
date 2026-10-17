@@ -51,3 +51,8 @@ test('only executable inline scripts and handlers are hashed', () => {
   assert.equal(inlineScriptHashes('<SCRIPT>window.c=1</SCRIPT\n foo>').size, 1)
   assert.deepEqual([...handlerHashes(html)], ["'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM='"])
 })
+
+test('sign-in and session responses are never cached', () => {
+  assert.equal(headersFor('/api/me')['Cache-Control'], 'private, no-store')
+  assert.equal(headersFor('/api/auth/*')['Cache-Control'], 'private, no-store')
+})

@@ -1,53 +1,61 @@
-// Site sign-in through Netlify Identity (@netlify/identity). Browser only: the
-// static pages render signed out, then this picks up the session after load.
-// Who may sign in is enforced on Netlify (invite-only + netlify/functions/identity.mjs);
-// the nav only reflects the result.
-// A session ends after an hour without activity in any tab (utils/idleSession.js).
-import { explainAuthError, IDLE_SIGNED_OUT, SIGN_IN_FAILED } from '~/utils/authMessages.js'
-import { inviteAuthorizeUrl, isInviteToken, isProvider, PROVIDER_LABELS } from '~/utils/authLinks.js'
+// Site sign-in with GitHub, owner only. The server decides who gets a session: a signed,
+// HTTP-only cookie set by /api/auth/github/callback and checked by /api/me. This
+// composable reflects that result and keeps the shared 1-hour idle clock
+// (utils/idleSession.js), renewing the session while the owner is active.
+import { explainAuthError, IDLE_SIGNED_OUT, SESSION_ENDED } from '~/utils/authMessages.js'
 import { clearLastActive, isIdleExpired, LAST_ACTIVE_KEY, readLastActive, writeLastActive } from '~/utils/idleSession.js'
 
+const PROVIDERS = [{ id: 'github', label: 'GitHub' }]
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'wheel']
 const CHECK_EVERY_MS = 60 * 1000
-const RECORD_EVERY_MS = 60 * 1000 // at most one localStorage write a minute
+const RECORD_EVERY_MS = 60 * 1000 // at most one write and one renewal a minute
 
-let identity = null
 let started = null
 let lastRecorded = 0
-let ending = false // a sign-out is in progress
 
 export const useAuth = () => {
   const user = useState('auth:user', () => null)
-  const providers = useState('auth:providers', () => [])
   const status = useState('auth:status', () => 'idle') // idle | ready | unavailable
   const error = useState('auth:error', () => '')
   const notice = useState('auth:notice', () => '')
-  const invite = useState('auth:invite', () => '') // token from an invite link, until accepted
 
   const endSession = async () => {
-    ending = true
     clearLastActive()
     user.value = null
     try {
-      await identity?.logout()
+      await fetch('/api/auth/logout', { method: 'POST' })
     } catch {}
-    ending = false
   }
 
-  // Idle sign-out: record activity while signed in, and check the shared clock every
-  // minute, when the tab comes back, and before counting any new activity
+  // Idle sign-out: checked on the shared clock every minute, when the tab comes back, and
+  // before counting new activity
   const expireIfIdle = async () => {
     if (!user.value || !isIdleExpired(readLastActive())) return false
     await endSession()
     notice.value = IDLE_SIGNED_OUT
     return true
   }
+
+  const renew = async () => {
+    try {
+      const res = await fetch('/api/auth/refresh', { method: 'POST' })
+      if (res.status === 401) {
+        // The server ended the session (expired or revoked)
+        clearLastActive()
+        user.value = null
+        notice.value = SESSION_ENDED
+      }
+    } catch {}
+  }
+
   const recordActivity = async () => {
     if (!user.value || Date.now() - lastRecorded < RECORD_EVERY_MS) return
     if (await expireIfIdle()) return
     lastRecorded = Date.now()
     writeLastActive(lastRecorded)
+    renew()
   }
+
   const watchIdle = () => {
     for (const type of ACTIVITY_EVENTS) addEventListener(type, recordActivity, { passive: true, capture: true })
     document.addEventListener('visibilitychange', () => {
@@ -60,70 +68,46 @@ export const useAuth = () => {
     setInterval(expireIfIdle, CHECK_EVERY_MS)
   }
 
-  // `landingHash` is the URL hash as the page loaded (loading the library clears it);
-  // `clearHash` removes it from the URL (see plugins/auth.client.js)
+  // Sign-ins from before the GitHub sign-in (Netlify Identity) leave these behind
+  const removeLegacySession = () => {
+    try {
+      localStorage.removeItem('gotrue.user')
+      document.cookie = 'nf_jwt=; Path=/; Max-Age=0; Secure; SameSite=Lax'
+    } catch {}
+  }
+
+  // `landingHash` is the URL hash as the page loaded; `clearHash` removes it from the URL
+  // (see plugins/auth.client.js)
   const start = ({ landingHash = '', clearHash = () => {} } = {}) => {
     if (import.meta.server) return Promise.resolve()
     started ??= (async () => {
-      // A refused SSO sign-in (not on the invite list) comes back with #error=... in
-      // the URL, which handleAuthCallback() ignores: report it and tidy the URL
+      removeLegacySession()
       const landing = new URLSearchParams(landingHash.slice(1))
-      if (landing.has('error')) error.value = explainAuthError(`${landing.get('error')} ${landing.get('error_description') ?? ''}`)
+      if (landing.has('auth_error')) {
+        error.value = explainAuthError(landing.get('auth_error'))
+        clearHash()
+      }
 
       try {
-        identity = await import('@netlify/identity')
-
-        // Finishes OAuth redirects and invite/confirmation links (#..._token in the URL)
-        const result = await identity.handleAuthCallback().catch(e => {
-          error.value = explainAuthError(`${e.status ?? ''} ${e.message}`)
-          return null
-        })
-        // after the library has loaded and touched the URL; keeps the token out of the address bar
-        if (landing.has('error') || landing.has('invite_token')) clearHash()
-
-        if (result?.type === 'invite') {
-          // An invite link: accepting it means signing in with a provider (see signIn)
-          if (isInviteToken(result.token)) invite.value = result.token
-          else error.value = SIGN_IN_FAILED
-        }
-
-        if (result?.user) {
-          // Just signed in: the idle clock starts now
-          writeLastActive()
-          user.value = result.user
-        } else {
-          // A stored session that sat idle for an hour ends before it's shown
-          user.value = await identity.getUser()
-          await expireIfIdle()
-        }
-        if (user.value) lastRecorded = Date.now()
-
-        // Also covers a token refresh that fails: the library reports a sign-out
-        // A token refresh can't bring back a session that was signed out (it may land
-        // while logout() is still in flight); only a real login can
-        identity.onAuthChange((event, next) => {
-          if (!next) {
-            clearLastActive()
-            user.value = null
-            return
-          }
-          if (ending) return
-          if (!user.value) {
-            if (event !== identity.AUTH_EVENTS.LOGIN) return
-            writeLastActive()
-          }
-          user.value = next
-        })
-        watchIdle()
-
-        const settings = await identity.getSettings()
-        // Single sign-on providers only ("email" is password sign-in, not SSO)
-        providers.value = Object.entries(settings.providers ?? {})
-          .filter(([id, on]) => on && isProvider(id))
-          .map(([id]) => ({ id, label: PROVIDER_LABELS[id] }))
+        const res = await fetch('/api/me', { headers: { accept: 'application/json' } })
+        if (res.status === 503) throw new Error('sign-in not configured')
+        const data = res.status === 200 ? await res.json() : null
+        user.value = data?.owner ? { email: data.email, name: data.name } : null
         status.value = 'ready'
+
+        if (user.value) {
+          // First load after signing in: the idle clock starts now
+          if (readLastActive() === null) writeLastActive()
+          lastRecorded = Date.now()
+          await expireIfIdle()
+        } else if (readLastActive() !== null && isIdleExpired(readLastActive())) {
+          // The session ran out while the site was closed
+          clearLastActive()
+          notice.value = IDLE_SIGNED_OUT
+        }
+        watchIdle()
       } catch {
-        // Identity isn't enabled for this site/deploy yet (or this is `nuxt dev`)
+        // Sign-in isn't configured on this deploy (or the site is running without functions)
         status.value = 'unavailable'
       }
     })()
@@ -131,18 +115,16 @@ export const useAuth = () => {
   }
 
   const signIn = provider => {
-    if (!isProvider(provider)) return
+    if (!PROVIDERS.some(p => p.id === provider)) return
     error.value = ''
     notice.value = ''
-    // Accepting an invite signs in with the provider and attaches it to the invite
-    const acceptInvite = inviteAuthorizeUrl(provider, invite.value)
-    if (acceptInvite) location.assign(acceptInvite)
-    else identity?.oauthLogin(provider) // navigates away
+    location.assign(`/api/auth/${provider}`)
   }
+
   const signOut = async () => {
     notice.value = ''
     await endSession()
   }
 
-  return { user, providers, status, error, notice, invite, start, signIn, signOut }
+  return { user, providers: PROVIDERS, status, error, notice, start, signIn, signOut }
 }
