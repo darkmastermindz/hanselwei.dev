@@ -20,7 +20,15 @@
     <span class="flip-link__inner">
       <span :class="['flip-link__face flip-link__face--front', bg]">{{ label }}</span>
       <span :class="['flip-link__face flip-link__face--back', bg]" aria-hidden="true">
-        <span class="flip-link__back-text">{{ backText }}</span>
+        <span class="flip-link__back-text">
+          <!-- Every option is laid out (hidden) so the pill keeps one width as the text changes -->
+          <span
+            v-for="text in backOptions"
+            :key="text"
+            :class="{ 'is-hidden': text !== backText }"
+            :aria-hidden="text !== backText"
+          >{{ text }}</span>
+        </span>
       </span>
     </span>
     <span v-if="effect === 'unicorn'" class="unicorn" aria-hidden="true">
@@ -79,6 +87,7 @@ let suppressClick = false
 
 // Prerendered HTML always uses `back`; random picks only happen in the browser
 const backText = ref(props.back)
+const backOptions = computed(() => [...new Set([props.back, ...props.backs])])
 const shuffleBack = () => {
   const options = props.backs.filter(text => text !== backText.value)
   if (options.length) backText.value = options[Math.floor(Math.random() * options.length)]
@@ -207,7 +216,7 @@ const openAfterAnimation = event => {
 <style lang="scss" scoped>
 .flip-link {
   position: relative;
-  display: block;
+  display: inline-block;
   perspective: 600px;
   text-decoration: none;
   touch-action: manipulation;
@@ -224,9 +233,11 @@ const openAfterAnimation = event => {
   }
 }
 
+/* Both faces share one grid cell, so the pill is as wide as the longer of
+   its front label and back text, and neither gets cut off */
 .flip-link__inner {
   position: relative;
-  display: block;
+  display: grid;
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
@@ -240,8 +251,8 @@ const openAfterAnimation = event => {
   display: flex;
   align-items: center;
   justify-content: center;
+  grid-area: 1 / 1;
   min-height: 44px; /* comfortable touch target */
-  min-width: 11.5rem; /* room for the back-face text */
   padding: 0.5rem 1.4rem;
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -254,9 +265,7 @@ const openAfterAnimation = event => {
 }
 
 .flip-link__face--back {
-  position: absolute;
-  inset: 0;
-  padding: 0.5rem 0.6rem;
+  position: relative;
   overflow: hidden;
   transform: rotateX(180deg);
   border-color: #ffd700;
@@ -287,12 +296,20 @@ const openAfterAnimation = event => {
 }
 
 .flip-link__back-text {
+  display: grid;
+  justify-items: center;
   position: relative;
-  font-size: 0.8rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.85rem;
   z-index: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.flip-link__back-text > span {
+  grid-area: 1 / 1;
+}
+
+.flip-link__back-text > .is-hidden {
+  visibility: hidden;
 }
 
 @media (hover: hover) {
