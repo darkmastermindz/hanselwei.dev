@@ -1,0 +1,5 @@
+User-agent: *
+# Contact card (unlocked on the home page by spinning the token)
+Disallow: /connect
+# Live JSON APIs (Netlify functions)
+Disallow: /api/

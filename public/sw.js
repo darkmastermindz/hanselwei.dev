@@ -56,6 +56,8 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET') return
   const url = new URL(request.url)
   if (url.origin !== self.location.origin) return
+  // Let the browser follow the contact card redirect itself
+  if (url.pathname === '/connect') return
 
   if (url.pathname.startsWith('/_nuxt/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(cacheFirst(request))

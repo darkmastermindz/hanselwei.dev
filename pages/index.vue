@@ -1,7 +1,7 @@
 <template>
   <main class="outer">
     <div class="flex justify-center pt-6 pb-4">
-      <Bitmoji @spin="addSpin" @release="reveal" />
+      <Bitmoji @spin="addSpin" @release="onRelease" />
     </div>
     <p class="hint">
       <template v-if="loaded && count">
@@ -17,7 +17,7 @@
     </h1>
 
     <div class="px-2 md:px-6">
-      <Socials />
+      <Socials :unlocked="humanVerified" />
     </div>
 
     <ul class="about">
@@ -39,6 +39,14 @@
 
 <script setup>
 const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useSpinStats()
+
+// Spinning the token (with real input) proves there's a human here, which
+// unlocks the contact card. Deliberately not persisted: every visit re-checks.
+const humanVerified = ref(false)
+const onRelease = spins => {
+  reveal(spins)
+  humanVerified.value = true
+}
 </script>
 
 <style lang="scss" scoped>
