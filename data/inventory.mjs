@@ -174,20 +174,41 @@ export const inventories = {
       apparel('Accessories', 'Chaco Promotional Bandana', { brand: 'Chaco', tags: ['Bandana'] })
     ]
   },
-  video: {
-    title: 'Video Gear',
-    emoji: '🎥',
-    description: 'Cameras, capture cards and software I make videos with.',
-    sections: ['Video'],
+  camera: {
+    title: 'Camera Gear',
+    emoji: '📷',
+    description: 'Cameras, lenses, video kit and the accessories that carry them.',
+    sections: ['Cameras & Lenses', 'Video', 'Accessories'],
     items: [
+      item('Cameras & Lenses', 'Cameras', 'X-T5', { brand: 'Fujifilm', tags: ['Mirrorless', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Cameras', 'Snap Digital Instant Camera (Red)', { brand: 'Polaroid', tags: ['Instant'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF 56mm F1.2 R WR', { brand: 'Fujifilm', tags: ['Portrait', 'Prime', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'DispoLens for X-Mount', { brand: 'DispoStudio', tags: ['Fun Lens', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'TripleLens for X-Mount', { brand: 'DispoStudio', tags: ['Fun Lens', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF 18-55mm F2.8-4 R LM OIS', { brand: 'Fujifilm', tags: ['Zoom', 'X-Mount'], notes: 'X-T5 kit lens' }),
+      item('Cameras & Lenses', 'Lenses', 'XF 16mm F2.8 R WR (Black)', { brand: 'Fujifilm', tags: ['Wide', 'Prime', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF 18mm F1.4 R LM WR', { brand: 'Fujifilm', tags: ['Wide', 'Prime', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF 35mm F2 R WR (Black)', { brand: 'Fujifilm', tags: ['Prime', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF 70-300mm F4-5.6 R LM OIS WR', { brand: 'Fujifilm', tags: ['Telephoto', 'Zoom', 'X-Mount'] }),
+      item('Cameras & Lenses', 'Lenses', 'XF2X TC WR Teleconverter', { brand: 'Fujifilm', tags: ['Teleconverter', 'X-Mount'] }),
       item('Video', 'Cameras', 'OBSBOT Me / iPhone 11', { tags: ['Phone'] }),
       item('Video', 'Cameras', 'Spectacles v1 (Black)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
       item('Video', 'Cameras', 'Spectacles v1 (Cyan)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
       item('Video', 'Cameras', 'Spectacles v2 (Nico)', { brand: 'Snap', tags: ['Wearable'], status: 'retired' }),
-      item('Video', 'Cameras', 'Snap Digital Instant Camera (Red)', { brand: 'Polaroid', tags: ['Instant'] }),
       item('Video', 'Cameras', 'BRIO 4K Ultra HD Webcam', { brand: 'Logitech', tags: ['Webcam', '4K'] }),
       item('Video', 'Capture', 'ShadowCast Capture', { brand: 'Genki', qty: 2, tags: ['Capture Card'] }),
-      item('Video', 'Software', 'Final Cut Pro', { brand: 'Apple', tags: ['Editing'] })
+      item('Video', 'Software', 'Final Cut Pro', { brand: 'Apple', tags: ['Editing'] }),
+      item('Accessories', 'Straps', 'LemurStrap with Bronze Baseplate', { brand: 'LemurStrap', tags: ['Strap'] }),
+      item('Accessories', 'Cases', 'X-T5 Half Case (Green)', { brand: 'MUZIRI KINOKOO', tags: ['Case'] }),
+      item('Accessories', 'Power', 'NP-W235 Battery', { brand: 'Fujifilm', tags: ['Battery'] }),
+      item('Accessories', 'Power', 'BC-W235 Dual Battery Charger', { brand: 'Fujifilm', tags: ['Charger'] }),
+      item('Accessories', 'Power', 'NP-W235 Dual Fast Charger', { brand: 'llano', tags: ['Charger'] }),
+      item('Accessories', 'Filters', 'MC UV Filter (43mm, 49mm, 58mm)', { brand: 'K&F Concept', qty: 3, tags: ['Filter', 'UV'] }),
+      item('Accessories', 'Filters', 'Variable ND2-ND32 Filter (58mm, 67mm)', { brand: 'K&F Concept', qty: 2, tags: ['Filter', 'ND'] }),
+      item('Accessories', 'Filters', '49mm Center-Pinch Lens Cap', { brand: 'K&F Concept', tags: ['Lens Cap'] }),
+      item('Accessories', 'Lighting', 'EF-X8 Clip-On Flash', { brand: 'Fujifilm', tags: ['Flash'] }),
+      item('Accessories', 'Support', 'Mini Flexible Tripod', { brand: 'ULANZI', tags: ['Tripod'] }),
+      item('Accessories', 'Printing', 'Instax SP-3 Mobile Printer (Black)', { brand: 'Fujifilm', tags: ['Instax', 'Printer'] })
     ]
   }
 }

@@ -21,7 +21,9 @@ export default async (req, context) => {
   const { searchParams } = new URL(req.url)
   // "climbing" used to be its own list; it is now the Climbing section of "outdoor"
   const legacyClimbing = list === 'climbing'
-  const result = queryInventory(legacyClimbing ? 'outdoor' : list, {
+  // "video" was renamed to "camera"
+  const id = legacyClimbing ? 'outdoor' : list === 'video' ? 'camera' : list
+  const result = queryInventory(id, {
     section: (legacyClimbing ? 'Climbing' : searchParams.get('section')) ?? undefined,
     category: searchParams.get('category') ?? undefined,
     status: searchParams.get('status') ?? undefined,

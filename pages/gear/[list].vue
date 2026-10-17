@@ -32,17 +32,22 @@
           {{ statuses[key].emoji }} {{ statuses[key].label }}
         </button>
       </div>
-      <div class="tags" role="group" aria-label="Filter by tag">
-        <button
-          v-for="tag in inventory.tags"
-          :key="tag"
-          type="button"
-          :class="['badge badge-lg', activeTag === tag ? 'badge-success' : 'badge-outline text-gray-300']"
-          :aria-pressed="activeTag === tag"
-          @click="activeTag = activeTag === tag ? null : tag"
-        >
-          {{ tag }}
-        </button>
+      <button v-if="activeTag" type="button" class="badge badge-lg badge-success self-start" @click="activeTag = null">
+        ✕ {{ activeTag }}
+      </button>
+      <div class="tag-strip" role="group" aria-label="Filter by tag">
+        <div v-for="(row, i) in tagRows" :key="i" class="tag-row">
+          <button
+            v-for="tag in row"
+            :key="tag"
+            type="button"
+            :class="['badge badge-lg', activeTag === tag ? 'badge-success' : 'badge-outline text-gray-300']"
+            :aria-pressed="activeTag === tag"
+            @click="activeTag = activeTag === tag ? null : tag"
+          >
+            {{ tag }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -99,6 +104,26 @@ const activeStatus = ref(null)
 const slugify = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 const showSectionHeadings = computed(() => inventory.value.sections.length > 1)
 
+// Split the alphabetical tags into three rows of roughly equal width (by characters),
+// keeping each row in order, so the strip scrolls sideways instead of growing tall
+const TAG_ROWS = 3
+const tagRows = computed(() => {
+  const tags = inventory.value.tags
+  const width = tag => tag.length + 4 // chip padding and gap, in characters
+  const target = tags.reduce((sum, tag) => sum + width(tag), 0) / TAG_ROWS
+  const rows = [[]]
+  let used = 0
+  for (const tag of tags) {
+    if (used >= target && rows.length < TAG_ROWS) {
+      rows.push([])
+      used = 0
+    }
+    rows[rows.length - 1].push(tag)
+    used += width(tag)
+  }
+  return rows
+})
+
 // section -> category -> items, in the list's section order
 const grouped = computed(() => {
   const needle = search.value.trim().toLowerCase()
@@ -143,6 +168,23 @@ const grouped = computed(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem;
+}
+
+// Long tag lists stay at three rows and scroll sideways instead of filling the screen
+.tag-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-bottom: 0.25rem;
+}
+
+.tag-row {
+  display: flex;
+  gap: 0.4rem;
+  width: max-content;
 }
 
 .empty {
