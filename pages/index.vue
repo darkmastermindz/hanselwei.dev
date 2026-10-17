@@ -1,9 +1,17 @@
 <template>
   <main class="outer">
     <div class="flex justify-center pt-6 pb-4">
-      <Bitmoji />
+      <Bitmoji @spin="addSpin" @release="reveal" />
     </div>
-    <p class="hint">press &amp; hold the token ✨</p>
+    <p class="hint">
+      <template v-if="loaded && count">
+        🪙 <strong>{{ count }}</strong> {{ count === 1 ? 'spin' : 'spins' }}
+        · best hold {{ best }}
+        · {{ seenCount }}/{{ total }} discovered
+      </template>
+      <template v-else>press &amp; hold the token ✨</template>
+    </p>
+    <SpinFact :fact="current" class="mb-4" />
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
     </h1>
@@ -29,6 +37,10 @@
   </main>
 </template>
 
+<script setup>
+const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useSpinStats()
+</script>
+
 <style lang="scss" scoped>
 .title {
   font-family: "Roboto Mono", "Quicksand", "Source Sans Pro", -apple-system,
@@ -39,9 +51,14 @@
 }
 
 .hint {
-  color: #888;
+  color: #999;
   font-size: 0.8rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-variant-numeric: tabular-nums;
+
+  strong {
+    color: #9dff5c;
+  }
 }
 
 .outer {
