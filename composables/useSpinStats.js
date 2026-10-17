@@ -1,10 +1,12 @@
 import { hobbyFacts } from '~/data/hobbyFacts.mjs'
+import { resetOnReload } from '~/utils/pageLoad.js'
 
 const STORAGE_KEY = 'hanselwei:token'
 
 // Spin count, best single-hold streak and revealed facts for the home page token.
-// Saved in localStorage so they survive reloads; everything still works if storage
-// is unavailable (private mode etc.), it just won't persist.
+// Saved in localStorage so they survive moving between pages; a refresh (pull-to-refresh)
+// starts them over. Everything still works if storage is unavailable (private mode
+// etc.), it just won't persist.
 export const useSpinStats = () => {
   const loaded = ref(false)
   const count = ref(0)
@@ -25,6 +27,7 @@ export const useSpinStats = () => {
 
   onMounted(() => {
     try {
+      if (resetOnReload(STORAGE_KEY)) localStorage.removeItem(STORAGE_KEY)
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
       count.value = Number(saved.count) || 0
       best.value = Number(saved.best) || 0
