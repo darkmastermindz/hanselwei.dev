@@ -11,7 +11,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/feed', '/blog', '/gear', '/projects', '/rss.xml', '/feed.xml'],
+      routes: ['/', '/blog', '/blog/feed', '/gear', '/projects', '/rss.xml', '/feed.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }

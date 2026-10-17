@@ -1,7 +1,7 @@
 <template>
   <main class="page">
     <article v-if="entry" class="entry">
-      <NuxtLink to="/feed" class="back">← Curiosity Feed</NuxtLink>
+      <NuxtLink to="/blog/feed" class="back">← Curiosity Feed</NuxtLink>
       <h1>{{ entry.title }}</h1>
       <p class="meta">
         <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
