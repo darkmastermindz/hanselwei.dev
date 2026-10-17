@@ -39,7 +39,13 @@ const links = [
   { label: 'Instagram', back: '📸 See my photos', href: 'https://hansel.rocks', bg: 'bg-[#c7501a]' },
   { label: 'dev.to', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
   { label: 'LinkedIn', back: '💼 Let’s connect', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
-  { label: 'Strava', back: '🏃 Run with me', href: 'https://www.strava.com/athletes/129101734', bg: 'bg-[#c73e00]' },
+  {
+    label: 'Strava',
+    back: '🏃 Run with me',
+    backs: ['🏃 Run with me', '🗺️ Sidequest with me', '🛶 Paddle with me', '🧗 Rock climb with me'],
+    href: 'https://www.strava.com/athletes/129101734',
+    bg: 'bg-[#c73e00]'
+  },
   { label: 'Send Email', back: '✉️ Drop me a line', href: 'mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>', bg: 'bg-[#008856]' }
 ]
 </script>
