@@ -21,6 +21,8 @@
       :id="`about-panel-${view}`"
       ref="panelEl"
       class="about-card__panel"
+      :class="{ 'is-charging': charging }"
+      :style="{ '--hold-ms': `${HOLD_MS}ms` }"
       role="tabpanel"
       tabindex="0"
       :aria-labelledby="`about-tab-${view}`"
@@ -30,6 +32,7 @@
       @keydown.enter.space.exact.prevent="next"
       @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
+      @pointermove="onHoldMove"
       @pointerup="cancelHold"
       @pointercancel="cancelHold"
       @pointerleave="cancelHold"
@@ -72,6 +75,9 @@
           ] }
         </p>
       </Transition>
+
+      <!-- Fills up while the press is held, so it reads as a deliberate long press -->
+      <span class="hold-charge" aria-hidden="true" />
 
       <!-- The old text falling away, and a sparkle burst where the press happened -->
       <div v-if="falling.length" :class="['poof-words', fallingClass]" aria-hidden="true">
@@ -162,8 +168,11 @@ const sentence = items => {
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
 // "poof": the old words fall away and sparkles burst from the press. Holding again,
 // or moving on (tap/tab elsewhere, scroll the card away, leave the page), flips back.
-const HOLD_MS = 500
+const HOLD_MS = 900
+const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
+const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
 const readable = ref(false)
+const charging = ref(false)
 const transitionName = ref('swap')
 const cardEl = ref(null)
 const panelEl = ref(null)
@@ -173,6 +182,7 @@ const sparkles = ref([])
 let holdTimer = null
 let holdOrigin = null
 let held = false
+let pressStart = 0
 let fxId = 0
 let fxTimer = null
 
@@ -218,19 +228,31 @@ const setReadable = (value, { animate = true, origin } = {}) => {
 const toggleReadable = options => setReadable(!readable.value, options)
 const revert = options => setReadable(false, options)
 
+const cancelHold = () => {
+  clearTimeout(holdTimer)
+  charging.value = false
+}
+
 const startHold = event => {
   held = false
+  pressStart = performance.now()
+  cancelHold()
+  if (view.value === 'fact') return
   holdOrigin = { x: event.clientX, y: event.clientY }
-  clearTimeout(holdTimer)
+  charging.value = true
   holdTimer = setTimeout(() => {
-    if (view.value === 'fact') return
+    charging.value = false
     held = true
     toggleReadable({ origin: holdOrigin })
     navigator.vibrate?.(15)
   }, HOLD_MS)
 }
 
-const cancelHold = () => clearTimeout(holdTimer)
+const onHoldMove = event => {
+  if (!charging.value) return
+  const moved = Math.hypot(event.clientX - holdOrigin.x, event.clientY - holdOrigin.y)
+  if (moved > HOLD_SLOP_PX) cancelHold()
+}
 
 // Back to JSON once attention leaves the card
 const onPointerDownAnywhere = event => {
@@ -273,12 +295,13 @@ const next = () => {
   view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
 }
 
-// A hold also ends in a click; don't let it switch views too
+// A hold (or a hold let go early) also ends in a click; only a quick tap switches views
 const onTap = () => {
   if (held) {
     held = false
     return
   }
+  if (pressStart && performance.now() - pressStart > TAP_MAX_MS) return
   next()
 }
 
@@ -436,6 +459,33 @@ cite {
 .json__line {
   display: block;
   padding-left: 1.25rem;
+}
+
+/* Long-press charge: a glowing bar fills under the text for the length of the hold */
+.hold-charge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.45rem;
+  height: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #653496, #c084fc, #7cfc00);
+  transform: scaleX(0);
+  transform-origin: left;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.is-charging .hold-charge {
+  opacity: 1;
+  transform: scaleX(1);
+  box-shadow: 0 0 8px #c084fc;
+  transition: transform var(--hold-ms) linear, opacity 0.15s ease;
+}
+
+.is-charging [data-content] {
+  filter: drop-shadow(0 0 6px rgba(192, 132, 252, 0.7));
+  transition: filter var(--hold-ms) ease-in;
 }
 
 /* Plain-English swap: the old words tumble away while the new text materialises */
