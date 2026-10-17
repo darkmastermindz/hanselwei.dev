@@ -85,7 +85,7 @@ const sync = async () => {
 await mkdir(OUT_DIR, { recursive: true })
 try {
   const count = await sync()
-  console.log(`[sync-devto] Mirrored ${count} post(s) from dev.to/@${USERNAME}`)
+  console.log(`[sync-devto] Mirrored ${count} post(s) from dev.to`)
 } catch (err) {
   console.warn(`[sync-devto] Skipped, keeping existing mirrored posts: ${err.message}`)
 }
