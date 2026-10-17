@@ -25,7 +25,7 @@ const links = [
   { label: 'Mastodon', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
   { label: 'Messenger', href: 'https://m.me/hanselwei', bg: 'bg-blue-600' },
   { label: 'Instagram', href: 'https://hansel.rocks', bg: 'bg-[#c7501a]' },
-  { label: 'All Links', href: 'https://hanselwei.link', bg: 'bg-[#582BE8]' },
+  { label: 'DEV', href: 'https://dev.to/hansel', bg: 'bg-black' },
   { label: 'LinkedIn', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
   { label: 'Send Email', href: 'mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>', bg: 'bg-[#008856]' }
 ]
