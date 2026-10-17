@@ -8,6 +8,7 @@
     :style="{ '--i': index }"
     :aria-label="label"
     @pointerdown="burst"
+    @click="openAfterAnimation"
     @pointerenter="shuffleBack"
     @focus="shuffleBack"
   >
@@ -37,6 +38,8 @@
 <script setup>
 // A social link that flips over to a glittery back face on hover/focus, and
 // throws a burst of sparkles (plus a quick spin) wherever it's tapped.
+const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
+
 const props = defineProps({
   label: { type: String, required: true },
   back: { type: String, required: true },
@@ -68,8 +71,9 @@ const burst = event => {
   shuffleBack()
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
   const rect = event.currentTarget.getBoundingClientRect()
-  const x = event.clientX - rect.left
-  const y = event.clientY - rect.top
+  // Keyboard activation has no pointer position: burst from the middle
+  const x = event.clientX ? event.clientX - rect.left : rect.width / 2
+  const y = event.clientY ? event.clientY - rect.top : rect.height / 2
 
   const palette = props.effect === 'unicorn' ? RAINBOW : COLORS
   const fresh = Array.from({ length: 14 }, () => {
@@ -99,6 +103,29 @@ const burst = event => {
     requestAnimationFrame(() => (galloping.value = true))
     setTimeout(() => (galloping.value = false), 1300)
   }
+}
+
+// Hold the navigation briefly so the tap animation is visible before the
+// link opens. Modified clicks (new tab/window shortcuts) behave normally.
+const openAfterAnimation = event => {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  event.preventDefault()
+  if (event.detail === 0) burst(event) // keyboard Enter: no pointerdown fired
+
+  setTimeout(() => {
+    if (props.href.startsWith('mailto:')) {
+      window.location.href = props.href
+      return
+    }
+    // Popup blockers may refuse a delayed window.open; fall back to this tab.
+    // ('noopener' as a feature would make window.open always return null, so
+    // the opener link is cut by hand instead.)
+    const opened = window.open(props.href, '_blank')
+    if (opened) opened.opener = null
+    else window.location.href = props.href
+  }, OPEN_DELAY)
 }
 </script>
 
