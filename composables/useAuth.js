@@ -3,10 +3,10 @@
 // Who may sign in is enforced on Netlify (invite-only + netlify/functions/identity.mjs);
 // the nav only reflects the result.
 // A session ends after an hour without activity in any tab (utils/idleSession.js).
-import { explainAuthError, IDLE_SIGNED_OUT } from '~/utils/authMessages.js'
+import { explainAuthError, IDLE_SIGNED_OUT, SIGN_IN_FAILED } from '~/utils/authMessages.js'
+import { inviteAuthorizeUrl, isInviteToken, isProvider, PROVIDER_LABELS } from '~/utils/authLinks.js'
 import { clearLastActive, isIdleExpired, LAST_ACTIVE_KEY, readLastActive, writeLastActive } from '~/utils/idleSession.js'
 
-const PROVIDER_LABELS = { github: 'GitHub', google: 'Google', gitlab: 'GitLab', bitbucket: 'Bitbucket', facebook: 'Facebook' }
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'scroll', 'wheel']
 const CHECK_EVERY_MS = 60 * 1000
 const RECORD_EVERY_MS = 60 * 1000 // at most one localStorage write a minute
@@ -14,6 +14,7 @@ const RECORD_EVERY_MS = 60 * 1000 // at most one localStorage write a minute
 let identity = null
 let started = null
 let lastRecorded = 0
+let ending = false // a sign-out is in progress
 
 export const useAuth = () => {
   const user = useState('auth:user', () => null)
@@ -21,11 +22,16 @@ export const useAuth = () => {
   const status = useState('auth:status', () => 'idle') // idle | ready | unavailable
   const error = useState('auth:error', () => '')
   const notice = useState('auth:notice', () => '')
+  const invite = useState('auth:invite', () => '') // token from an invite link, until accepted
 
   const endSession = async () => {
+    ending = true
     clearLastActive()
     user.value = null
-    await identity?.logout().catch(() => {})
+    try {
+      await identity?.logout()
+    } catch {}
+    ending = false
   }
 
   // Idle sign-out: record activity while signed in, and check the shared clock every
@@ -72,7 +78,14 @@ export const useAuth = () => {
           error.value = explainAuthError(`${e.status ?? ''} ${e.message}`)
           return null
         })
-        if (landing.has('error')) clearHash() // after the library has loaded and touched the URL
+        // after the library has loaded and touched the URL; keeps the token out of the address bar
+        if (landing.has('error') || landing.has('invite_token')) clearHash()
+
+        if (result?.type === 'invite') {
+          // An invite link: accepting it means signing in with a provider (see signIn)
+          if (isInviteToken(result.token)) invite.value = result.token
+          else error.value = SIGN_IN_FAILED
+        }
 
         if (result?.user) {
           // Just signed in: the idle clock starts now
@@ -86,9 +99,19 @@ export const useAuth = () => {
         if (user.value) lastRecorded = Date.now()
 
         // Also covers a token refresh that fails: the library reports a sign-out
+        // A token refresh can't bring back a session that was signed out (it may land
+        // while logout() is still in flight); only a real login can
         identity.onAuthChange((event, next) => {
-          if (!next) clearLastActive()
-          else if (!user.value) writeLastActive()
+          if (!next) {
+            clearLastActive()
+            user.value = null
+            return
+          }
+          if (ending) return
+          if (!user.value) {
+            if (event !== identity.AUTH_EVENTS.LOGIN) return
+            writeLastActive()
+          }
           user.value = next
         })
         watchIdle()
@@ -96,7 +119,7 @@ export const useAuth = () => {
         const settings = await identity.getSettings()
         // Single sign-on providers only ("email" is password sign-in, not SSO)
         providers.value = Object.entries(settings.providers ?? {})
-          .filter(([id, on]) => on && Object.hasOwn(PROVIDER_LABELS, id))
+          .filter(([id, on]) => on && isProvider(id))
           .map(([id]) => ({ id, label: PROVIDER_LABELS[id] }))
         status.value = 'ready'
       } catch {
@@ -108,15 +131,18 @@ export const useAuth = () => {
   }
 
   const signIn = provider => {
-    if (!Object.hasOwn(PROVIDER_LABELS, provider)) return
+    if (!isProvider(provider)) return
     error.value = ''
     notice.value = ''
-    identity?.oauthLogin(provider) // navigates away
+    // Accepting an invite signs in with the provider and attaches it to the invite
+    const acceptInvite = inviteAuthorizeUrl(provider, invite.value)
+    if (acceptInvite) location.assign(acceptInvite)
+    else identity?.oauthLogin(provider) // navigates away
   }
   const signOut = async () => {
     notice.value = ''
     await endSession()
   }
 
-  return { user, providers, status, error, notice, start, signIn, signOut }
+  return { user, providers, status, error, notice, invite, start, signIn, signOut }
 }
