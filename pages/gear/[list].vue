@@ -85,12 +85,12 @@
 </template>
 
 <script setup>
-import { inventories, statuses } from '~/data/inventory.mjs'
+import { hasInventory, inventories, statuses } from '~/data/inventory.mjs'
 
 const route = useRoute()
 const id = String(route.params.list)
 
-if (!inventories[id]) {
+if (!hasInventory(id)) {
   throw createError({ statusCode: 404, statusMessage: 'Gear list not found', fatal: true })
 }
 

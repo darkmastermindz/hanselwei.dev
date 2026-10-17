@@ -39,7 +39,8 @@
 // A collectible-style token: it spins (and speeds up) while it is held down,
 // then settles on whichever face it is closest to when released.
 // Emits `spin` for every full turn (a quick tap counts as one) and `release`
-// with the number of spins in that hold. Only real (trusted) input counts.
+// with the number of spins in that hold and how long it was held (ms).
+// Only real (trusted) input counts.
 const emit = defineEmits(['spin', 'release'])
 
 const MAX_SPEED = 24 // degrees per frame
@@ -54,6 +55,7 @@ let frame = null
 let reducedMotion = false
 let pressStartAngle = 0
 let spinsThisHold = 0
+let pressStartTime = 0
 let popId = 0
 
 onMounted(() => {
@@ -86,6 +88,7 @@ const press = event => {
   pressed.value = true
   intro.value = false
   pressStartAngle = angle.value
+  pressStartTime = performance.now()
   spinsThisHold = 0
   navigator.vibrate?.(12)
 
@@ -104,7 +107,7 @@ const release = () => {
   pressed.value = false
   cancelAnimationFrame(frame)
   if (!spinsThisHold) countSpin()
-  emit('release', spinsThisHold)
+  emit('release', spinsThisHold, performance.now() - pressStartTime)
   if (reducedMotion) return
 
   // Coast to the next face, taking longer the faster it was spinning

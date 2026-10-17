@@ -6,7 +6,9 @@ import { listSummaries, queryInventory } from '../../data/inventory.mjs'
 const headers = {
   'content-type': 'application/json; charset=utf-8',
   'access-control-allow-origin': '*',
-  'cache-control': 'public, max-age=60, s-maxage=300'
+  'cache-control': 'public, max-age=60, s-maxage=300',
+  'access-control-allow-methods': 'GET, OPTIONS',
+  'x-robots-tag': 'noindex'
 }
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers })
@@ -31,7 +33,7 @@ export default async (req, context) => {
     q: searchParams.get('q') ?? undefined
   })
 
-  return result ? json(result) : json({ error: `Unknown inventory list "${list}"` }, 404)
+  return result ? json(result) : json({ error: 'Unknown inventory list' }, 404)
 }
 
 export const config = {

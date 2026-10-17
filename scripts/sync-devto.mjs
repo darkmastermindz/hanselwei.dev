@@ -8,6 +8,7 @@
 // Network failures never fail the build: previously mirrored posts are kept.
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+import { convertLiquidTags, frontMatter, isMirroredFile, safeSlug } from './lib/devto.mjs'
 
 const USERNAME = process.env.DEVTO_USERNAME || 'hansel'
 const OUT_DIR = fileURLToPath(new URL('../content/blog/devto/', import.meta.url))
@@ -23,29 +24,6 @@ const getJSON = async url => {
   return res.json()
 }
 
-// dev.to liquid tags ({% embed url %}, {% github repo %}, ...) don't render outside dev.to;
-// turn the common ones into plain links.
-export const convertLiquidTags = markdown =>
-  markdown
-    .replace(/{%\s*(?:embed|link|twitter|youtube|codepen|github|gist|stackblitz|codesandbox|replit|glitch|instagram|speakerdeck|slideshare)\s+([^\s%]+)[^%]*%}/g, (_, target) => {
-      const url = /^https?:\/\//.test(target)
-        ? target
-        : /^[\w.-]+\/[\w.-]+$/.test(target)
-          ? `https://github.com/${target}`
-          : /^[\w-]{11}$/.test(target)
-            ? `https://www.youtube.com/watch?v=${target}`
-            : target
-      return `[${url}](${url})`
-    })
-    .replace(/{%\s*(?:raw|endraw)\s*%}/g, '')
-    .replace(/{%[^%]*%}/g, '')
-
-const frontMatter = data =>
-  `---\n${Object.entries(data)
-    .filter(([, v]) => v !== null && v !== undefined && v !== '')
-    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
-    .join('\n')}\n---\n\n`
-
 const sync = async () => {
   const summaries = []
   for (let page = 1; ; page++) {
@@ -56,7 +34,11 @@ const sync = async () => {
 
   const files = []
   for (const { id } of summaries) {
-    const article = await getJSON(`${API}/articles/${id}`)
+    const article = await getJSON(`${API}/articles/${encodeURIComponent(id)}`)
+    if (!safeSlug(article.slug)) {
+      console.warn(`[sync-devto] Skipping article ${id}: unexpected slug ${JSON.stringify(article.slug)}`)
+      continue
+    }
     const file = `${article.slug}.md`
     files.push(file)
 
@@ -76,7 +58,7 @@ const sync = async () => {
 
   // Drop mirrored posts that were unpublished on dev.to
   for (const existing of await readdir(OUT_DIR)) {
-    if (existing.endsWith('.md') && !files.includes(existing)) await rm(`${OUT_DIR}${existing}`)
+    if (isMirroredFile(existing) && !files.includes(existing)) await rm(`${OUT_DIR}${existing}`)
   }
 
   return files.length

@@ -93,3 +93,4 @@ dist
 
 # Vim swap files
 *.swp
+netlify/lib/access.mjs

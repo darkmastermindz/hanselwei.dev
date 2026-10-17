@@ -34,10 +34,13 @@ const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useS
 // unlocks the contact card. Deliberately not persisted: every visit re-checks.
 const humanVerified = ref(false)
 const reveals = ref(0)
-const onRelease = spins => {
+// A 3-second spin, then a tap, also reveals the nav's owner Sign in
+const { onTokenRelease } = useOwnerGate()
+const onRelease = (spins, heldMs) => {
   reveal(spins)
   reveals.value++
   humanVerified.value = true
+  onTokenRelease(spins, heldMs)
 }
 </script>
 

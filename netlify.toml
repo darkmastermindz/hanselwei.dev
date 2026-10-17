@@ -33,6 +33,25 @@
   to = "https://hansel.run/connect"
   status = 302
 
+# Security headers for every response. The Content-Security-Policy is generated per
+# build into .output/public/_headers (scripts/build-csp.mjs) because it pins the hashes
+# of Nuxt's inline scripts. tests/security/headers.test.mjs keeps these from being dropped.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), browsing-topics=()"
+    # Sign-in popups and links opened in new tabs keep working
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    X-Robots-Tag = "noindex"
+
 [[headers]]
   for = "/sw.js"
   [headers.values]

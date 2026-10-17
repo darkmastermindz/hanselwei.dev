@@ -213,6 +213,9 @@ export const inventories = {
   }
 }
 
+// Only real lists: ids come from URLs, so "__proto__", "constructor" etc. must not match
+export const hasInventory = id => typeof id === 'string' && Object.hasOwn(inventories, id)
+
 export const listSummaries = () =>
   Object.entries(inventories).map(([id, { title, emoji, description, items }]) => ({
     id,
@@ -225,8 +228,8 @@ export const listSummaries = () =>
 // Filters a list by ?section=, ?category=, ?tag=, ?status= and free-text ?q=
 // (matches name, brand, notes, section, category, tags).
 export const queryInventory = (id, { section, category, tag, status, q } = {}) => {
+  if (!hasInventory(id)) return null
   const list = inventories[id]
-  if (!list) return null
 
   const needle = q?.trim().toLowerCase()
   const items = list.items.filter(i => {

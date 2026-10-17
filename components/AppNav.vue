@@ -11,6 +11,10 @@
       >
         <span>{ {{ link.emoji }} {{ link.label }} }</span>
       </NuxtLink>
+      <!-- Hidden until the owner gesture on the home page token (or already signed in) -->
+      <Transition name="reveal">
+        <AuthButton v-if="showSignIn" />
+      </Transition>
     </div>
   </nav>
 </template>
@@ -20,6 +24,16 @@
 // which router-link-active misses because those pages aren't nested routes
 const route = useRoute()
 const isCurrent = to => (to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`))
+
+// Sign in only appears after the secret token gesture, or for a signed-in owner (so
+// they can sign out), when coming back from a refused sign-in (to say why), or from an
+// invite link (to accept it)
+const { revealed, restore } = useOwnerGate()
+const { user, error, notice, invite } = useAuth()
+const showSignIn = computed(
+  () => revealed.value || Boolean(user.value) || Boolean(error.value) || Boolean(notice.value) || Boolean(invite.value)
+)
+onMounted(restore)
 
 const links = [
   { to: '/', label: 'Home', emoji: '🏠', color: 'white' },
@@ -51,6 +65,42 @@ const links = [
 
   .is-current {
     background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Sign in appears in line with the other buttons with a little shimmer */
+.reveal-enter-active {
+  animation: reveal-in 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+.reveal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.reveal-leave-to {
+  opacity: 0;
+}
+
+@keyframes reveal-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+    filter: drop-shadow(0 0 0 #fbbf24);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12) rotate(2deg);
+    filter: drop-shadow(0 0 10px #fbbf24);
+  }
+  100% {
+    transform: none;
+    filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-enter-active {
+    animation: none;
   }
 }
 
