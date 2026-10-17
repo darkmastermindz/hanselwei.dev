@@ -2,14 +2,14 @@
 // Mirrors published dev.to articles into content/blog/devto/*.md so they show up
 // in the site's blog. Runs before every build (see "pregenerate" in package.json).
 //
-//   DEVTO_USERNAME  dev.to username to mirror (default: darkmastermindz)
+//   DEVTO_USERNAME  dev.to username to mirror (default: hansel)
 //   DEVTO_API_KEY   optional; only needed to raise rate limits
 //
 // Network failures never fail the build: previously mirrored posts are kept.
 import { mkdir, readdir, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
-const USERNAME = process.env.DEVTO_USERNAME || 'darkmastermindz'
+const USERNAME = process.env.DEVTO_USERNAME || 'hansel'
 const OUT_DIR = fileURLToPath(new URL('../content/blog/devto/', import.meta.url))
 const API = 'https://dev.to/api'
 const headers = {

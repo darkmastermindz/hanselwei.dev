@@ -31,9 +31,8 @@ netlify dev            # run the site *and* the Netlify functions locally
   ```
 - Posts are rendered at build time (`server/api/blog`) and also published at `/rss.xml`.
 - **dev.to mirror:** `npm run sync:devto` pulls published dev.to articles into
-  `content/blog/devto/`. It runs automatically before every build. Set `DEVTO_USERNAME`
-  in Netlify's environment variables if your dev.to username isn't `darkmastermindz`
-  (optional `DEVTO_API_KEY`). Mirrored posts link back to dev.to as the canonical URL.
+  `content/blog/devto/`. It runs automatically before every build and mirrors
+  [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`). Mirrored posts link back to dev.to as the canonical URL.
 
 ## Gear inventory (Netlify Functions)
 - Edit inventories in `data/inventory.mjs`.
