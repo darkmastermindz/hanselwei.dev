@@ -10,7 +10,8 @@ const hobbies = {
   yoga: { label: 'Yoga', emoji: '🧘' },
   running: { label: 'Running', emoji: '🏃' },
   community: { label: 'Community Building', emoji: '🤝' },
-  maker: { label: 'Maker', emoji: '🛠️' }
+  maker: { label: 'Maker', emoji: '🛠️' },
+  stainedglass: { label: 'Stained Glass', emoji: '🪟' }
 }
 
 const fact = (id, hobby, text) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text })
@@ -81,5 +82,14 @@ export const hobbyFacts = [
   fact('maker-pi', 'maker', 'The Raspberry Pi launched in 2012 to get more kids into computer science; the original Model B cost $35.'),
   fact('maker-reprap', 'maker', 'The RepRap project (2005) set out to build a 3D printer that could print most of its own parts.'),
   quote('maker-kay', 'maker', 'The best way to predict the future is to invent it.', 'Alan Kay'),
-  quote('maker-whole-earth', 'maker', 'Stay hungry. Stay foolish.', 'Whole Earth Catalog (1974)')
+  quote('maker-whole-earth', 'maker', 'Stay hungry. Stay foolish.', 'Whole Earth Catalog (1974)'),
+
+  // Stained glass
+  fact('glass-augsburg', 'stainedglass', "The Prophet Windows in Germany's Augsburg Cathedral, from around 1100, are among the oldest stained glass windows still in place."),
+  fact('glass-sainte-chapelle', 'stainedglass', "Paris's Sainte-Chapelle (1248) has 15 towering windows that tell 1,113 scenes from the Bible."),
+  fact('glass-chartres', 'stainedglass', "Chartres Cathedral keeps one of the most complete sets of medieval stained glass, famous for its deep \"Chartres blue\"."),
+  fact('glass-myth', 'stainedglass', 'Old windows are thicker at the bottom not because glass flows, but because panes were uneven and glaziers set the heavy edge down.'),
+  fact('glass-gold', 'stainedglass', 'Ruby or "cranberry" glass gets its red from tiny particles of gold; deep blues come from cobalt.'),
+  fact('glass-tiffany', 'stainedglass', "Louis Comfort Tiffany's studios popularized the copper-foil method that makes detailed lamps and small pieces possible."),
+  quote('glass-kubler-ross', 'stainedglass', 'People are like stained-glass windows. They sparkle and shine when the sun is out, but when the darkness sets in, their true beauty is revealed only if there is a light from within.', 'Elisabeth Kübler-Ross')
 ]
