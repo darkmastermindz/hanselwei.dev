@@ -1,10 +1,11 @@
 <template>
   <div class="socials">
     <a
+      v-if="isIPhone"
       href="https://hansel.run/connect"
       target="_blank"
       rel="noopener"
-      class="social md:hidden bg-[#00b489]"
+      class="social bg-[#00b489]"
     >Open Apple Contact Card ✨</a>
     <div class="socials__grid">
       <a
@@ -20,6 +21,13 @@
 </template>
 
 <script setup>
+// The contact card opens straight into Contacts on iPhone only, so the button is
+// added in the browser once we know the device (it's never in the prerendered HTML).
+const isIPhone = ref(false)
+onMounted(() => {
+  isIPhone.value = /iPhone|iPod/.test(navigator.userAgent)
+})
+
 const links = [
   { label: 'GitHub', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]' },
   { label: 'Mastodon', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
