@@ -5,6 +5,7 @@
       <h1>{{ entry.title }}</h1>
       <p class="meta">
         <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
+        <template v-if="entry.series"> · 🔁 {{ entry.series }} #{{ entry.seriesNumber }}</template>
         <template v-if="entry.tags.length">
           · <span v-for="tag in entry.tags" :key="tag" class="tag">#{{ tag }}</span>
         </template>

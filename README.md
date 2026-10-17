@@ -18,10 +18,11 @@ netlify dev            # run the site *and* the Netlify functions locally
 ```
 
 ## Curiosity Feed (`/feed`) vs Blog (`/blog`)
-- **Feed**: newsletter-style stream of short notes and shared links, shown in full and
-  grouped by month. Add `content/feed/*.md` (front matter: `title`, `date`, `tags`,
-  optional `link` to the thing you're sharing). RSS at `/feed.xml`.
-- **Blog**: long-form, evergreen posts you click into, at `/blog/<slug>`. Add
+- **Feed**: time-series posts: short, recurring updates (newsletter style), shown in
+  full and grouped by month. Add `content/feed/*.md` (front matter: `title`, `date`,
+  `tags`, optional `series: "Climbing Log"` to number entries in a recurring series,
+  optional `link` to something you're sharing). RSS at `/feed.xml`.
+- **Blog**: one-shot posts that stand on their own, at `/blog/<slug>`. Add
   `content/blog/*.md` with front matter:
   ```md
   ---

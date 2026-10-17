@@ -69,6 +69,7 @@ const toPost = (key, source) => {
     source: data.source || 'hanselwei.dev',
     canonical: data.canonical_url || null,
     link: data.link || null, // feed entries can share an external link
+    series: data.series || null, // feed entries: the recurring series they belong to
     draft: data.draft === true,
     readingTime: readingTime(content),
     content
@@ -81,9 +82,16 @@ export const getPosts = async (collection = 'blog') => {
   const keys = (await storage.getKeys()).filter(key => key.endsWith('.md'))
   const posts = await Promise.all(keys.map(async key => toPost(key, String(await storage.getItem(key)))))
 
-  return posts
+  const sorted = posts
     .filter(post => !post.draft)
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+
+  // Number entries within each series in date order (#1 is the oldest)
+  const counts = {}
+  for (const post of [...sorted].reverse()) {
+    if (post.series) post.seriesNumber = counts[post.series] = (counts[post.series] || 0) + 1
+  }
+  return sorted
 }
 
 export const renderMarkdown = content => marked.parse(content, { renderer, gfm: true })
