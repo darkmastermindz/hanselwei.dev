@@ -1,4 +1,6 @@
 import { marked } from 'marked'
+import sanitizeHtml from 'sanitize-html'
+import { safeUrl } from '../../utils/safeUrl.js'
 
 // Minimal front matter parser for the subset we write: `key: value` pairs where
 // values are JSON-ish strings, numbers, booleans or `[a, b]` lists.
@@ -52,7 +54,7 @@ renderer.link = function (token) {
   return /^https?:\/\//.test(token.href) ? html.replace('<a ', '<a target="_blank" rel="noopener" ') : html
 }
 
-const toPost = (key, source) => {
+export const toPost = (key, source) => {
   const { data, content } = parseFrontMatter(source)
   // Storage keys look like "devto:my-post.md" or "hello-world.md"
   const file = key.split(':').pop()
@@ -65,10 +67,10 @@ const toPost = (key, source) => {
     date: data.date ? new Date(data.date).toISOString() : null,
     description: data.description || content.replace(/[#>*_`[\]()!-]/g, '').trim().slice(0, 160),
     tags,
-    cover: data.cover_image || null,
+    cover: safeUrl(data.cover_image),
     source: data.source || 'hanselwei.dev',
-    canonical: data.canonical_url || null,
-    link: data.link || null, // feed entries can share an external link
+    canonical: safeUrl(data.canonical_url),
+    link: safeUrl(data.link), // feed entries can share an external link
     series: data.series || null, // recurring series => Curiosity Feed; none => one-shot post
     draft: data.draft === true,
     readingTime: readingTime(content),
@@ -93,4 +95,38 @@ export const getPosts = async () => {
   return sorted
 }
 
-export const renderMarkdown = content => marked.parse(content, { renderer, gfm: true })
+// Posts include markdown mirrored from dev.to and are injected with v-html, so the
+// rendered HTML is reduced to plain formatting: no scripts, handlers, styles or
+// non-http(s) links (tests/security/markdown.test.mjs)
+const SANITIZE = {
+  allowedTags: [
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'hr', 'blockquote', 'pre', 'code', 'kbd', 'samp',
+    'strong', 'b', 'em', 'i', 'del', 's', 'sub', 'sup', 'mark', 'small', 'abbr',
+    'ul', 'ol', 'li', 'dl', 'dt', 'dd', 'a', 'img', 'figure', 'figcaption',
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'details', 'summary', 'span', 'div'
+  ],
+  allowedAttributes: {
+    a: ['href', 'title', 'target', 'rel', 'id'],
+    img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
+    code: ['class'],
+    span: ['class'],
+    th: ['align'],
+    td: ['align'],
+    ol: ['start'],
+    li: ['id'],
+    h1: ['id'], h2: ['id'], h3: ['id'], h4: ['id'], h5: ['id'], h6: ['id']
+  },
+  allowedClasses: { code: [/^language-[\w-]+$/], span: [/^hljs-[\w-]+$/] },
+  allowedSchemes: ['http', 'https', 'mailto'],
+  allowedSchemesByTag: { img: ['http', 'https'] },
+  allowProtocolRelative: false,
+  transformTags: {
+    // Only external links open in a new tab; `rel` can't be set by the post
+    a: (tagName, { target, rel, ...attribs }) => ({
+      tagName,
+      attribs: /^https?:\/\//i.test(attribs.href ?? '') ? { ...attribs, target: '_blank', rel: 'noopener' } : attribs
+    })
+  }
+}
+
+export const renderMarkdown = content => sanitizeHtml(marked.parse(content, { renderer, gfm: true }), SANITIZE)

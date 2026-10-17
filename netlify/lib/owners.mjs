@@ -6,4 +6,4 @@ const allowed = new Set(access.emails)
 
 export const ownerEmails = () => [...allowed]
 
-export const isOwner = email => Boolean(email) && allowed.has(email.toLowerCase())
+export const isOwner = email => typeof email === 'string' && allowed.has(email.toLowerCase())

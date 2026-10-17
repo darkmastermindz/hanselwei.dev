@@ -1,0 +1,32 @@
+# Injection and security tests (tests/security), plus a dependency audit.
+# Netlify also runs `npm test` before every build, so a failing test blocks the deploy.
+name: Security tests
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Security tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Third-party actions are pinned to full commit SHAs (Dependabot keeps them current)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      # Known advisories are in build-time tooling (Nuxt devtools, Tailwind's watcher);
+      # this reports them on every run, and Dependency Review blocks PRs that add new ones
+      - name: Audit dependencies
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

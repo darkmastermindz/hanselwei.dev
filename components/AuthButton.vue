@@ -9,8 +9,8 @@
       @click="open = !open"
     >
       <template v-if="user">
-        <img v-if="user.pictureUrl" :src="user.pictureUrl" alt="" class="auth__avatar" />
-        <span>{ {{ user.pictureUrl ? '' : '👋 ' }}{{ firstName }} }</span>
+        <img v-if="avatar" :src="avatar" alt="" class="auth__avatar" />
+        <span>{ {{ avatar ? '' : '👋 ' }}{{ firstName }} }</span>
       </template>
       <span v-else>{ 🔐 Sign in }</span>
     </button>
@@ -41,6 +41,7 @@
         <span class="auth__badge">🔒 Invite only</span>
         Sign-in isn't switched on for this site yet.
       </p>
+      <p v-if="notice && !user" class="auth__notice">{{ notice }}</p>
       <p v-if="error" class="auth__error">{{ error }}</p>
     </div>
   </div>
@@ -50,18 +51,23 @@
 // Nav sign-in for the site owner, through Netlify Identity's single sign-on
 // (GitHub/Google/... — whichever providers are enabled in the Identity settings)
 // (plugins/auth.client.js starts the session check on page load)
-const { user, providers, status, error, signIn, signOut } = useAuth()
+import { safeUrl } from '~/utils/safeUrl.js'
+
+const { user, providers, status, error, notice, signIn, signOut } = useAuth()
 const open = ref(false)
 const root = ref(null)
 
-// Coming back from a refused sign-in: open the menu so the reason is visible
+// Coming back from a refused sign-in, or signed out for inactivity: open the menu so
+// the reason is visible
 watch(
-  error,
-  message => {
-    if (message) open.value = true
+  [error, notice],
+  ([message, note]) => {
+    if (message || note) open.value = true
   },
   { immediate: true }
 )
+
+const avatar = computed(() => safeUrl(user.value?.pictureUrl))
 
 const firstName = computed(() => user.value?.name?.split(' ')[0] || user.value?.email?.split('@')[0] || 'Me')
 
@@ -167,6 +173,12 @@ onBeforeUnmount(() => {
 .auth__item:focus-visible {
   background: #653496;
   outline: none;
+}
+
+.auth__notice {
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: #fbbf24;
 }
 
 .auth__error {

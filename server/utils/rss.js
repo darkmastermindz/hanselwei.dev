@@ -7,11 +7,12 @@ const escape = s =>
 // `home` the page the channel links to (defaults to `path`)
 export const buildRss = ({ title, description, path, home = path, posts }) => {
   const items = posts
+    .map(post => ({ post, url: escape(`${SITE}${path}/${encodeURIComponent(post.slug)}`) }))
     .map(
-      post => `    <item>
+      ({ post, url }) => `    <item>
       <title>${escape(post.title)}</title>
-      <link>${SITE}${path}/${post.slug}</link>
-      <guid>${SITE}${path}/${post.slug}</guid>
+      <link>${url}</link>
+      <guid>${url}</guid>
       ${post.date ? `<pubDate>${new Date(post.date).toUTCString()}</pubDate>` : ''}
       <description>${escape(post.description)}</description>
     </item>`

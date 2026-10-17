@@ -6,10 +6,16 @@ import { isOwner } from '../lib/owners.mjs'
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'private, no-store' }
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'private, no-store',
+      'x-robots-tag': 'noindex',
+      allow: 'GET'
+    }
   })
 
-export default async () => {
+export default async req => {
+  if (req.method !== 'GET') return json({ error: 'Method not allowed' }, 405)
   const user = await getUser()
   if (!user) return json({ error: 'Not signed in' }, 401)
   if (!isOwner(user.email)) return json({ error: 'Not allowed' }, 403)
