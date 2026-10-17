@@ -7,10 +7,12 @@
   "scripts": {
     "dev": "nuxt dev",
     "sync:devto": "node scripts/sync-devto.mjs",
-    "prebuild": "npm run sync:devto",
+    "build:access": "node scripts/build-access.mjs",
+    "predev": "npm run build:access",
+    "prebuild": "npm run build:access && npm run sync:devto",
     "build": "nuxt build",
     "start": "nuxt start",
-    "pregenerate": "npm run sync:devto",
+    "pregenerate": "npm run build:access && npm run sync:devto",
     "generate": "nuxt generate",
     "preview": "nuxt preview"
   },
@@ -34,6 +36,7 @@
     "@tailwindcss/typography": "^0.5.20",
     "autoprefixer": "^10.4.16",
     "postcss": "^8.4.31",
-    "sass": "^1.69.5"
+    "sass": "^1.69.5",
+    "smol-toml": "^1.9.0"
   }
 }

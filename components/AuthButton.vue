@@ -5,6 +5,7 @@
       :class="['btn btn-ghost btn-sm md:btn-md normal-case dim auth__toggle', user ? 'signed-in' : 'signed-out']"
       :aria-expanded="open"
       aria-haspopup="menu"
+      :title="user ? 'Account' : 'Invite-only sign-in'"
       @click="open = !open"
     >
       <template v-if="user">
@@ -20,7 +21,10 @@
         <button type="button" role="menuitem" class="auth__item" @click="leave">Sign out</button>
       </template>
       <template v-else-if="status === 'ready' && providers.length">
-        <p class="auth__who">Owner sign-in</p>
+        <p class="auth__invite">
+          <span class="auth__badge">🔒 Invite only</span>
+          Only the site's code owners and invited people can sign in.
+        </p>
         <button
           v-for="provider in providers"
           :key="provider.id"
@@ -33,7 +37,10 @@
         </button>
       </template>
       <p v-else-if="status === 'idle'" class="auth__who">Checking…</p>
-      <p v-else class="auth__who">Sign-in isn't switched on for this site yet.</p>
+      <p v-else class="auth__invite">
+        <span class="auth__badge">🔒 Invite only</span>
+        Sign-in isn't switched on for this site yet.
+      </p>
       <p v-if="error" class="auth__error">{{ error }}</p>
     </div>
   </div>
@@ -42,9 +49,19 @@
 <script setup>
 // Nav sign-in for the site owner, through Netlify Identity's single sign-on
 // (GitHub/Google/... — whichever providers are enabled in the Identity settings)
-const { user, providers, status, error, start, signIn, signOut } = useAuth()
+// (plugins/auth.client.js starts the session check on page load)
+const { user, providers, status, error, signIn, signOut } = useAuth()
 const open = ref(false)
 const root = ref(null)
+
+// Coming back from a refused sign-in: open the menu so the reason is visible
+watch(
+  error,
+  message => {
+    if (message) open.value = true
+  },
+  { immediate: true }
+)
 
 const firstName = computed(() => user.value?.name?.split(' ')[0] || user.value?.email?.split('@')[0] || 'Me')
 
@@ -61,7 +78,6 @@ const onKey = event => {
   if (event.key === 'Escape') open.value = false
 }
 onMounted(() => {
-  start()
   document.addEventListener('pointerdown', onPointerDown)
   document.addEventListener('keydown', onKey)
 })
@@ -116,6 +132,25 @@ onBeforeUnmount(() => {
   color: #bbb;
   padding: 0.25rem 0.4rem 0.5rem;
   overflow-wrap: anywhere;
+}
+
+.auth__invite {
+  font-size: 0.8rem;
+  color: #bbb;
+  padding: 0.25rem 0.4rem 0.6rem;
+  line-height: 1.45;
+}
+
+.auth__badge {
+  display: inline-block;
+  margin-bottom: 0.35rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 9999px;
+  background: #3b2a06;
+  border: 1px solid #fbbf24;
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 0.75rem;
 }
 
 .auth__item {

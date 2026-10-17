@@ -1,6 +1,7 @@
 // Netlify Identity event handlers: the server-side lock on site sign-in.
 // Netlify calls these on every signup and login (email or GitHub/Google/... SSO).
-// Anyone not in OWNER_EMAILS is turned away with a 401; owners get the "owner" role.
+// Anyone not on the allow-list (CODEOWNERS + config.toml [access]) is turned away with
+// a 401; owners get the "owner" role.
 // A role change rides in the JWT, so it takes effect on the next login or token refresh.
 import { isOwner } from '../lib/owners.mjs'
 
