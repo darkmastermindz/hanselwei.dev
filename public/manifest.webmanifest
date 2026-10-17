@@ -17,6 +17,6 @@
   ],
   "shortcuts": [
     { "name": "Blog", "url": "/blog", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Outdoor Gear", "url": "/gear/outdoor", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Gear Lists", "url": "/gear", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
