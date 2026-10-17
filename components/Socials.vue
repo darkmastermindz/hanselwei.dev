@@ -37,7 +37,7 @@ const links = [
   { label: 'Mastodon', back: '🐘 Toot at me', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
   { label: 'Messenger', back: '💬 Say hi!', href: 'https://m.me/hanselwei', bg: 'bg-blue-600' },
   { label: 'Instagram', back: '📸 See my photos', href: 'https://hansel.rocks', bg: 'bg-[#c7501a]' },
-  { label: 'dev.to', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
+  { label: 'DEV Community', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
   { label: 'LinkedIn', back: '💼 Let’s connect', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
   {
     label: 'Strava',
