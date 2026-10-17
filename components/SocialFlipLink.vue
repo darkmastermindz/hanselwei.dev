@@ -12,7 +12,6 @@
     @pointerup="endPress"
     @pointercancel="endPress"
     @pointerleave="endPress"
-    @contextmenu="onContextMenu"
     @click="openAfterAnimation"
     @pointerenter="shuffleBack"
     @focus="shuffleBack"
@@ -52,7 +51,8 @@
 // A social link that flips over to a glittery back face on hover/focus, and
 // throws a burst of sparkles (plus a quick spin) wherever it's tapped.
 // A quick tap opens the link once the animation has played; pressing and
-// holding keeps the show going and does not open the link.
+// holding keeps the show going and does not open the link, and a long enough
+// hold still brings up the phone's own link menu (Open, Copy Link, Share...).
 const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
 const HOLD_AFTER = 350 // ms of pressing before it counts as a hold
 const HOLD_BURST_EVERY = 300 // ms between sparkle bursts while held
@@ -173,11 +173,6 @@ const endPress = () => {
   if (suppressClick) setTimeout(() => (suppressClick = false), 600)
 }
 
-// A long press on a touch screen would pop up the link preview / copy menu
-const onContextMenu = event => {
-  if (pressed || holding.value) event.preventDefault()
-}
-
 onBeforeUnmount(() => {
   clearTimeout(holdTimer)
   clearInterval(holdInterval)
@@ -221,7 +216,6 @@ const openAfterAnimation = event => {
   text-decoration: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none; /* no iOS link preview on long press */
   user-select: none;
 
   &:focus-visible {
