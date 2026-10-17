@@ -12,6 +12,7 @@
     @pointerup="endPress"
     @pointercancel="endPress"
     @pointerleave="endPress"
+    @contextmenu="onNativeMenu"
     @click="openAfterAnimation"
     @pointerenter="shuffleBack"
     @focus="shuffleBack"
@@ -50,9 +51,10 @@
 <script setup>
 // A social link that flips over to a glittery back face on hover/focus, and
 // throws a burst of sparkles (plus a quick spin) wherever it's tapped.
-// A quick tap opens the link once the animation has played; pressing and
-// holding keeps the show going and does not open the link, and a long enough
-// hold still brings up the phone's own link menu (Open, Copy Link, Share...).
+// A quick tap opens the link once the animation has played. A press starts the
+// sparkles and spin straight away; from HOLD_AFTER it keeps sparkling and won't
+// open on release. Around halfway through, the phone's own long-press takes over
+// (iOS link menu with Open, Copy Link, Share...; Android's link menu) untouched.
 const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
 const HOLD_AFTER = 350 // ms of pressing before it counts as a hold
 const HOLD_BURST_EVERY = 300 // ms between sparkle bursts while held
@@ -171,6 +173,11 @@ const endPress = () => {
   clearInterval(holdInterval)
   // Some browsers never fire click after a long press; don't let the flag linger
   if (suppressClick) setTimeout(() => (suppressClick = false), 600)
+}
+
+// The browser is showing its own long-press menu: let it, and stop our show
+const onNativeMenu = () => {
+  if (pressed) endPress()
 }
 
 onBeforeUnmount(() => {
