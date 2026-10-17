@@ -24,9 +24,15 @@
       tabindex="0"
       :aria-labelledby="`about-tab-${view}`"
       aria-live="polite"
-      title="Tap to switch"
-      @click="next"
-      @keydown.enter.space.prevent="next"
+      title="Tap to switch, press and hold for plain English"
+      @click="onTap"
+      @keydown.enter.space.exact.prevent="next"
+      @keydown.shift.enter.prevent="toggleReadable"
+      @pointerdown="startHold"
+      @pointerup="cancelHold"
+      @pointercancel="cancelHold"
+      @pointerleave="cancelHold"
+      @contextmenu.prevent
     >
       <!-- type="transition": the bounce/pulse animations are infinite, so never wait on them -->
       <Transition name="swap" mode="out-in" type="transition">
@@ -41,25 +47,33 @@
           </blockquote>
           <p v-else>{{ fact.text }}</p>
         </figure>
-        <p v-else-if="view === 'skills'" key="skills" class="json json--skills json-bounce">
-          { "I am a" : [ "Senior Software Developer", "Full Stack Engineer",
-          "Secured Infrastructure Professional", "Data Scientist", "Developer Experience Advocate",
-          "Emerging Tech Fanatic!", "✨" ] }
+        <p v-else-if="view === 'skills'" :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
+          <template v-if="readable">I'm a {{ sentence(skills) }}. ✨</template>
+          <template v-else>{ "I am a" : [ {{ quoted([...skills, '✨']) }} ] }</template>
         </p>
-        <p v-else-if="view === 'hobbies'" key="hobbies" class="json json--hobbies motion-safe:animate-pulse">
-          { "My hobbies include" : [ "Hiking", "Photography", "Watching Anime", "Coffee", "Board Games",
-          "Rock Climbing", "Yoga", "Running", "Community Building", "Maker", "Stained Glass", "🧗🏻‍♂️" ] }
+        <p
+          v-else-if="view === 'hobbies'"
+          :key="`hobbies-${readable}`"
+          :class="['json--hobbies motion-safe:animate-pulse', readable ? 'prose-line' : 'json']"
+        >
+          <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
+          <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
+        <ul v-else-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
+          <li v-for="entry in education" :key="entry.year"><strong>{{ entry.year }}</strong> · {{ entry.readable }}</li>
+        </ul>
         <p v-else key="edu" class="json json--edu">
           { "Education" : [
-          <span class="json__line">"2026 · Single Pitch Instructor Course · Pisgah Climbing School · Brevard, NC",</span>
-          <span class="json__line">"2025 · Chakra Flow University · YTT200 · Whitewater Center · Charlotte, NC",</span>
-          <span class="json__line">"2019 · UNC Charlotte · Computer Science, BS / Communication Studies Minor · Charlotte, NC"</span>
+          <span v-for="(entry, i) in education" :key="entry.year" class="json__line">
+            "{{ [entry.year, ...entry.parts].join(' · ') }}"{{ i < education.length - 1 ? ',' : '' }}
+          </span>
           ] }
         </p>
       </Transition>
     </div>
-    <p class="about-card__hint" aria-hidden="true">tap to switch</p>
+    <p class="about-card__hint" aria-hidden="true">
+      tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
+    </p>
   </section>
 </template>
 
@@ -86,10 +100,85 @@ onMounted(() => {
   if (Math.random() < 0.5) view.value = 'hobbies'
 })
 
+const skills = [
+  'Senior Software Developer',
+  'Full Stack Engineer',
+  'Secured Infrastructure Professional',
+  'Data Scientist',
+  'Developer Experience Advocate',
+  'Emerging Tech Fanatic!'
+]
+
+const hobbies = [
+  'Hiking', 'Photography', 'Watching Anime', 'Coffee', 'Board Games', 'Rock Climbing',
+  'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
+]
+
+// `parts` is the JSON line; `readable` is the plain-English version
+const education = [
+  {
+    year: 2026,
+    parts: ['Single Pitch Instructor Course', 'Pisgah Climbing School', 'Brevard, NC'],
+    readable: 'Single Pitch Instructor Course at Pisgah Climbing School in Brevard, NC'
+  },
+  {
+    year: 2025,
+    parts: ['Chakra Flow University', 'YTT200', 'Whitewater Center', 'Charlotte, NC'],
+    readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
+  },
+  {
+    year: 2019,
+    parts: ['UNC Charlotte', 'Computer Science, BS / Communication Studies Minor', 'Charlotte, NC'],
+    readable: 'BS in Computer Science with a minor in Communication Studies from UNC Charlotte'
+  }
+]
+
+const quoted = items => items.map(i => `"${i}"`).join(', ')
+// "a, b and c" (drops a trailing "!" so the sentence can end with a period)
+const sentence = items => {
+  const words = items.map(i => i.replace(/!$/, ''))
+  return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0]
+}
+
+// Press and hold (or Shift+Enter) flips the JSON views into plain English and back
+const HOLD_MS = 500
+const readable = ref(false)
+let holdTimer = null
+let held = false
+
+const toggleReadable = () => {
+  if (view.value === 'fact') return
+  readable.value = !readable.value
+}
+
+const startHold = () => {
+  held = false
+  clearTimeout(holdTimer)
+  holdTimer = setTimeout(() => {
+    if (view.value === 'fact') return
+    held = true
+    toggleReadable()
+    navigator.vibrate?.(15)
+  }, HOLD_MS)
+}
+
+const cancelHold = () => clearTimeout(holdTimer)
+
+onBeforeUnmount(cancelHold)
+
 // Tapping the card cycles through whatever views are available
 const next = () => {
   const ids = tabs.value.map(tab => tab.id)
   view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
+}
+
+// A hold also ends in a click; don't let it switch views too
+const onTap = () => {
+  if (held) {
+    held = false
+    return
+  }
+  next()
 }
 
 // A new spin brings the fact to the front
@@ -148,6 +237,7 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   min-height: 4.5rem;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none; /* no iOS text menu on press-and-hold */
   user-select: none;
 }
 
@@ -229,6 +319,15 @@ cite {
 
 .json--edu {
   color: #bae6fd;
+}
+
+.prose-line {
+  font-size: clamp(0.95rem, 3.6vw, 1.1rem);
+  line-height: 1.55;
+}
+
+.edu-list li + li {
+  margin-top: 0.45rem;
 }
 
 /* One school per line, indented inside the array */
