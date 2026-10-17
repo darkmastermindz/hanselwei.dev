@@ -18,6 +18,7 @@
     "node": ">=22"
   },
   "dependencies": {
+    "@netlify/identity": "^2.0.0",
     "@pinia/nuxt": "^1.0.2",
     "daisyui": "^3.9.4",
     "marked": "^14.1.4",
@@ -26,6 +27,7 @@
     "tachyons": "^4.12.0"
   },
   "devDependencies": {
+    "@netlify/functions": "^6.0.2",
     "@netlify/plugin-a11y": "^1.0.0-beta.1",
     "@netlify/plugin-lighthouse": "^6.0.4",
     "@nuxtjs/tailwindcss": "^6.8.1",

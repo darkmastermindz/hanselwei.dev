@@ -11,6 +11,7 @@
       >
         <span>{ {{ link.emoji }} {{ link.label }} }</span>
       </NuxtLink>
+      <AuthButton class="app-nav__auth" />
     </div>
   </nav>
 </template>
@@ -52,6 +53,11 @@ const links = [
   .is-current {
     background-color: rgba(255, 255, 255, 0.08);
   }
+}
+
+/* Sign-in sits at the far end of the nav */
+.app-nav__auth {
+  margin-left: auto;
 }
 
 .blue {
