@@ -39,7 +39,7 @@
 // A collectible-style token: it spins (and speeds up) while it is held down,
 // then settles on whichever face it is closest to when released.
 // Emits `spin` for every full turn (a quick tap counts as one) and `release`
-// with the number of spins in that hold.
+// with the number of spins in that hold. Only real (trusted) input counts.
 const emit = defineEmits(['spin', 'release'])
 
 const MAX_SPEED = 24 // degrees per frame
@@ -79,7 +79,9 @@ const spin = () => {
 }
 
 const press = event => {
-  if (pressed.value) return
+  // Ignore synthetic events (e.g. element.dispatchEvent from a script): the token
+  // doubles as a "are you human?" check for the contact card on the home page
+  if (pressed.value || !event?.isTrusted) return
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   intro.value = false

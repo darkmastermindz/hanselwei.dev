@@ -1,12 +1,17 @@
 <template>
   <div class="socials">
-    <a
-      v-if="isIPhone"
-      href="https://hansel.run/connect"
-      target="_blank"
-      rel="noopener"
-      class="social bg-[#00b489]"
-    >Open Apple Contact Card ✨</a>
+    <template v-if="isIPhone">
+      <a
+        v-if="unlocked"
+        href="/connect"
+        target="_blank"
+        rel="noopener nofollow"
+        class="social social--unlocked bg-[#00b489]"
+      >Open Apple Contact Card ✨</a>
+      <span v-else class="social social--locked" aria-disabled="true">
+        🔒 Spin the token to unlock my contact card
+      </span>
+    </template>
     <div class="socials__grid">
       <a
         v-for="link in links"
@@ -21,8 +26,14 @@
 </template>
 
 <script setup>
+defineProps({
+  // Set once the visitor has spun the token, our lightweight human check
+  unlocked: { type: Boolean, default: false }
+})
+
 // The contact card opens straight into Contacts on iPhone only, so the button is
 // added in the browser once we know the device (it's never in the prerendered HTML).
+// It links to /connect, which Netlify redirects to the card and robots.txt blocks.
 const isIPhone = ref(false)
 onMounted(() => {
   isIPhone.value = /iPhone|iPod/.test(navigator.userAgent)
@@ -74,6 +85,38 @@ const links = [
 .social:hover,
 .social:focus-visible {
   transform: scale(1.05);
+}
+
+.social--locked {
+  border-style: dashed;
+  color: #aaa;
+  font-weight: 400;
+  cursor: not-allowed;
+}
+
+.social--locked:hover {
+  transform: none;
+}
+
+.social--unlocked {
+  animation: unlock 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+@keyframes unlock {
+  from {
+    transform: scale(0.85);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .social--unlocked {
+    animation: none;
+  }
 }
 
 @media (max-width: 480px) {
