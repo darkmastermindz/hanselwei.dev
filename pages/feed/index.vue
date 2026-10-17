@@ -1,6 +1,6 @@
 <template>
   <main class="page">
-    <h1 class="page-title text-purple-300">Blog</h1>
+    <h1 class="page-title text-purple-300">Curiosity Feed</h1>
     <p class="intro">
       Dev logs and notes, written in Markdown. Posts from
       <a href="https://dev.to" target="_blank" rel="noopener">dev.to</a> are mirrored here too.
@@ -23,7 +23,7 @@
     <p v-if="!filtered.length" class="intro">No posts yet.</p>
 
     <div class="posts">
-      <NuxtLink v-for="post in filtered" :key="post.slug" :to="`/blog/${post.slug}`" class="post-card">
+      <NuxtLink v-for="post in filtered" :key="post.slug" :to="`/feed/${post.slug}`" class="post-card">
         <img v-if="post.cover" :src="post.cover" alt="" loading="lazy" class="cover" />
         <div class="body">
           <p class="meta">
@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-useHead({ title: 'Blog · hanselwei.dev' })
+useHead({ title: 'Curiosity Feed · hanselwei.dev' })
 
 const { data: posts } = await useFetch('/api/blog', { default: () => [] })
 

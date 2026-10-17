@@ -11,6 +11,17 @@
   node_bundler = "esbuild"
 
 # Old route kept working for existing links
+# The blog is now the Curiosity Feed
+[[redirects]]
+  from = "/blog"
+  to = "/feed"
+  status = 301
+
+[[redirects]]
+  from = "/blog/*"
+  to = "/feed/:splat"
+  status = 301
+
 [[redirects]]
   from = "/gearClimbing"
   to = "/gear/outdoor#climbing"

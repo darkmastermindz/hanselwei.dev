@@ -1,7 +1,7 @@
 <template>
   <main class="page">
     <article v-if="post" class="post">
-      <NuxtLink to="/blog" class="back">← All posts</NuxtLink>
+      <NuxtLink to="/feed" class="back">← Curiosity Feed</NuxtLink>
       <img v-if="post.cover" :src="post.cover" alt="" class="cover" />
       <h1>{{ post.title }}</h1>
       <p class="meta">
