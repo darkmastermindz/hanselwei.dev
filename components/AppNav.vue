@@ -19,7 +19,7 @@ const links = [
   { to: '/', label: 'Home', emoji: '🏠', color: 'white' },
   { to: '/projects', label: 'Projects', emoji: '👨🏻‍💻', color: 'blue' },
   { to: '/blog', label: 'Blog', emoji: '✍️', color: 'purple' },
-  { to: '/gear/outdoor', label: 'Outdoor Gear', emoji: '🏔️', color: 'green' }
+  { to: '/gear', label: 'Gear Lists', emoji: '🏔️', color: 'green' }
 ]
 </script>
 

@@ -32,7 +32,7 @@
 
     <div class="flex flex-wrap justify-center gap-3 px-4 pb-10">
       <NuxtLink to="/blog" class="button--green">Read the blog ✍️</NuxtLink>
-      <NuxtLink to="/gear/outdoor" class="button--grey">Browse my outdoor gear 🏔️</NuxtLink>
+      <NuxtLink to="/gear" class="button--grey">Browse my gear lists 🏔️</NuxtLink>
     </div>
   </main>
 </template>
