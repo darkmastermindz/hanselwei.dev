@@ -1,7 +1,7 @@
 {
   "name": "Hansel Wei — hanselwei.dev",
   "short_name": "Hansel",
-  "description": "Hansel Wei's corner of the web: projects, blog, and climbing gear.",
+  "description": "Hansel Wei's corner of the web: projects, blog, and outdoor gear.",
   "id": "/",
   "start_url": "/?source=pwa",
   "scope": "/",
@@ -17,6 +17,6 @@
   ],
   "shortcuts": [
     { "name": "Blog", "url": "/blog", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Climbing Gear", "url": "/gear", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Outdoor Gear", "url": "/gear/outdoor", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
