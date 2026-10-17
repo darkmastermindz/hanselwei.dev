@@ -2,7 +2,7 @@
 // - Build assets (/_nuxt/*, icons) are cache-first: their names are content-hashed.
 // - Pages are network-first, falling back to the last cached copy when offline.
 // - API responses (/api/*) are network-first so the gear inventory stays fresh.
-const VERSION = 'v1'
+const VERSION = 'v2'
 const STATIC_CACHE = `static-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
 const PRECACHE = ['/', '/blog', '/gear', '/projects', '/manifest.webmanifest', '/icons/icon-192.png']

@@ -146,7 +146,10 @@ const release = () => {
 
 .token__face--front {
   transform: translateZ(2px);
-  background: radial-gradient(circle at 30% 30%, #9b6fd6, #653496 60%, #3d1f5c);
+  /* The original bitmoji backdrop pattern */
+  background-color: #653496;
+  background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
+  background-size: 40px 40px;
 }
 
 .token__face--back {
