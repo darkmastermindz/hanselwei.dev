@@ -10,7 +10,7 @@
 
       <h2>Gear</h2>
       <ul>
-        <li><NuxtLink to="/gear/climbing">🧗 My climbing gear</NuxtLink></li>
+        <li><NuxtLink to="/gear/outdoor">🏔️ My outdoor gear</NuxtLink></li>
         <li><NuxtLink to="/gear/video">🎥 My video gear</NuxtLink></li>
       </ul>
     </section>

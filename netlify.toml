@@ -13,7 +13,12 @@
 # Old route kept working for existing links
 [[redirects]]
   from = "/gearClimbing"
-  to = "/gear/climbing"
+  to = "/gear/outdoor#climbing"
+  status = 301
+
+[[redirects]]
+  from = "/gear/climbing"
+  to = "/gear/outdoor#climbing"
   status = 301
 
 [[headers]]

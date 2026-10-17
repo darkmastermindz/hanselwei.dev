@@ -38,7 +38,7 @@ netlify dev            # run the site *and* the Netlify functions locally
 - Edit inventories in `data/inventory.mjs`.
 - `netlify/functions/inventory.mjs` serves them:
   - `GET /api/inventory`: all lists
-  - `GET /api/inventory/climbing?tag=Rappel&category=Harness&q=black`: filtered items
+  - `GET /api/inventory/outdoor?section=Climbing&tag=Rappel&status=owned&q=black`: filtered items
 - `/gear/:list` pages are prerendered from the same data, then refreshed from the function in the browser.
 
 ## Install as an app (PWA)

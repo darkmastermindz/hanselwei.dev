@@ -1,6 +1,6 @@
 // GET /api/inventory              -> available inventory lists
-// GET /api/inventory/:list        -> items in a list (e.g. /api/inventory/climbing)
-//     ?category=Harness&tag=Belay&q=black diamond
+// GET /api/inventory/:list        -> items in a list (e.g. /api/inventory/outdoor)
+//     ?section=Climbing&category=Harness&tag=Belay&status=shipped&q=black diamond
 import { listSummaries, queryInventory } from '../../data/inventory.mjs'
 
 const headers = {
@@ -19,8 +19,12 @@ export default async (req, context) => {
   if (!list) return json({ lists: listSummaries() })
 
   const { searchParams } = new URL(req.url)
-  const result = queryInventory(list, {
+  // "climbing" used to be its own list; it is now the Climbing section of "outdoor"
+  const legacyClimbing = list === 'climbing'
+  const result = queryInventory(legacyClimbing ? 'outdoor' : list, {
+    section: (legacyClimbing ? 'Climbing' : searchParams.get('section')) ?? undefined,
     category: searchParams.get('category') ?? undefined,
+    status: searchParams.get('status') ?? undefined,
     tag: searchParams.get('tag') ?? undefined,
     q: searchParams.get('q') ?? undefined
   })
