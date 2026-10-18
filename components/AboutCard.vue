@@ -207,6 +207,18 @@ const experience = [
   { role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
 ]
 
+// Achievements: milestones on the XP timeline (the medal)
+const achievements = [
+  {
+    event: 'Around the Crown 10K',
+    distance: '10K',
+    first: true,
+    date: 'Sep 2026',
+    location: 'Charlotte, NC',
+    readable: 'First 10K: Around the Crown 10K in Charlotte, NC'
+  }
+]
+
 // Valid JSON on one line, like the other About views, built from the fields so quoting is right
 const jsonValue = value => {
   if (Array.isArray(value)) return `[ ${value.map(jsonValue).join(', ')} ]`
@@ -239,6 +251,13 @@ const timeline = [
     label: `${job.start} – ${job.end}`,
     text: `${job.role} at ${job.company}${job.location ? ` (${job.location})` : ''}${job.highlight ? `. ${job.highlight}.` : '.'}`,
     json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
+  })),
+  ...achievements.map(item => ({
+    from: yearOf(item.date),
+    to: yearOf(item.date),
+    label: item.date,
+    text: item.readable,
+    json: `{ "achievement" : ${jsonValue(Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable')))} }`
   }))
 ]
 const yearMin = Math.min(...timeline.map(entry => entry.from))
