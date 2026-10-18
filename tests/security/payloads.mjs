@@ -91,6 +91,22 @@ export const FRONT_MATTER_BREAKS = ['x\n---\nslug: evil', 'x\r\ndraft: true', '"
 
 export const JS_BREAKOUTS = ['";process.exit(1)//', "'};globalThis.pwned=1;//", '`${globalThis.pwned=1}`', '</script><script>alert(1)</script>']
 
+// Browser language tags (navigator.languages): read by the About card's translate link
+export const HOSTILE_LANGUAGES = [
+  'es&u=https://evil.example',
+  'es#x',
+  'es?tl=xx',
+  'es/../x',
+  'es x',
+  'es\nx',
+  'javascript:alert(1)',
+  '-es',
+  'es-',
+  'e',
+  'abcd',
+  'es-' + 'x'.repeat(40)
+]
+
 export const PROTOTYPE_KEYS = ['__proto__', 'constructor', 'prototype', 'toString', 'hasOwnProperty', '__defineGetter__']
 
 // The GitHub profile README: markup, markdown tricks, control characters and oversize text
