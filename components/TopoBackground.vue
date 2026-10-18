@@ -37,6 +37,7 @@
 
 <script setup>
 import { buildTopo, levelProgress, trailOpacity } from '~/utils/topo.mjs'
+import { wantsLessData } from '~/utils/background.mjs'
 // config.toml [background], checked at build time (scripts/build-background.mjs)
 import settings from '~/data/background.generated.mjs'
 
@@ -124,8 +125,18 @@ const onResize = () => {
   }, 300)
 }
 
+// Data Saver / Lite mode, prefers-reduced-data, or a very slow connection (config.toml
+// respect_data_saver): skip the background entirely, worker and all
+const browserWantsLessData = () =>
+  wantsLessData({
+    saveData: navigator.connection?.saveData,
+    effectiveType: navigator.connection?.effectiveType,
+    reducedData: window.matchMedia('(prefers-reduced-data: reduce)').matches
+  })
+
 onMounted(() => {
   if (!settings.enabled) return
+  if (settings.respectDataSaver && browserWantsLessData()) return
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   build()
   window.addEventListener('resize', onResize, { passive: true })

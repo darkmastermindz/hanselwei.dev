@@ -16,5 +16,6 @@ if (problems.length) {
 await writeFile(new URL('data/background.generated.mjs', root), backgroundModule(config))
 console.log(
   `[build-background] ${config.enabled ? 'on' : 'off'}: ${config.contours} contours, ${config.featureSize}px features, ` +
-    `index every ${config.indexEvery || 'none'}, ${config.trails} trail(s), ${config.drawSeconds}s to draw`
+    `index every ${config.indexEvery || 'none'}, ${config.trails} trail(s), ${config.drawSeconds}s to draw, ` +
+    `${config.respectDataSaver ? 'skipped' : 'shown'} when saving data`
 )
