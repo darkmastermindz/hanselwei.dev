@@ -234,6 +234,49 @@ const experience = [
 const achievements = [
   {
     category: 'Achievement',
+    event: 'MLH: hackathonCLT MMXIX',
+    place: 'Submitted',
+    date: '2019',
+    location: 'Charlotte, NC',
+    readable: 'Submitted: MLH: hackathonCLT MMXIX in Charlotte, NC (March 2019)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackDuke 2018: Code For Good',
+    place: 'Submitted',
+    date: '2018',
+    location: 'Durham, NC',
+    readable: 'Submitted: MLH: HackDuke 2018: Code For Good in Durham, NC (October 2018)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackNC 2018',
+    place: 'Winner',
+    project: 'Human Trafficking Textual and Emoji Analysis',
+    description: 'Feature generation and emoji text analysis, for machine learning, to help prevent human trafficking.',
+    date: '2018',
+    location: 'Chapel Hill, NC',
+    readable: 'Winner: MLH: HackNC 2018 with Human Trafficking Textual and Emoji Analysis, feature generation and emoji text analysis to help prevent human trafficking (Chapel Hill, NC, October 2018)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackDuke 2017: Code For Good',
+    place: 'Submitted',
+    date: '2017',
+    location: 'Durham, NC',
+    readable: 'Submitted: MLH: HackDuke 2017: Code For Good in Durham, NC (October 2017)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: RamHacks 2017',
+    place: 'Submitted',
+    project: 'ramhacksfall2017',
+    date: '2017',
+    location: 'Richmond, VA',
+    readable: 'Submitted: MLH: RamHacks 2017 with ramhacksfall2017 (Richmond, VA, September 2017)'
+  },
+  {
+    category: 'Achievement',
     event: 'Collegiate Cyber Defense Competition (CCDC), Southeast Regional Finals',
     place: 'Fourth at Kennesaw State University (UNC Charlotte team)',
     date: '2018',
