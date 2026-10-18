@@ -1,5 +1,6 @@
 <template>
   <div class="app-shell">
+    <TopoBackground />
     <AppNav />
     <PullToRefresh />
     <slot />
