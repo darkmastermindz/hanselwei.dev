@@ -36,7 +36,8 @@ const links = [
   { to: '/', label: 'Home', emoji: '🏠', color: 'white' },
   { to: '/projects', label: 'Projects', emoji: '👨🏻‍💻', color: 'blue' },
   { to: '/blog', label: 'Blog', emoji: '📰', color: 'purple' },
-  { to: '/gear', label: 'Gear Lists', emoji: '🏔️', color: 'green' }
+  { to: '/gear', label: 'Gear Lists', emoji: '🏔️', color: 'green' },
+  { to: '/bio', label: 'Bio', emoji: '👋', color: 'yellow' }
 ]
 </script>
 
@@ -111,5 +112,9 @@ const links = [
 
 .purple {
   color: #c084fc;
+}
+
+.yellow {
+  color: #fbbf24;
 }
 </style>

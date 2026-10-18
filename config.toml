@@ -1,12 +1,13 @@
 # hanselwei.dev site settings
 
 [access]
-# Sign-in is invite-only. Everyone in .github/CODEOWNERS can sign in, plus the
-# extra emails listed here. They still need a Netlify Identity invite.
+# Owner sign-in (GitHub) is invite-only. Everyone in .github/CODEOWNERS can sign in,
+# plus the extra emails listed here. Each GitHub account signs in with a verified email
+# address, so the email must be verified on that account.
 additional = []
 
-# Netlify Identity knows people by email, so give one for each @username in
-# CODEOWNERS. (Emails written directly in CODEOWNERS work as they are.)
+# Give the email for each @username in CODEOWNERS (the build fails if one is missing).
+# Emails written directly in CODEOWNERS work as they are.
 [access.github]
 darkmastermindz = "hello@hanselwei.dev"
 

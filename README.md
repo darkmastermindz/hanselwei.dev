@@ -17,6 +17,47 @@ npm run generate       # static build into .output/public (what Netlify deploys)
 netlify dev            # run the site *and* the Netlify functions locally
 ```
 
+## Build-time data
+These run before `npm run dev`, `npm test` and the builds. The files they write are git-ignored:
+- `build:access`: the sign-in allow-list, from `.github/CODEOWNERS` and `config.toml` → `netlify/lib/access.mjs`.
+- `build:projects`: the Projects settings in `config.toml` → `data/projects.generated.mjs`.
+- `sync:contributions`: the GitHub contribution calendar for the Projects page → `data/contributions.generated.json`.
+- `sync:readme`: the GitHub profile README for the Bio page → `content/bio/github-readme.generated.md`.
+- `sync:devto`: dev.to posts (see below). Runs before `npm run build` and `npm run generate`.
+
+If a sync can't reach GitHub or dev.to, the last copy is kept (or an empty one written) and the build carries on.
+
+## Environment variables (Netlify build settings)
+| Variable | Used for | Needed? |
+| --- | --- | --- |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Owner sign-in with a GitHub OAuth App. Callback: `https://www.hanselwei.dev/api/auth/github/callback` | For sign-in |
+| `GITHUB_TOKEN` | Projects contribution graph. Read-only, with no permissions selected | Optional |
+| `DEVTO_USERNAME`, `DEVTO_API_KEY` | dev.to mirror (see Blog) | Optional |
+| `CSP_MODE` | `enforce` or `report-only`, overriding the default Content-Security-Policy mode | Optional |
+
+The session key is derived from `GITHUB_CLIENT_SECRET`, so changing that secret signs everyone out.
+
+## Sign-in and access
+- Owner sign-in is GitHub OAuth (`/api/auth/github`). Sign-in is invite-only: accounts listed in `.github/CODEOWNERS` get a session, and their verified emails must match an entry in `config.toml` (`[access.github]`, plus `[access] additional` for extra emails).
+- Sessions last an hour, and an idle hour signs you out.
+
+## Projects (`/projects`)
+Non-fork repos show automatically. In `config.toml`, under `[projects]`:
+- `wip`: marks repos as work in progress (everything else is active).
+- `forks`: forks to show.
+- `featured` and `hackathon`: tags for repos that are already shown.
+
+## About card (home page)
+`components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English.
+
+## Bio (`/bio`)
+- `content/bio/bio.md`: hand-written markdown, with `title` and `description` in its front matter.
+- Below it, the GitHub profile README (`darkmastermindz/darkmastermindz`) is synced on every build.
+
+## Tests
+- `npm test` runs Node's built-in test runner over `tests/**/*.test.mjs`. App logic is in `tests/app/`, and injection and security checks are in `tests/security/`. Shared attack payloads live in `tests/security/payloads.mjs`.
+- Outside input (markdown, front matter, URLs, GitHub data, the profile README) renders only through `renderMarkdown` and `safeUrl`, and the security tests check that.
+
 ## Blog (`/blog`): Posts and the Curiosity Feed
 One collection: every post is a Markdown file in `content/blog/` and lives at `/blog/<slug>`.
 A `series` label decides where it's listed:

@@ -6,11 +6,12 @@ export default defineNuxtConfig({
     // Blog markdown (local + mirrored from dev.to) is read at build time.
     // Posts with a `series` form the Curiosity Feed; the rest are one-shot posts.
     serverAssets: [
-      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) }
+      { baseName: 'blog', dir: fileURLToPath(new URL('./content/blog', import.meta.url)) },
+      { baseName: 'bio', dir: fileURLToPath(new URL('./content/bio', import.meta.url)) }
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/blog', '/blog/feed', '/gear', '/projects', '/rss.xml', '/feed.xml'],
+      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', '/rss.xml', '/feed.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }

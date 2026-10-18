@@ -93,5 +93,14 @@ export const JS_BREAKOUTS = ['";process.exit(1)//', "'};globalThis.pwned=1;//", 
 
 export const PROTOTYPE_KEYS = ['__proto__', 'constructor', 'prototype', 'toString', 'hasOwnProperty', '__defineGetter__']
 
+// The GitHub profile README: markup, markdown tricks, control characters and oversize text
+export const HOSTILE_README = [
+  ...XSS_HTML,
+  ...XSS_MARKDOWN,
+  'line one\u0000hidden\nline two',
+  'bell\u0007 and escape \u001b[31m red',
+  'x'.repeat(100_001)
+]
+
 // Long input for catastrophic-backtracking checks
 export const REDOS = 'a'.repeat(50_000) + '!'

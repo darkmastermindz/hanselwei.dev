@@ -17,6 +17,11 @@
       </button>
     </div>
 
+    <!-- Holding does nothing on the fact view, so the tip only says tapping switches categories -->
+    <p v-if="view === 'fact'" class="about-card__hint" aria-hidden="true"><span class="hint__touch">tap</span><span class="hint__mouse">click</span> to switch categories</p>
+    <p v-else class="about-card__hint" aria-hidden="true">
+      <span class="hint__touch">tap</span><span class="hint__mouse">click</span> to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
+    </p>
     <div
       :id="`about-panel-${view}`"
       ref="panelEl"
@@ -27,13 +32,13 @@
       tabindex="0"
       :aria-labelledby="`about-tab-${view}`"
       aria-live="polite"
-      title="Tap to switch, press and hold for plain English"
+      :title="view === 'fact' ? 'tap to switch categories' : 'Tap to switch, press and hold for plain English'"
       @click="onTap"
       @keydown.enter.space.exact.prevent="next"
       @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
       @pointermove="onHoldMove"
-      @pointerup="cancelHold"
+      @pointerup="endHold"
       @pointercancel="cancelHold"
       @pointerleave="cancelHold"
       @contextmenu.prevent
@@ -64,18 +69,44 @@
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
-        <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
-          <li v-for="entry in education" :key="entry.program"><strong>{{ entry.graduated }}</strong> · {{ entry.readable }}</li>
-        </ul>
-        <p v-else key="edu" data-content class="json json--edu">
-          { "Education" : [
-          <span
-            v-for="(line, i) in educationJson"
-            :key="i"
-            :class="['json__line', `json__line--${line.depth}`]"
-          >{{ line.text }}</span>
-          ] }
-        </p>
+        <div v-else key="edu" data-content class="xp-timeline">
+          <!-- Presses on the track stay here: they don't start a hold or switch views -->
+          <div
+            class="xp-track"
+            role="slider"
+            tabindex="0"
+            aria-label="Experience timeline, by year"
+            :aria-valuemin="yearMin"
+            :aria-valuemax="yearMax"
+            :aria-valuenow="xpYear"
+            :aria-valuetext="`${xpYear}, ${yearEntries.length} ${yearEntries.length === 1 ? 'entry' : 'entries'}`"
+            @pointerdown.stop="startDrag"
+            @pointermove="dragTo"
+            @pointerup.stop="endDrag"
+            @pointercancel.stop="endDrag"
+            @click.stop
+            @keydown.stop="onTrackKey"
+          >
+            <span v-for="segment in yearSegments" :key="segment.year" class="xp-year" :style="{ flexGrow: segment.weight }">
+              <span class="xp-dot" />
+            </span>
+            <span class="xp-thumb" :style="{ left: thumbLeft }" aria-hidden="true" />
+          </div>
+          <p class="xp-timeline__label">{{ xpYear }} · {{ yearEntries.length }} {{ yearEntries.length === 1 ? 'entry' : 'entries' }}</p>
+          <!-- The text swaps between JSON and plain English; the year track and label stay above in both -->
+          <Transition :name="transitionName" mode="out-in" type="transition">
+            <ul v-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
+              <!-- The same entries as the JSON for the selected year -->
+              <li v-for="(entry, i) in yearEntries" :key="entry.text">
+                <span class="xp-entry__icon" aria-hidden="true">{{ CATEGORY_ICON[entry.category] }}</span>
+                <span class="xp-entry__count" aria-hidden="true">{{ i + 1 }}/{{ yearEntries.length }}</span>
+                <span class="visually-hidden">Entry {{ i + 1 }} of {{ yearEntries.length }}, {{ entry.category }}: </span>
+                <strong>{{ entry.label }}</strong> · {{ entry.text }}
+              </li>
+            </ul>
+            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+          </Transition>
+        </div>
       </Transition>
 
       <!-- Fills up while the press is held, so it reads as a deliberate long press -->
@@ -98,9 +129,6 @@
         aria-hidden="true"
       >{{ spark.char }}</span>
     </div>
-    <p class="about-card__hint" aria-hidden="true">
-      tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
-    </p>
   </section>
 </template>
 
@@ -118,7 +146,7 @@ const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
   { id: 'hobbies', label: '🧗 Hobbies' },
-  { id: 'edu', label: '🎓 Edu' }
+  { id: 'edu', label: '💚 XP' }
 ])
 
 // Prerender shows Skills; each visit then opens on Skills or Hobbies at random
@@ -141,44 +169,187 @@ const hobbies = [
   'Paddleboarding', 'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
 ]
 
-// `graduated` is the graduation date; `readable` is the plain-English version
+// XP: certifications and education, then work history (newest first). `readable` and
+// `highlight` are the plain-English text; the JSON view uses the fields only.
 const education = [
   {
-    graduated: 2026,
-    program: 'Single Pitch Instructor Course',
+    category: 'Certification',
+    certification: 'AMGA Single Pitch Instructor',
+    passed: 'May 2026',
+    status: 'SPI exam pending',
     school: 'Pisgah Climbing School',
     location: 'Brevard, NC',
-    readable: 'Single Pitch Instructor Course at Pisgah Climbing School in Brevard, NC'
+    date: 'Passed May 2026',
+    readable: 'Certification: AMGA Single Pitch Instructor from Pisgah Climbing School in Brevard, NC (SPI exam pending)'
   },
   {
+    category: 'Certification',
+    certification: 'Data Science and Machine Learning: Making Data-Driven Decisions',
+    passed: 'September 2024',
+    school: 'MIT Institute for Data, Systems, and Society (IDSS)',
+    location: 'Online',
+    date: 'Passed September 2024',
+    readable: 'Certification: Data Science and Machine Learning: Making Data-Driven Decisions from MIT IDSS (completed September 2024)'
+  },
+  {
+    category: 'Education',
     graduated: 2025,
     program: 'YTT200',
     school: 'Chakra Flow University',
     location: 'Charlotte, NC',
+    date: '2025',
     readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
   },
   {
+    category: 'Education',
+    started: 2016,
     graduated: 2019,
     program: 'Computer Science, BS / Communication Studies Minor',
     school: 'UNC Charlotte',
     location: 'Charlotte, NC',
+    date: '2016 – 2019',
     readable: 'Bachelor of Science in Computer Science with a minor in Communication Studies from UNC Charlotte in Charlotte, NC'
   }
 ]
 
-// Valid JSON, one value per line, written out from the fields so quoting and commas are right
-const educationJson = education.flatMap((entry, i) => {
-  const fields = ['graduated', 'program', 'school', 'location'].map(key => [key, entry[key]])
-  const last = i === education.length - 1
-  return [
-    { depth: 1, text: '{' },
-    ...fields.map(([key, value], j) => ({
-      depth: 2,
-      text: `${JSON.stringify(key)} : ${JSON.stringify(value)}${j < fields.length - 1 ? ',' : ''}`
-    })),
-    { depth: 1, text: `}${last ? '' : ','}` }
-  ]
-})
+const experience = [
+  { category: 'Work', role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC and Kubernetes platform solutions; lead projects and act as escalation point for less experienced staff' },
+  { category: 'Work', role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Engineered language-specific GitHub Actions support across Python, Ruby, C#, Node.js and Java; built GitHub-hosted runners on Azure VNET and customized self-hosted runners for TKGI and OpenShift' },
+  { category: 'Volunteer', role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open source naloxone vending machine project' },
+  { category: 'Career break', role: 'Career break', company: 'Position eliminated', start: 'Apr 2024', end: 'Jun 2024', highlight: '' },
+  { category: 'Work', role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit, compliance and risk; migrated a React app to Vite (95% faster build and runtime); AWS and Terraform infrastructure; Technology Achievement Award for a 25% cut in audit processing time' },
+  { category: 'Work', role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Founded the Developer Experience Guild; platform SME across the enterprise; L3 platform support and continuous improvement on OpenShift, Kong and CI/CD' },
+  { category: 'Work', role: 'Developer II', company: 'TIAA', start: 'Jan 2021', end: 'Mar 2022', location: 'Charlotte, NC', highlight: 'Full stack development and solution architecture for imaging, data distribution and workflow systems' },
+  { category: 'Work', role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and Imaging Distribution; reverse engineered and refactored legacy monoliths into microservices with Spring Boot and OpenShift' },
+  { category: 'Work', role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Automation Anywhere RPA bots and process intelligence systems; LSTM text classification model; cognitive services platform for text, voice and object detection' },
+  { category: 'Work', role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment for material science; migrated ensemble ML from Python to C# .NET; UX research and an analytics dashboard' },
+  { category: 'Work', role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Partnered with Microsoft engineers on Azure AI data modeling and data science pipelines for real-time and batch processing; prototyped Azure ML environments; built a PowerBI visualization and a data analytic dashboard proof of concept' },
+  { category: 'Work', role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won Major League Hackathon 2019 at HackNC; gave over a dozen workshops at hackathons and campus events' },
+  { category: 'Volunteer', role: 'Guest speaker, GenCyber camp', company: 'Winthrop University, Richard W. Riley College of Education', start: '2017', end: '2017', location: 'Rock Hill, SC', highlight: 'Demonstrated open wireless network insecurity and how to ethically hack a network for teachers and students, as a student and computer science peer tutor at UNC Charlotte' },
+  { category: 'Work', role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor responsible for handling money; supervised a team and improved customer satisfaction and accountability' },
+  { category: 'Work', role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
+]
+
+// Achievements: milestones on the XP timeline (the medal)
+const achievements = [
+  {
+    category: 'Achievement',
+    event: 'MLH: hackathonCLT MMXIX',
+    place: 'Submitted',
+    date: '2019',
+    location: 'Charlotte, NC',
+    readable: 'Submitted: MLH: hackathonCLT MMXIX in Charlotte, NC (March 2019)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackDuke 2018: Code For Good',
+    place: 'Submitted',
+    date: '2018',
+    location: 'Durham, NC',
+    readable: 'Submitted: MLH: HackDuke 2018: Code For Good in Durham, NC (October 2018)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackNC 2018',
+    place: 'Winner',
+    project: 'Human Trafficking Textual and Emoji Analysis',
+    description: 'Feature generation and emoji text analysis, for machine learning, to help prevent human trafficking.',
+    date: '2018',
+    location: 'Chapel Hill, NC',
+    readable: 'Winner: MLH: HackNC 2018 with Human Trafficking Textual and Emoji Analysis, feature generation and emoji text analysis to help prevent human trafficking (Chapel Hill, NC, October 2018)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: HackDuke 2017: Code For Good',
+    place: 'Submitted',
+    date: '2017',
+    location: 'Durham, NC',
+    readable: 'Submitted: MLH: HackDuke 2017: Code For Good in Durham, NC (October 2017)'
+  },
+  {
+    category: 'Achievement',
+    event: 'MLH: RamHacks 2017',
+    place: 'Submitted',
+    project: 'ramhacksfall2017',
+    date: '2017',
+    location: 'Richmond, VA',
+    readable: 'Submitted: MLH: RamHacks 2017 with ramhacksfall2017 (Richmond, VA, September 2017)'
+  },
+  {
+    category: 'Achievement',
+    event: 'Collegiate Cyber Defense Competition (CCDC), Southeast Regional Finals',
+    place: 'Fourth at Kennesaw State University (UNC Charlotte team)',
+    date: '2018',
+    location: 'Kennesaw, GA',
+    readable: 'Fourth place: UNC Charlotte team at the Southeast Regional Finals of the Collegiate Cyber Defense Competition (CCDC) at Kennesaw State University, 2018'
+  },
+  {
+    category: 'Achievement',
+    event: 'Around the Crown 10K',
+    distance: '10K',
+    first: true,
+    date: 'Sep 2026',
+    location: 'Charlotte, NC',
+    readable: 'First 10K: Around the Crown 10K in Charlotte, NC'
+  }
+]
+
+// Valid JSON on one line, like the other About views, built from the fields so quoting is right
+const jsonValue = value => {
+  if (Array.isArray(value)) return `[ ${value.map(jsonValue).join(', ')} ]`
+  if (value && typeof value === 'object') {
+    return `{ ${Object.entries(value).filter(([, v]) => v !== undefined).map(([key, v]) => `${JSON.stringify(key)} : ${jsonValue(v)}`).join(', ')} }`
+  }
+  return JSON.stringify(value)
+}
+const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable' && key !== 'date'))
+// The XP timeline by year: the slider picks a year, and the card shows every entry active in
+// that year (education and work history) as minified JSON
+const CURRENT_YEAR = new Date().getFullYear()
+const yearOf = text => Number(String(text).match(/\d{4}/)?.[0])
+// Each entry has its JSON (for the card) and its plain-English line (for holding), so both views
+// always show the same things
+// One icon per category in the XP data (every category used has an entry)
+const CATEGORY_ICON = {
+  Certification: '📜',
+  Education: '🎓',
+  Work: '💼',
+  Volunteer: '🤝',
+  'Career break': '⏸️',
+  Achievement: '🏅'
+}
+
+const timeline = [
+  ...education.map(entry => {
+    const to = yearOf(entry.graduated ?? entry.passed)
+    return {
+      from: entry.started ?? to,
+      to,
+      label: entry.date,
+      category: entry.category,
+      text: entry.readable,
+      json: `{ "education" : ${jsonValue(withoutText(entry))} }`
+    }
+  }),
+  ...experience.map(job => ({
+    from: yearOf(job.start),
+    to: job.end === 'Present' ? CURRENT_YEAR : yearOf(job.end),
+    label: `${job.start} – ${job.end}`,
+    category: job.category,
+    text: `${job.role} at ${job.company}${job.location ? ` (${job.location})` : ''}${job.highlight ? `. ${job.highlight}.` : '.'}`,
+    json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
+  })),
+  ...achievements.map(item => ({
+    from: yearOf(item.date),
+    to: yearOf(item.date),
+    label: item.date,
+    category: item.category,
+    text: item.readable,
+    json: `{ "achievement" : ${jsonValue(Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable')))} }`
+  }))
+]
+const yearMin = Math.min(...timeline.map(entry => entry.from))
+const yearMax = CURRENT_YEAR
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
@@ -187,12 +358,69 @@ const sentence = items => {
   return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0]
 }
 
+// The slider starts on this year, and goes back to it whenever the card changes view
+const xpYear = ref(yearMax)
+watch(view, () => (xpYear.value = yearMax))
+// The pull-down reset (composables/useHardRefresh.js) starts the token over, and the XP slider with it
+const resetAt = useState('token:resetAt', () => 0)
+watch(resetAt, () => (xpYear.value = yearMax))
+const yearEntries = computed(() => timeline.filter(entry => entry.from <= xpYear.value && xpYear.value <= entry.to))
+const yearJson = computed(() => `{ "${xpYear.value}" : [ ${yearEntries.value.map(entry => entry.json).join(', ')} ] }`)
+
+// Each year gets room in proportion to its entries (plus one, so an empty year still has a dot)
+const yearSegments = Array.from({ length: yearMax - yearMin + 1 }, (_, i) => {
+  const year = yearMin + i
+  return { year, weight: 1 + timeline.filter(entry => entry.from <= year && year <= entry.to).length }
+})
+const totalWeight = yearSegments.reduce((sum, segment) => sum + segment.weight, 0)
+let before = 0
+for (const segment of yearSegments) {
+  segment.centre = ((before + segment.weight / 2) / totalWeight) * 100
+  before += segment.weight
+}
+const thumbLeft = computed(() => `${yearSegments.find(segment => segment.year === xpYear.value)?.centre ?? 0}%`)
+
+const setYear = year => (xpYear.value = Math.min(yearMax, Math.max(yearMin, year)))
+
+// Dragging across the track picks the year under the pointer
+let dragging = false
+const pickYear = event => {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width))
+  let edge = 0
+  for (const segment of yearSegments) {
+    edge += segment.weight / totalWeight
+    if (fraction <= edge) return setYear(segment.year)
+  }
+}
+const startDrag = event => {
+  dragging = true
+  event.currentTarget.setPointerCapture(event.pointerId)
+  pickYear(event)
+}
+const dragTo = event => {
+  if (dragging) pickYear(event)
+}
+const endDrag = () => (dragging = false)
+
+// Arrow keys step a year, Home and End jump to the ends
+const onTrackKey = event => {
+  const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[event.key]
+  if (step) {
+    event.preventDefault()
+    setYear(xpYear.value + step)
+  } else if (event.key === 'Home') setYear(yearMin)
+  else if (event.key === 'End') setYear(yearMax)
+}
+
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
 // "poof": the old words fall away and sparkles burst from the press. Holding again,
 // or moving on (tap/tab elsewhere, scroll the card away, leave the page), flips back.
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
+const HOLD_RELEASE_MS = 600 // after a hold, clicks outside the card are ignored this long (the text just changed under the finger)
+let suppressClicksUntil = 0
 const readable = ref(false)
 const charging = ref(false)
 const transitionName = ref('swap')
@@ -276,6 +504,19 @@ const onHoldMove = event => {
   if (moved > HOLD_SLOP_PX) cancelHold()
 }
 
+// Letting go of a hold: the text has just changed under the finger, so a click outside the
+// card (such as a social link) right after it is ignored. Clicks inside the card are handled
+// by onTap as usual.
+const endHold = () => {
+  if (held) suppressClicksUntil = performance.now() + HOLD_RELEASE_MS
+  cancelHold()
+}
+const swallowClickAfterHold = event => {
+  if (performance.now() >= suppressClicksUntil || panelEl.value?.contains(event.target)) return
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 // Back to JSON once attention leaves the card
 const onPointerDownAnywhere = event => {
   if (!cardEl.value?.contains(event.target)) revert()
@@ -290,6 +531,7 @@ let observer = null
 
 onMounted(() => {
   document.addEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.addEventListener('click', swallowClickAfterHold, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
   // Mostly scrolled out of view counts as moving on
@@ -306,6 +548,7 @@ onBeforeUnmount(() => {
   cancelHold()
   clearTimeout(fxTimer)
   document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.removeEventListener('click', swallowClickAfterHold, true)
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
@@ -317,10 +560,15 @@ const next = () => {
   view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
 }
 
-// A hold (or a hold let go early) also ends in a click; only a quick tap switches views
-const onTap = () => {
+// A hold (or a hold let go early) also ends in a click; only a quick tap switches views.
+// On desktop, alt-click flips the text the same way a hold does.
+const onTap = event => {
   if (held) {
     held = false
+    return
+  }
+  if (event.altKey) {
+    toggleReadable({ origin: { x: event.clientX, y: event.clientY } })
     return
   }
   if (pressStart && performance.now() - pressStart > TAP_MAX_MS) return
@@ -395,10 +643,25 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 }
 
 .about-card__hint {
-  margin-top: 0.6rem;
+  margin-bottom: 0.4rem;
   font-size: 0.7rem;
   text-align: right;
   color: #777;
+}
+
+/* Phones say "tap and hold"; a mouse says "alt-click or hold" */
+.hint__mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hint__touch {
+    display: none;
+  }
+
+  .hint__mouse {
+    display: inline;
+  }
 }
 
 .fact__label {
@@ -431,6 +694,102 @@ cite {
   font-size: clamp(0.9rem, 3.4vw, 1.05rem);
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+/* The XP timeline: a year's JSON, with a bold track underneath (a dot per year, wider for busier years) */
+.xp-track {
+  position: relative;
+  display: flex;
+  height: 2.6rem;
+  margin-top: 0.4rem;
+  align-items: center;
+  touch-action: none; /* a drag moves the year instead of scrolling the page */
+  cursor: pointer;
+  user-select: none;
+}
+
+.xp-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #c084fc, #41b883);
+  opacity: 0.6;
+}
+
+.xp-year {
+  position: relative;
+  flex: 0 0 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c084fc, #41b883);
+}
+
+.xp-thumb {
+  position: absolute;
+  top: 50%;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 3px solid #0f172a;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #c084fc, #41b883);
+  box-shadow: 0 0 0 2px #c084fc66;
+  transform: translate(-50%, -50%);
+  transition: left 0.2s ease;
+  pointer-events: none;
+}
+
+.xp-track:focus-visible {
+  outline: 2px dashed #7cfc00;
+  outline-offset: 4px;
+  border-radius: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-thumb {
+    transition: none;
+  }
+}
+
+.xp-entry__icon,
+.xp-entry__count {
+  margin-right: 0.3rem;
+}
+
+.xp-entry__count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Text for screen readers only (the same rule pages/projects.vue uses) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.xp-timeline__label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
 .json--skills {
@@ -477,15 +836,7 @@ cite {
   margin-top: 0.45rem;
 }
 
-/* One value per line, indented inside the array and each object */
-.json__line {
-  display: block;
-  padding-left: 1.25rem;
-}
 
-.json__line--2 {
-  padding-left: 2.5rem;
-}
 
 /* Long-press charge: a glowing bar fills under the text for the length of the hold */
 .hold-charge {
