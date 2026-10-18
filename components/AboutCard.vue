@@ -419,8 +419,6 @@ const onTrackKey = event => {
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
-const HOLD_RELEASE_MS = 600 // after a hold, clicks outside the card are ignored this long (the text just changed under the finger)
-let suppressClicksUntil = 0
 const readable = ref(false)
 const charging = ref(false)
 const transitionName = ref('swap')
@@ -493,6 +491,7 @@ const startHold = event => {
   holdTimer = setTimeout(() => {
     charging.value = false
     held = true
+    lockSocials() // the card changes height, so the links below move under the finger
     toggleReadable({ origin: holdOrigin })
     navigator.vibrate?.(15)
   }, HOLD_MS)
@@ -504,17 +503,13 @@ const onHoldMove = event => {
   if (moved > HOLD_SLOP_PX) cancelHold()
 }
 
-// Letting go of a hold: the text has just changed under the finger, so a click outside the
-// card (such as a social link) right after it is ignored. Clicks inside the card are handled
-// by onTap as usual.
-const endHold = () => {
-  if (held) suppressClicksUntil = performance.now() + HOLD_RELEASE_MS
-  cancelHold()
-}
-const swallowClickAfterHold = event => {
-  if (performance.now() >= suppressClicksUntil || panelEl.value?.contains(event.target)) return
-  event.preventDefault()
-  event.stopPropagation()
+const endHold = () => cancelHold()
+
+// The social links stay paused from the switch until a moment after the press ends, wherever
+// it ends (lifted off the card, cancelled by a scroll or the system's long-press, ...)
+const { lockSocials, releaseSocials } = useSocialsLock()
+const onPressEndAnywhere = () => {
+  if (held) releaseSocials()
 }
 
 // Back to JSON once attention leaves the card
@@ -531,7 +526,8 @@ let observer = null
 
 onMounted(() => {
   document.addEventListener('pointerdown', onPointerDownAnywhere, true)
-  document.addEventListener('click', swallowClickAfterHold, true)
+  document.addEventListener('pointerup', onPressEndAnywhere, true)
+  document.addEventListener('pointercancel', onPressEndAnywhere, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
   // Mostly scrolled out of view counts as moving on
@@ -548,7 +544,9 @@ onBeforeUnmount(() => {
   cancelHold()
   clearTimeout(fxTimer)
   document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
-  document.removeEventListener('click', swallowClickAfterHold, true)
+  document.removeEventListener('pointerup', onPressEndAnywhere, true)
+  document.removeEventListener('pointercancel', onPressEndAnywhere, true)
+  releaseSocials()
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
@@ -568,6 +566,8 @@ const onTap = event => {
     return
   }
   if (event.altKey) {
+    lockSocials()
+    releaseSocials()
     toggleReadable({ origin: { x: event.clientX, y: event.clientY } })
     return
   }

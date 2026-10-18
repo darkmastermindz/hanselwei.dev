@@ -1,5 +1,11 @@
 <template>
-  <nav ref="nav" class="socials" :class="{ 'is-lens': layout }" aria-label="Find me elsewhere">
+  <nav
+    ref="nav"
+    class="socials"
+    :class="{ 'is-lens': layout, 'is-locked': locked }"
+    :aria-disabled="locked || undefined"
+    aria-label="Find me elsewhere"
+  >
     <SocialFlipLink
       v-for="(link, i) in links"
       :key="link.label"
@@ -13,6 +19,9 @@
 </template>
 
 <script setup>
+// Paused for a moment while a press on the About card switches its text (useSocialsLock)
+const { locked } = useSocialsLock()
+
 const links = [
   { label: 'GitHub', back: '🦄 @darkmastermindz', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]', effect: 'unicorn' },
   { label: 'Mastodon', back: '🐘 Toot at me', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
@@ -159,6 +168,22 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
 
 .socials.is-lens > .flip-link {
   margin: 0.375rem 0;
+}
+
+/* Paused: taps can't reach the links (no burst, no opening) while the card above changes */
+.socials {
+  transition: opacity 0.15s ease;
+}
+
+.socials.is-locked {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socials {
+    transition: none;
+  }
 }
 
 .socials__break {
