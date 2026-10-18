@@ -6,12 +6,12 @@ import { buildProjectConfig, projectsModule } from '../utils/projects.mjs'
 
 const root = new URL('../', import.meta.url)
 const toml = parse((await readFile(new URL('config.toml', root), 'utf8').catch(() => '')) || '')
-const { wip, forks, problems } = buildProjectConfig(toml)
+const { wip, forks, featured, hackathon, problems } = buildProjectConfig(toml)
 
 if (problems.length) {
   console.error(`[build-projects] Can't build the projects config:\n  ${problems.join('\n  ')}`)
   process.exit(1)
 }
 
-await writeFile(new URL('data/projects.generated.mjs', root), projectsModule({ wip, forks }))
-console.log(`[build-projects] ${wip.size} work in progress, ${forks.size} fork(s) listed`)
+await writeFile(new URL('data/projects.generated.mjs', root), projectsModule({ wip, forks, featured, hackathon }))
+console.log(`[build-projects] ${wip.size} work in progress, ${forks.size} fork(s), ${featured.size} featured, ${hackathon.size} hackathon`)

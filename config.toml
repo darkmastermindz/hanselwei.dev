@@ -13,6 +13,9 @@ darkmastermindz = "hello@hanselwei.dev"
 [projects]
 # Projects page (/projects). Non-fork repos show automatically; each one is "Active"
 # unless it's listed under `wip`. Forks show only when listed under `forks`.
-# Names are GitHub repo names (case doesn't matter).
+# `featured` and `hackathon` add a tag to repos that are already shown (a name here
+# never adds a hidden repo). Names are GitHub repo names (case doesn't matter).
 wip = []
 forks = ["HackNC2019", "iole-python"]
+featured = []
+hackathon = ["HackNC2019"]
