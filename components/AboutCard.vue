@@ -18,7 +18,7 @@
     </div>
 
     <p class="about-card__hint" aria-hidden="true">
-      tap to switch · tap and hold for {{ readable ? 'JSON' : 'plain English' }}
+      tap to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
     </p>
     <div
       :id="`about-panel-${view}`"
@@ -473,10 +473,15 @@ const next = () => {
   view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
 }
 
-// A hold (or a hold let go early) also ends in a click; only a quick tap switches views
-const onTap = () => {
+// A hold (or a hold let go early) also ends in a click; only a quick tap switches views.
+// On desktop, alt-click flips the text the same way a hold does.
+const onTap = event => {
   if (held) {
     held = false
+    return
+  }
+  if (event.altKey) {
+    toggleReadable({ origin: { x: event.clientX, y: event.clientY } })
     return
   }
   if (pressStart && performance.now() - pressStart > TAP_MAX_MS) return
@@ -555,6 +560,21 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   font-size: 0.7rem;
   text-align: right;
   color: #777;
+}
+
+/* Phones say "tap and hold"; a mouse says "alt-click or hold" */
+.hint__mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hint__touch {
+    display: none;
+  }
+
+  .hint__mouse {
+    display: inline;
+  }
 }
 
 .fact__label {
