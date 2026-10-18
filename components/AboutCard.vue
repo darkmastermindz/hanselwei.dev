@@ -67,12 +67,15 @@
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
-        <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
-          <!-- The same entries as the JSON for the selected year -->
-          <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
-        </ul>
         <div v-else key="edu" data-content class="xp-timeline">
-          <p class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+          <!-- The text swaps between JSON and plain English; the year track stays below in both -->
+          <Transition :name="transitionName" mode="out-in" type="transition">
+            <ul v-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
+              <!-- The same entries as the JSON for the selected year -->
+              <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
+            </ul>
+            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+          </Transition>
           <!-- Presses on the track stay here: they don't start a hold or switch views -->
           <div
             class="xp-track"
