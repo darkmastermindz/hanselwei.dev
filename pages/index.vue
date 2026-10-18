@@ -9,7 +9,7 @@
         · best hold {{ best }}
         · {{ seenCount }}/{{ total }} discovered
       </template>
-      <template v-else>tap to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for plain English</template>
+      <template v-else>tap profile picture coin • discover a new fact</template>
     </p>
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
@@ -63,22 +63,6 @@ const onRelease = (spins, heldMs) => {
     color: #9dff5c;
   }
 }
-
-/* Phones say "tap and hold"; a mouse says "alt-click or hold" (as on the About card) */
-.hint__mouse {
-  display: none;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .hint__touch {
-    display: none;
-  }
-
-  .hint__mouse {
-    display: inline;
-  }
-}
-
 .outer {
   text-align: center;
 }
