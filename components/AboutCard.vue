@@ -17,8 +17,8 @@
       </button>
     </div>
 
-    <!-- Holding does nothing on the fact view, so the tip points at the coin instead -->
-    <p v-if="view === 'fact'" class="about-card__hint" aria-hidden="true">tap profile picture coin • discover a new fact</p>
+    <!-- Holding does nothing on the fact view, so the tip only says tapping switches categories -->
+    <p v-if="view === 'fact'" class="about-card__hint" aria-hidden="true">tap to switch categories</p>
     <p v-else class="about-card__hint" aria-hidden="true">
       tap to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
     </p>
@@ -32,7 +32,7 @@
       tabindex="0"
       :aria-labelledby="`about-tab-${view}`"
       aria-live="polite"
-      :title="view === 'fact' ? 'tap profile picture coin • discover a new fact' : 'Tap to switch, press and hold for plain English'"
+      :title="view === 'fact' ? 'tap to switch categories' : 'Tap to switch, press and hold for plain English'"
       @click="onTap"
       @keydown.enter.space.exact.prevent="next"
       @keydown.shift.enter.prevent="toggleReadable()"
