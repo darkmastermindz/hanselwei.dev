@@ -20,3 +20,19 @@ wip = []
 forks = ["HackNC2019", "iole-python"]
 featured = []
 hackathon = ["HackNC2019"]
+
+[background]
+# The faint topographic lines behind every page (purple-to-green, drawing in as visitors stay).
+# Leave a setting out to use its default. The build fails on a value out of range.
+# More contours or smaller features mean more drawing data on big screens (about 0.3 MB at
+# these values on a 2560px-wide screen, up to about 1.6 MB at 60 contours and 80px features).
+enabled = true
+# When the browser asks to save data (Data Saver / Lite mode, reduced data, 2G; detected
+# automatically): "sparse" draws a lighter pattern (half the contours, larger hills, no trails,
+# about a quarter of the size), "skip" draws none, "full" ignores it.
+data_saver = "sparse"
+contours = 28       # how many contour lines (8–60); more lines = denser
+feature_size = 260  # rough size of a hill or valley, in pixels (80–800); smaller = busier
+index_every = 5     # every Nth line is heavier, like a topo map (0 = none, up to 20)
+trails = 3          # dashed trails that fade in at the end (0–6)
+draw_seconds = 90   # time on the page to draw everything (0 = show it all at once, up to 600)
