@@ -22,6 +22,7 @@
           <option value="updated">Recently updated</option>
           <option value="stars">Most stars</option>
           <option value="name">Name</option>
+          <option value="featured">Featured first</option>
         </select>
       </label>
     </form>
@@ -40,6 +41,20 @@
       </button>
     </div>
 
+    <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
+      <button
+        v-for="t in tags"
+        :key="t"
+        type="button"
+        class="tag"
+        :class="{ 'is-on': tag === t }"
+        :aria-pressed="tag === t ? 'true' : 'false'"
+        @click="store.setTag(tag === t ? null : t)"
+      >
+        {{ tagLabel(t) }}
+      </button>
+    </div>
+
     <p class="results" aria-live="polite">{{ resultText }}</p>
 
     <div class="projects">
@@ -53,8 +68,8 @@
           <span v-if="project.language">· {{ project.language }}</span>
         </p>
         <p v-if="project.description">{{ project.description }}</p>
-        <ul v-if="project.topics.length" class="topics" aria-label="Topics">
-          <li v-for="topic in project.topics" :key="topic">{{ topic }}</li>
+        <ul v-if="project.tags.length" class="topics" aria-label="Tags">
+          <li v-for="t in project.tags" :key="t">{{ tagLabel(t) }}</li>
         </ul>
         <a v-if="project.homepage" class="homepage" :href="project.homepage" target="_blank" rel="noopener">
           {{ project.homepage }}
@@ -72,6 +87,7 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useProjectsStore } from '~/stores/projects'
+import { tagLabel } from '~/utils/projects.mjs'
 
 useHead({ title: 'Projects · hanselwei.dev' })
 
@@ -86,7 +102,7 @@ const LABELS = { active: 'Active', wip: 'Work in progress', fork: 'Fork' }
 const store = useProjectsStore()
 await callOnce(() => store.fetchGithubProjects())
 
-const { githubProjects, filter, query, sort, loaded, counts, visible } = storeToRefs(store)
+const { githubProjects, filter, tag, query, sort, loaded, counts, visible, tags } = storeToRefs(store)
 
 const resultText = computed(() => {
   if (!loaded.value) return 'Loading projects…'
@@ -97,6 +113,7 @@ const resultText = computed(() => {
 const reset = () => {
   query.value = ''
   store.setFilter('all')
+  store.setTag(null)
 }
 </script>
 
@@ -153,6 +170,34 @@ const reset = () => {
     background: #23262a;
     color: #eee;
     border: 1px solid #653496;
+  }
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.tag {
+  min-height: 36px;
+  padding: 0.2rem 0.8rem;
+  border-radius: 9999px;
+  border: 1px solid #3f3f46;
+  background: transparent;
+  color: #bbb;
+  font-size: 0.85rem;
+
+  &.is-on {
+    background: #7cfc00;
+    color: #111;
+    border-color: #7cfc00;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #7cfc00;
+    outline-offset: 2px;
   }
 }
 

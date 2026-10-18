@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import projectsConfig from '~/data/projects.generated.mjs'
-import { buildProjectConfig, categorize, FILTERS, matchesQuery, sorter } from '~/utils/projects.mjs'
+import { buildProjectConfig, categorize, FILTERS, tagsFor, visibleProjects } from '~/utils/projects.mjs'
 
 // Built from config.toml [projects] at build time (scripts/build-projects.mjs)
 const CONFIG = buildProjectConfig(projectsConfig)
@@ -9,6 +9,7 @@ export const useProjectsStore = defineStore('projects', {
   state: () => ({
     githubProjects: [],
     filter: 'all',
+    tag: null,
     query: '',
     sort: 'updated',
     loaded: false
@@ -22,14 +23,16 @@ export const useProjectsStore = defineStore('projects', {
       }
       return counts
     },
-    visible: state =>
-      state.githubProjects
-        .filter(project => (state.filter === 'all' || project.category === state.filter) && matchesQuery(project, state.query))
-        .sort(sorter(state.sort))
+    // Every tag on a shown repo, sorted like the blog's tags
+    tags: state => [...new Set(state.githubProjects.flatMap(project => project.tags))].sort(),
+    visible: state => visibleProjects(state.githubProjects, state)
   },
   actions: {
     setFilter(filter) {
       if (FILTERS.includes(filter)) this.filter = filter
+    },
+    setTag(tag) {
+      if (tag === null || this.tags.includes(tag)) this.tag = tag
     },
     async fetchGithubProjects() {
       if (this.githubProjects.length) return
@@ -52,9 +55,11 @@ export const useProjectsStore = defineStore('projects', {
             homepage: repo.homepage,
             html_url: repo.html_url,
             updated_at: repo.updated_at,
-            category: categorize(repo, CONFIG)
+            category: categorize(repo, CONFIG),
+            tags: tagsFor(repo, CONFIG).concat(Array.isArray(repo.topics) ? repo.topics : [])
           }))
           .filter(project => project.category !== null)
+          .map(project => ({ ...project, tags: [...new Set(project.tags)] }))
       } catch (err) {
         console.error(err)
       } finally {
