@@ -18,7 +18,7 @@
     </div>
 
     <p class="about-card__hint" aria-hidden="true">
-      tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
+      tap to switch · tap and hold for {{ readable ? 'JSON' : 'plain English' }}
     </p>
     <div
       :id="`about-panel-${view}`"
@@ -73,20 +73,28 @@
         </ul>
         <div v-else key="edu" data-content class="xp-timeline">
           <p class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
-          <!-- Scrubbing stays on the slider: presses here don't start a hold or switch views -->
-          <input
-            v-model.number="xpYear"
-            type="range"
-            class="xp-slider"
-            :min="yearMin"
-            :max="yearMax"
-            step="1"
+          <!-- Presses on the track stay here: they don't start a hold or switch views -->
+          <div
+            class="xp-track"
+            role="slider"
+            tabindex="0"
             aria-label="Experience timeline, by year"
+            :aria-valuemin="yearMin"
+            :aria-valuemax="yearMax"
+            :aria-valuenow="xpYear"
             :aria-valuetext="String(xpYear)"
-            @pointerdown.stop
+            @pointerdown.stop="startDrag"
+            @pointermove="dragTo"
+            @pointerup.stop="endDrag"
+            @pointercancel.stop="endDrag"
             @click.stop
-            @keydown.stop
-          />
+            @keydown.stop="onTrackKey"
+          >
+            <span v-for="segment in yearSegments" :key="segment.year" class="xp-year" :style="{ flexGrow: segment.weight }">
+              <span class="xp-dot" />
+            </span>
+            <span class="xp-thumb" :style="{ left: thumbLeft }" aria-hidden="true" />
+          </div>
           <p class="xp-timeline__label">{{ xpYear }} · {{ yearEntries.length }} {{ yearEntries.length === 1 ? 'entry' : 'entries' }}</p>
         </div>
       </Transition>
@@ -238,6 +246,52 @@ const xpYear = ref(yearMax)
 watch(view, () => (xpYear.value = yearMax))
 const yearEntries = computed(() => timeline.filter(entry => entry.from <= xpYear.value && xpYear.value <= entry.to))
 const yearJson = computed(() => `{ "${xpYear.value}" : [ ${yearEntries.value.map(entry => entry.json).join(', ')} ] }`)
+
+// Each year gets room in proportion to its entries (plus one, so an empty year still has a dot)
+const yearSegments = Array.from({ length: yearMax - yearMin + 1 }, (_, i) => {
+  const year = yearMin + i
+  return { year, weight: 1 + timeline.filter(entry => entry.from <= year && year <= entry.to).length }
+})
+const totalWeight = yearSegments.reduce((sum, segment) => sum + segment.weight, 0)
+let before = 0
+for (const segment of yearSegments) {
+  segment.centre = ((before + segment.weight / 2) / totalWeight) * 100
+  before += segment.weight
+}
+const thumbLeft = computed(() => `${yearSegments.find(segment => segment.year === xpYear.value)?.centre ?? 0}%`)
+
+const setYear = year => (xpYear.value = Math.min(yearMax, Math.max(yearMin, year)))
+
+// Dragging across the track picks the year under the pointer
+let dragging = false
+const pickYear = event => {
+  const rect = event.currentTarget.getBoundingClientRect()
+  const fraction = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width))
+  let edge = 0
+  for (const segment of yearSegments) {
+    edge += segment.weight / totalWeight
+    if (fraction <= edge) return setYear(segment.year)
+  }
+}
+const startDrag = event => {
+  dragging = true
+  event.currentTarget.setPointerCapture(event.pointerId)
+  pickYear(event)
+}
+const dragTo = event => {
+  if (dragging) pickYear(event)
+}
+const endDrag = () => (dragging = false)
+
+// Arrow keys step a year, Home and End jump to the ends
+const onTrackKey = event => {
+  const step = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1 }[event.key]
+  if (step) {
+    event.preventDefault()
+    setYear(xpYear.value + step)
+  } else if (event.key === 'Home') setYear(yearMin)
+  else if (event.key === 'End') setYear(yearMax)
+}
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
 // "poof": the old words fall away and sparkles burst from the press. Holding again,
@@ -485,13 +539,70 @@ cite {
   overflow-wrap: anywhere;
 }
 
-/* The XP timeline: one entry's JSON, with a slider underneath to step through the history */
-.xp-slider {
-  display: block;
-  width: 100%;
-  margin-top: 0.6rem;
-  accent-color: #bae6fd;
+/* The XP timeline: a year's JSON, with a bold track underneath (a dot per year, wider for busier years) */
+.xp-track {
+  position: relative;
+  display: flex;
+  height: 2.6rem;
+  margin-top: 0.4rem;
+  align-items: center;
+  touch-action: none; /* a drag moves the year instead of scrolling the page */
   cursor: pointer;
+  user-select: none;
+}
+
+.xp-track::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 0.5rem;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: #334155;
+}
+
+.xp-year {
+  position: relative;
+  flex: 0 0 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.xp-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: #64748b;
+}
+
+.xp-thumb {
+  position: absolute;
+  top: 50%;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 3px solid #0f172a;
+  border-radius: 50%;
+  background: #bae6fd;
+  box-shadow: 0 0 0 2px #bae6fd66;
+  transform: translate(-50%, -50%);
+  transition: left 0.2s ease;
+  pointer-events: none;
+}
+
+.xp-track:focus-visible {
+  outline: 2px dashed #7cfc00;
+  outline-offset: 4px;
+  border-radius: 0.4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .xp-thumb {
+    transition: none;
+  }
 }
 
 .xp-timeline__label {
