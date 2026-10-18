@@ -3,8 +3,8 @@
 // anything wrong fails the build, like the other config sections.
 export const BACKGROUND_DEFAULTS = {
   enabled: true,
-  contours: 36,
-  featureSize: 240,
+  contours: 28,
+  featureSize: 260,
   indexEvery: 5,
   trails: 3,
   drawSeconds: 90
