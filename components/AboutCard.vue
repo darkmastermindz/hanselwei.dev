@@ -68,8 +68,8 @@
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
         <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
-          <li v-for="entry in education" :key="entry.school"><strong>{{ entry.date }}</strong> · {{ entry.readable }}</li>
-          <li v-for="job in experience" :key="`${job.role}-${job.start}`"><strong>{{ job.start }} – {{ job.end }}</strong> · {{ job.role }} at {{ job.company }}<template v-if="job.location"> ({{ job.location }})</template>{{ job.highlight ? `. ${job.highlight}.` : '.' }}</li>
+          <!-- The same entries as the JSON for the selected year -->
+          <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
         </ul>
         <div v-else key="edu" data-content class="xp-timeline">
           <p class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
@@ -220,14 +220,24 @@ const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key
 // that year (education and work history) as minified JSON
 const CURRENT_YEAR = new Date().getFullYear()
 const yearOf = text => Number(String(text).match(/\d{4}/)?.[0])
+// Each entry has its JSON (for the card) and its plain-English line (for holding), so both views
+// always show the same things
 const timeline = [
   ...education.map(entry => {
     const to = yearOf(entry.graduated ?? entry.passed)
-    return { from: entry.started ?? to, to, json: `{ "education" : ${jsonValue(withoutText(entry))} }` }
+    return {
+      from: entry.started ?? to,
+      to,
+      label: entry.date,
+      text: entry.readable,
+      json: `{ "education" : ${jsonValue(withoutText(entry))} }`
+    }
   }),
   ...experience.map(job => ({
     from: yearOf(job.start),
     to: job.end === 'Present' ? CURRENT_YEAR : yearOf(job.end),
+    label: `${job.start} – ${job.end}`,
+    text: `${job.role} at ${job.company}${job.location ? ` (${job.location})` : ''}${job.highlight ? `. ${job.highlight}.` : '.'}`,
     json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
   }))
 ]
@@ -560,7 +570,8 @@ cite {
   height: 0.5rem;
   transform: translateY(-50%);
   border-radius: 999px;
-  background: #334155;
+  background: linear-gradient(90deg, #c084fc, #41b883);
+  opacity: 0.6;
 }
 
 .xp-year {
@@ -576,7 +587,7 @@ cite {
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background: #64748b;
+  background: linear-gradient(135deg, #c084fc, #41b883);
 }
 
 .xp-thumb {
@@ -586,8 +597,8 @@ cite {
   height: 1.4rem;
   border: 3px solid #0f172a;
   border-radius: 50%;
-  background: #bae6fd;
-  box-shadow: 0 0 0 2px #bae6fd66;
+  background: linear-gradient(135deg, #c084fc, #41b883);
+  box-shadow: 0 0 0 2px #c084fc66;
   transform: translate(-50%, -50%);
   transition: left 0.2s ease;
   pointer-events: none;
