@@ -27,7 +27,10 @@ hackathon = ["HackNC2019"]
 # More contours or smaller features mean more drawing data on big screens (about 0.3 MB at
 # these values on a 2560px-wide screen, up to about 1.6 MB at 60 contours and 80px features).
 enabled = true
-respect_data_saver = true  # skip it when the browser asks to save data (Data Saver / Lite mode, reduced data, 2G), detected automatically
+# When the browser asks to save data (Data Saver / Lite mode, reduced data, 2G; detected
+# automatically): "sparse" draws a lighter pattern (half the contours, larger hills, no trails,
+# about a quarter of the size), "skip" draws none, "full" ignores it.
+data_saver = "sparse"
 contours = 28       # how many contour lines (8–60); more lines = denser
 feature_size = 260  # rough size of a hill or valley, in pixels (80–800); smaller = busier
 index_every = 5     # every Nth line is heavier, like a topo map (0 = none, up to 20)

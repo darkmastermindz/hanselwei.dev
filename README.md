@@ -51,7 +51,10 @@ Non-fork repos show automatically. In `config.toml`, under `[projects]`:
 ## Topographic background
 Faint purple-to-green contour lines sit behind every page and draw in as visitors stay. They're built in the browser at the screen's size, in a Web Worker (`workers/topo.worker.mjs`, `utils/topo.mjs`). Tune them in `config.toml` under `[background]`; the build fails on a value out of range:
 - `enabled`: `true` or `false`.
-- `respect_data_saver`: `true` (the default) skips the background when the browser asks to save data. That's detected automatically: Data Saver or Lite mode (`navigator.connection.saveData`), the `prefers-reduced-data` media query, or a 2G or slower connection.
+- `data_saver`: what to do when the browser asks to save data. That's detected automatically: Data Saver or Lite mode (`navigator.connection.saveData`), the `prefers-reduced-data` media query, or a 2G or slower connection.
+  - `"sparse"` (the default): a lighter pattern with half the contours, larger hills, no trails and a coarser grid, about a quarter of the size.
+  - `"skip"`: no background.
+  - `"full"`: ignore the hint and draw the full pattern.
 - `contours` (8–60): how many contour lines. More is denser.
 - `feature_size` (80–800): the rough size of a hill or valley in pixels. Smaller is busier.
 - `index_every` (0–20): every Nth line is heavier. `0` turns them off.

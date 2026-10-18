@@ -187,9 +187,10 @@ const smoothPath = line => {
   return `${d}L${px(kept.at(-1)[0])} ${px(kept.at(-1)[1])}`
 }
 
-// The cell size for a screen: about 8px, larger on very big screens so the work stays bounded
-export const gridFor = (width, height) => {
-  const cell = Math.max(TARGET_CELL_PX, Math.sqrt((width * height) / MAX_CELLS))
+// The cell size for a screen: about 8px (or the cell size asked for), larger on very big screens
+// so the work stays bounded
+export const gridFor = (width, height, cellSize = TARGET_CELL_PX) => {
+  const cell = Math.max(cellSize, Math.sqrt((width * height) / MAX_CELLS))
   const cols = Math.max(1, Math.ceil(width / cell))
   const rows = Math.max(1, Math.ceil(height / cell))
   return { cols, rows, cellW: width / cols, cellH: height / rows }
@@ -203,9 +204,10 @@ export const buildTopo = ({
   contours = LEVEL_COUNT,
   featureSize = FEATURE_PX,
   indexEvery = INDEX_EVERY,
-  trails: trailCount = TRAIL_COUNT
+  trails: trailCount = TRAIL_COUNT,
+  cellSize = TARGET_CELL_PX
 }) => {
-  const grid = gridFor(width, height)
+  const grid = gridFor(width, height, cellSize)
   const values = sampleGrid(grid, terrain(featureSize))
   let low = Infinity
   let high = -Infinity

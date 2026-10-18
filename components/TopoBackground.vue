@@ -37,7 +37,7 @@
 
 <script setup>
 import { buildTopo, levelProgress, trailOpacity } from '~/utils/topo.mjs'
-import { wantsLessData } from '~/utils/background.mjs'
+import { topoOptions, wantsLessData } from '~/utils/background.mjs'
 // config.toml [background], checked at build time (scripts/build-background.mjs)
 import settings from '~/data/background.generated.mjs'
 
@@ -60,6 +60,7 @@ let idle = null
 let worker = null
 let drawing = false
 let reducedMotion = false
+let options = null // the build settings for this visitor (full or light), from topoOptions
 
 // Show a built pattern, and start the draw-in clock the first time
 const show = pattern => {
@@ -83,14 +84,7 @@ const buildHere = size => {
 
 // Build in a worker (workers/topo.worker.mjs), so the main thread stays free
 const build = () => {
-  const size = {
-    width: window.innerWidth,
-    height: window.innerHeight,
-    contours: settings.contours,
-    featureSize: settings.featureSize,
-    indexEvery: settings.indexEvery,
-    trails: settings.trails
-  }
+  const size = { width: window.innerWidth, height: window.innerHeight, ...options }
   try {
     worker ??= new Worker(new URL('../workers/topo.worker.mjs', import.meta.url), { type: 'module' })
     worker.onmessage = ({ data }) => show(data)
@@ -125,8 +119,8 @@ const onResize = () => {
   }, 300)
 }
 
-// Data Saver / Lite mode, prefers-reduced-data, or a very slow connection (config.toml
-// respect_data_saver): skip the background entirely, worker and all
+// Data Saver / Lite mode, prefers-reduced-data, or a very slow connection: config.toml
+// data_saver decides whether that means a lighter pattern, none, or the full one
 const browserWantsLessData = () =>
   wantsLessData({
     saveData: navigator.connection?.saveData,
@@ -135,8 +129,8 @@ const browserWantsLessData = () =>
   })
 
 onMounted(() => {
-  if (!settings.enabled) return
-  if (settings.respectDataSaver && browserWantsLessData()) return
+  options = topoOptions(settings, browserWantsLessData())
+  if (!options) return // turned off, or data_saver = "skip" while saving data
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   build()
   window.addEventListener('resize', onResize, { passive: true })

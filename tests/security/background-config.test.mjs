@@ -13,12 +13,12 @@ test('no [background] section means the defaults', () => {
 
 test('valid settings are used, in their own names', () => {
   const { config, problems } = buildBackgroundConfig({
-    background: { enabled: false, respect_data_saver: false, contours: 50, feature_size: 120, index_every: 0, trails: 0, draw_seconds: 0 }
+    background: { enabled: false, data_saver: 'skip', contours: 50, feature_size: 120, index_every: 0, trails: 0, draw_seconds: 0 }
   })
   assert.deepEqual(problems, [])
   assert.deepEqual(config, {
     enabled: false,
-    respectDataSaver: false,
+    dataSaver: 'skip',
     contours: 50,
     featureSize: 120,
     indexEvery: 0,
@@ -41,8 +41,9 @@ test('out-of-range, fractional and wrongly typed values fail the build', () => {
     { draw_seconds: 601 },
     { enabled: 'yes' },
     { enabled: 1 },
-    { respect_data_saver: 'auto' },
-    { respect_data_saver: 0 }
+    { data_saver: 'auto' },
+    { data_saver: true },
+    { data_saver: 'SPARSE' }
   ]
   for (const background of bad) {
     const { config, problems } = buildBackgroundConfig({ background })
@@ -60,9 +61,9 @@ test('unknown or hostile keys fail the build and never reach the module', () => 
   }
 })
 
-test('hostile values are refused, so the generated module only ever holds numbers and booleans', () => {
+test('hostile values are refused, so the generated module only holds numbers, booleans and a known mode', () => {
   for (const payload of [...JS_BREAKOUTS, ...XSS_HTML]) {
-    for (const key of ['enabled', 'respect_data_saver', 'contours', 'feature_size', 'index_every', 'trails', 'draw_seconds']) {
+    for (const key of ['enabled', 'data_saver', 'contours', 'feature_size', 'index_every', 'trails', 'draw_seconds']) {
       const { config, problems } = buildBackgroundConfig({ background: { [key]: payload } })
       assert.equal(problems.length, 1)
       const source = backgroundModule(config)

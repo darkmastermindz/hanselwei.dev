@@ -13,7 +13,8 @@ self.onmessage = ({ data }) => {
       contours: whole(data?.contours),
       featureSize: whole(data?.featureSize),
       indexEvery: whole(data?.indexEvery),
-      trails: whole(data?.trails)
+      trails: whole(data?.trails),
+      cellSize: whole(data?.cellSize)
     })
   )
 }
