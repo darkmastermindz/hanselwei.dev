@@ -65,13 +65,15 @@
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
         <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
-          <li v-for="entry in education" :key="entry.year"><strong>{{ entry.year }}</strong> · {{ entry.readable }}</li>
+          <li v-for="entry in education" :key="entry.program"><strong>{{ entry.graduated }}</strong> · {{ entry.readable }}</li>
         </ul>
         <p v-else key="edu" data-content class="json json--edu">
           { "Education" : [
-          <span v-for="(entry, i) in education" :key="entry.year" class="json__line">
-            "{{ [entry.year, ...entry.parts].join(' · ') }}"{{ i < education.length - 1 ? ',' : '' }}
-          </span>
+          <span
+            v-for="(line, i) in educationJson"
+            :key="i"
+            :class="['json__line', `json__line--${line.depth}`]"
+          >{{ line.text }}</span>
           ] }
         </p>
       </Transition>
@@ -139,24 +141,44 @@ const hobbies = [
   'Paddleboarding', 'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
 ]
 
-// `parts` is the JSON line; `readable` is the plain-English version
+// `graduated` is the graduation date; `readable` is the plain-English version
 const education = [
   {
-    year: 2026,
-    parts: ['Single Pitch Instructor Course', 'Pisgah Climbing School', 'Brevard, NC'],
+    graduated: 2026,
+    program: 'Single Pitch Instructor Course',
+    school: 'Pisgah Climbing School',
+    location: 'Brevard, NC',
     readable: 'Single Pitch Instructor Course at Pisgah Climbing School in Brevard, NC'
   },
   {
-    year: 2025,
-    parts: ['Chakra Flow University', 'YTT200', 'Whitewater Center', 'Charlotte, NC'],
+    graduated: 2025,
+    program: 'YTT200',
+    school: 'Chakra Flow University',
+    location: 'Charlotte, NC',
     readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
   },
   {
-    year: 2019,
-    parts: ['UNC Charlotte', 'Computer Science, BS / Communication Studies Minor', 'Charlotte, NC'],
+    graduated: 2019,
+    program: 'Computer Science, BS / Communication Studies Minor',
+    school: 'UNC Charlotte',
+    location: 'Charlotte, NC',
     readable: 'Bachelor of Science in Computer Science with a minor in Communication Studies from UNC Charlotte in Charlotte, NC'
   }
 ]
+
+// Valid JSON, one value per line, written out from the fields so quoting and commas are right
+const educationJson = education.flatMap((entry, i) => {
+  const fields = ['graduated', 'program', 'school', 'location'].map(key => [key, entry[key]])
+  const last = i === education.length - 1
+  return [
+    { depth: 1, text: '{' },
+    ...fields.map(([key, value], j) => ({
+      depth: 2,
+      text: `${JSON.stringify(key)} : ${JSON.stringify(value)}${j < fields.length - 1 ? ',' : ''}`
+    })),
+    { depth: 1, text: `}${last ? '' : ','}` }
+  ]
+})
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
@@ -455,10 +477,14 @@ cite {
   margin-top: 0.45rem;
 }
 
-/* One school per line, indented inside the array */
+/* One value per line, indented inside the array and each object */
 .json__line {
   display: block;
   padding-left: 1.25rem;
+}
+
+.json__line--2 {
+  padding-left: 2.5rem;
 }
 
 /* Long-press charge: a glowing bar fills under the text for the length of the hold */
