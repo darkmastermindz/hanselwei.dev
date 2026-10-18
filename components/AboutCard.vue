@@ -133,6 +133,8 @@
 </template>
 
 <script setup>
+import { isActionTarget } from '~/utils/actionTarget.js'
+
 // One card under the contact button: the token's latest fact, or the "I am a"
 // (skills), hobbies and education JSON, switched with the toggle on top.
 const props = defineProps({
@@ -414,8 +416,9 @@ const onTrackKey = event => {
 }
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
-// "poof": the old words fall away and sparkles burst from the press. Holding again,
-// or moving on (tap/tab elsewhere, scroll the card away, leave the page), flips back.
+// "poof": the old words fall away and sparkles burst from the press. It stays through
+// scrolling and taps on the background; holding again, or a real action elsewhere (a link,
+// a button, tabbing away, leaving the page), flips back.
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
@@ -512,9 +515,10 @@ const onPressEndAnywhere = () => {
   if (held) releaseSocials()
 }
 
-// Back to JSON once attention leaves the card
-const onPointerDownAnywhere = event => {
-  if (!cardEl.value?.contains(event.target)) revert()
+// Back to JSON once the visitor does something else. A click (not a pointerdown) so a scroll
+// that starts on a link doesn't count.
+const onClickAnywhere = event => {
+  if (!cardEl.value?.contains(event.target) && isActionTarget(event.target)) revert()
 }
 const onFocusOut = event => {
   if (event.relatedTarget && !cardEl.value?.contains(event.relatedTarget)) revert()
@@ -522,34 +526,23 @@ const onFocusOut = event => {
 const onVisibility = () => {
   if (document.hidden) revert({ animate: false })
 }
-let observer = null
-
 onMounted(() => {
-  document.addEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.addEventListener('click', onClickAnywhere, true)
   document.addEventListener('pointerup', onPressEndAnywhere, true)
   document.addEventListener('pointercancel', onPressEndAnywhere, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
-  // Mostly scrolled out of view counts as moving on
-  observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.intersectionRatio < 0.25) revert({ animate: false })
-    },
-    { threshold: [0, 0.25] }
-  )
-  if (cardEl.value) observer.observe(cardEl.value)
 })
 
 onBeforeUnmount(() => {
   cancelHold()
   clearTimeout(fxTimer)
-  document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.removeEventListener('click', onClickAnywhere, true)
   document.removeEventListener('pointerup', onPressEndAnywhere, true)
   document.removeEventListener('pointercancel', onPressEndAnywhere, true)
   releaseSocials()
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
-  observer?.disconnect()
 })
 
 // Tapping the card cycles through whatever views are available
