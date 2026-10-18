@@ -146,7 +146,7 @@ const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
   { id: 'hobbies', label: '🧗 Hobbies' },
-  { id: 'edu', label: '🏅 XP' }
+  { id: 'edu', label: '💚 XP' }
 ])
 
 // Prerender shows Skills; each visit then opens on Skills or Hobbies at random
