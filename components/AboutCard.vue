@@ -68,14 +68,6 @@
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
         <div v-else key="edu" data-content class="xp-timeline">
-          <!-- The text swaps between JSON and plain English; the year track stays below in both -->
-          <Transition :name="transitionName" mode="out-in" type="transition">
-            <ul v-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
-              <!-- The same entries as the JSON for the selected year -->
-              <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
-            </ul>
-            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
-          </Transition>
           <!-- Presses on the track stay here: they don't start a hold or switch views -->
           <div
             class="xp-track"
@@ -99,6 +91,14 @@
             <span class="xp-thumb" :style="{ left: thumbLeft }" aria-hidden="true" />
           </div>
           <p class="xp-timeline__label">{{ xpYear }} · {{ yearEntries.length }} {{ yearEntries.length === 1 ? 'entry' : 'entries' }}</p>
+          <!-- The text swaps between JSON and plain English; the year track and label stay above in both -->
+          <Transition :name="transitionName" mode="out-in" type="transition">
+            <ul v-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
+              <!-- The same entries as the JSON for the selected year -->
+              <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
+            </ul>
+            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+          </Transition>
         </div>
       </Transition>
 
