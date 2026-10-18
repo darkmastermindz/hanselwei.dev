@@ -71,8 +71,20 @@
           <li v-for="entry in education" :key="entry.school"><strong>{{ entry.date }}</strong> · {{ entry.readable }}</li>
           <li v-for="job in experience" :key="`${job.role}-${job.start}`"><strong>{{ job.start }} – {{ job.end }}</strong> · {{ job.role }} at {{ job.company }}<template v-if="job.location"> ({{ job.location }})</template>{{ job.highlight ? `. ${job.highlight}.` : '.' }}</li>
         </ul>
-        <p v-else key="edu" data-content :class="['json json--edu json--xp motion-safe:animate-pulse']">{{ xpJson }}</p>
+        <p v-else key="edu" data-content :class="['json json--edu json--xp motion-safe:animate-pulse', { 'json--clamped': xpCollapsed }]">{{ xpJson }}</p>
       </Transition>
+
+      <!-- The XP JSON is long: a scrollable preview (swipe on a phone) with a button to show it all -->
+      <button
+        v-if="xpCollapsible"
+        type="button"
+        class="json-toggle"
+        :aria-expanded="xpExpanded"
+        @click.stop="xpExpanded = !xpExpanded"
+        @pointerdown.stop
+      >
+        {{ xpExpanded ? 'Show less ▲' : 'Show all ▼' }}
+      </button>
 
       <!-- Fills up while the press is held, so it reads as a deliberate long press -->
       <span class="hold-charge" aria-hidden="true" />
@@ -199,6 +211,14 @@ const sentence = items => {
   const words = items.map(i => i.replace(/!$/, ''))
   return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0]
 }
+
+// The XP JSON is long: on the card it starts as a scrollable preview, with a button to show it all.
+// Only the JSON view (not plain English) is truncated, and it folds back when the view changes.
+const JSON_PREVIEW_CHARS = 240
+const xpExpanded = ref(false)
+const xpCollapsible = computed(() => xpJson.length > JSON_PREVIEW_CHARS && view.value === 'edu' && !readable.value)
+const xpCollapsed = computed(() => xpCollapsible.value && !xpExpanded.value)
+watch(view, () => (xpExpanded.value = false))
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
 // "poof": the old words fall away and sparkles burst from the press. Holding again,
@@ -444,6 +464,26 @@ cite {
   font-size: clamp(0.9rem, 3.4vw, 1.05rem);
   line-height: 1.6;
   overflow-wrap: anywhere;
+}
+
+/* Long JSON starts as a preview that scrolls on its own (swipe on a phone) */
+.json--clamped {
+  max-height: 7.5em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.json-toggle {
+  display: block;
+  margin-top: 0.5rem;
+  padding: 0.15rem 0.75rem;
+  font-size: 0.75rem;
+  color: #bae6fd;
+  background: none;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  cursor: pointer;
 }
 
 .json--skills {
