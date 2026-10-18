@@ -197,7 +197,10 @@ export const gridFor = (width, height, cellSize = TARGET_CELL_PX) => {
 }
 
 // The whole pattern for a screen size and settings:
-// { width, height, levels: [{ d, length, index }], trails: [{ d }] }
+// { width, height, levels: [{ d, length, longest, index, order }], trails: [{ d }] }
+// length is the level's total line length, longest its longest single line (the dash the browser
+// draws each line along, since dashing restarts on every line of a path), and order its place in
+// the draw-in sequence: the longest levels go first, so the most visible lines show right away.
 export const buildTopo = ({
   width,
   height,
@@ -223,6 +226,7 @@ export const buildTopo = ({
     levels.push({
       d: lines.map(smoothPath).join(''),
       length: lines.reduce((sum, line) => sum + lengthOf(line), 0),
+      longest: lines.reduce((most, line) => Math.max(most, lengthOf(line)), 0),
       index: indexEvery > 0 && k % indexEvery === indexEvery - 1
     })
   }
@@ -239,6 +243,12 @@ export const buildTopo = ({
       .map(line => ({ d: smoothPath(line) }))
   }
 
+  // Draw order: longest levels first (ties keep their height order)
+  levels
+    .map((level, k) => ({ k, length: level.length }))
+    .sort((a, b) => b.length - a.length || a.k - b.k)
+    .forEach(({ k }, rank) => (levels[k].order = rank))
+
   return { width, height, levels, trails }
 }
 
@@ -249,6 +259,10 @@ export const levelProgress = (drawn, index, count = LEVEL_COUNT) => {
   const start = count > 1 ? (index / (count - 1)) * 0.7 : 0
   return Math.min(1, Math.max(0, (drawn - start) / 0.3))
 }
+
+// Time on the page (0 to 1 of the full draw time) -> how far the pattern is drawn. It eases out:
+// fast at first, so lines show within the first seconds, then slower until it's complete.
+export const easeDraw = t => (t >= 1 ? 1 : t <= 0 ? 0 : 1 - (1 - t) ** 2)
 
 // The dashed trails fade in over the last 20% of the drawing
 export const trailOpacity = drawn => (drawn >= 1 ? 1 : Math.min(1, Math.max(0, (drawn - 0.8) / 0.2)))

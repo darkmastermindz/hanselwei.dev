@@ -3,7 +3,7 @@
 // reasonable size, and draw in with overlapping levels.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTopo, INDEX_EVERY, LEVEL_COUNT, levelProgress, trailOpacity } from '../../utils/topo.mjs'
+import { buildTopo, easeDraw, INDEX_EVERY, LEVEL_COUNT, levelProgress, trailOpacity } from '../../utils/topo.mjs'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -98,4 +98,31 @@ test('levels overlap as they draw, and never go backwards', () => {
       previous = value
     }
   }
+})
+
+test('the draw eases out: lines show within the first seconds, and it still ends complete', () => {
+  assert.equal(easeDraw(0), 0)
+  assert.equal(easeDraw(1), 1)
+  assert.equal(easeDraw(2), 1)
+  // 5 seconds into a 90-second draw, the pattern is well under way
+  assert.ok(easeDraw(5 / 90) > 0.1, `${easeDraw(5 / 90)}`)
+  let previous = 0
+  for (let step = 0; step <= 100; step++) {
+    const value = easeDraw(step / 100)
+    assert.ok(value >= previous)
+    previous = value
+  }
+})
+
+test('each level knows its longest line, and the longest levels draw first', () => {
+  for (const level of phone.levels) {
+    assert.ok(level.longest > 0 && level.longest <= level.length + 1e-9)
+  }
+  // order is a permutation of 0..n-1
+  const orders = phone.levels.map(level => level.order).sort((a, b) => a - b)
+  assert.deepEqual(orders, [...Array(phone.levels.length).keys()])
+  // the first to draw is the level with the most line, the last the one with the least
+  const byOrder = [...phone.levels].sort((a, b) => a.order - b.order)
+  assert.equal(byOrder[0].length, Math.max(...phone.levels.map(level => level.length)))
+  assert.equal(byOrder.at(-1).length, Math.min(...phone.levels.map(level => level.length)))
 })

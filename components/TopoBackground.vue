@@ -20,8 +20,8 @@
         :d="line.d"
         :class="['topo__line', { 'topo__line--index': line.index }]"
         :style="{
-          strokeDasharray: `${line.length} ${line.length}`,
-          strokeDashoffset: `${line.length * (1 - levelProgress(drawn, i, topo.levels.length))}`
+          strokeDasharray: `${line.longest} ${line.longest}`,
+          strokeDashoffset: `${line.longest * (1 - levelProgress(drawn, line.order, topo.levels.length))}`
         }"
       />
       <path
@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { buildTopo, levelProgress, trailOpacity } from '~/utils/topo.mjs'
+import { buildTopo, easeDraw, levelProgress, trailOpacity } from '~/utils/topo.mjs'
 import { topoOptions, wantsLessData } from '~/utils/background.mjs'
 // config.toml [background], checked at build time (scripts/build-background.mjs)
 import settings from '~/data/background.generated.mjs'
@@ -103,7 +103,7 @@ const tick = now => {
   if (last && document.visibilityState === 'visible') progress = Math.min(1, progress + (now - last) / FULL_DRAW_MS)
   last = now
   if (progress >= 1 || now - lastPaint >= PAINT_EVERY_MS) {
-    drawn.value = progress
+    drawn.value = easeDraw(progress) // fast at first, so lines show within the first seconds
     lastPaint = now
   }
   if (progress < 1) frame = requestAnimationFrame(tick)
