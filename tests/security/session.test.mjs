@@ -48,10 +48,19 @@ test('hostile or malformed cookie values are rejected without throwing', () => {
   }
 })
 
-test('a secret must be long enough to use', () => {
-  assert.equal(sessionSecret({ SESSION_SECRET: 'short' }), null)
+test('the signing key is derived from the GitHub client secret, and is not that secret', () => {
+  const key = sessionSecret({ GITHUB_CLIENT_SECRET: 'g'.repeat(40) })
+  assert.equal(typeof key, 'string')
+  assert.ok(key.length >= 40)
+  assert.notEqual(key, 'g'.repeat(40))
+  assert.equal(sessionSecret({ GITHUB_CLIENT_SECRET: 'g'.repeat(40) }), key) // stable across cold starts
+  assert.notEqual(sessionSecret({ GITHUB_CLIENT_SECRET: 'h'.repeat(40) }), key) // a new client secret signs everyone out
+})
+
+test('no usable client secret means no session key', () => {
   assert.equal(sessionSecret({}), null)
-  assert.equal(sessionSecret({ SESSION_SECRET: SECRET }), SECRET)
+  assert.equal(sessionSecret({ GITHUB_CLIENT_SECRET: 'short' }), null)
+  assert.equal(sessionSecret({ GITHUB_CLIENT_SECRET: 42 }), null)
 })
 
 test('the cookie is HttpOnly, Secure, SameSite=Lax, site-wide, and an hour long', () => {
