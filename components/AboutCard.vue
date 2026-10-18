@@ -155,26 +155,27 @@ const education = [
     readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
   },
   {
+    started: 2016,
     graduated: 2019,
     program: 'Computer Science, BS / Communication Studies Minor',
     school: 'UNC Charlotte',
     location: 'Charlotte, NC',
-    date: '2019',
+    date: '2016 – 2019',
     readable: 'Bachelor of Science in Computer Science with a minor in Communication Studies from UNC Charlotte in Charlotte, NC'
   }
 ]
 
 const experience = [
-  { role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineering, developing and maintaining GitHub Actions, ARC and Kubernetes platform solutions' },
-  { role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Custom GitHub Actions support for Python, Ruby, C#, Node.js and Java' },
+  { role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC and Kubernetes platform solutions; lead projects and act as escalation point for less experienced staff' },
+  { role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Engineered language-specific GitHub Actions support across Python, Ruby, C#, Node.js and Java; built GitHub-hosted runners on Azure VNET and customized self-hosted runners for TKGI and OpenShift' },
   { role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open source naloxone vending machine project' },
   { role: 'Career break', company: 'Position eliminated', start: 'Apr 2024', end: 'Jun 2024', highlight: '' },
-  { role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit and compliance; 25% faster audit processing; Technology Achievement Award' },
-  { role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Developer Experience Guild founder; enterprise platform subject matter expert' },
+  { role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit, compliance and risk; migrated a React app to Vite (95% faster build and runtime); AWS and Terraform infrastructure; Technology Achievement Award for a 25% cut in audit processing time' },
+  { role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Founded the Developer Experience Guild; platform SME across the enterprise; L3 platform support and continuous improvement on OpenShift, Kong and CI/CD' },
   { role: 'Developer II', company: 'TIAA', start: 'Jan 2021', end: 'Mar 2022', location: 'Charlotte, NC', highlight: 'Full stack development and solution architecture for imaging, data distribution and workflow systems' },
-  { role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and imaging distribution' },
-  { role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Robotics Process Automation and process intelligence on the TIAA Robotics Platform' },
-  { role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment and C# migration for material science applications' },
+  { role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and Imaging Distribution; reverse engineered and refactored legacy monoliths into microservices with Spring Boot and OpenShift' },
+  { role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Automation Anywhere RPA bots and process intelligence systems; LSTM text classification model; cognitive services platform for text, voice and object detection' },
+  { role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment for material science; migrated ensemble ML from Python to C# .NET; UX research and an analytics dashboard' },
   { role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Azure AI data modeling and cloud architecture work with Microsoft engineers' },
   { role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring in programming and critical thinking; won Major League Hackathon 2019 at HackNC' },
   { role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor; supervised a team and handled customer satisfaction' },
