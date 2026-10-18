@@ -72,22 +72,22 @@
           <li v-for="job in experience" :key="`${job.role}-${job.start}`"><strong>{{ job.start }} – {{ job.end }}</strong> · {{ job.role }} at {{ job.company }}<template v-if="job.location"> ({{ job.location }})</template>{{ job.highlight ? `. ${job.highlight}.` : '.' }}</li>
         </ul>
         <div v-else key="edu" data-content class="xp-timeline">
-          <p class="json json--edu json--xp motion-safe:animate-pulse">{{ timeline[xpIndex].json }}</p>
+          <p class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
           <!-- Scrubbing stays on the slider: presses here don't start a hold or switch views -->
           <input
-            v-model.number="xpIndex"
+            v-model.number="xpYear"
             type="range"
             class="xp-slider"
-            min="0"
-            :max="timeline.length - 1"
+            :min="yearMin"
+            :max="yearMax"
             step="1"
-            :aria-label="`Experience timeline: ${timeline[xpIndex].label}`"
-            :aria-valuetext="timeline[xpIndex].label"
+            aria-label="Experience timeline, by year"
+            :aria-valuetext="String(xpYear)"
             @pointerdown.stop
             @click.stop
             @keydown.stop
           />
-          <p class="xp-timeline__label">{{ timeline[xpIndex].label }} · {{ xpIndex + 1 }} of {{ timeline.length }}</p>
+          <p class="xp-timeline__label">{{ xpYear }} · {{ yearEntries.length }} {{ yearEntries.length === 1 ? 'entry' : 'entries' }}</p>
         </div>
       </Transition>
 
@@ -208,15 +208,23 @@ const jsonValue = value => {
   return JSON.stringify(value)
 }
 const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable' && key !== 'date'))
-// The XP timeline: one entry at a time (education, then work history, newest first), picked
-// with a slider, so the card never shows the whole history at once
+// The XP timeline by year: the slider picks a year, and the card shows every entry active in
+// that year (education and work history) as minified JSON
+const CURRENT_YEAR = new Date().getFullYear()
+const yearOf = text => Number(String(text).match(/\d{4}/)?.[0])
 const timeline = [
-  ...education.map(entry => ({ label: entry.date, json: `{ "education" : ${jsonValue(withoutText(entry))} }` })),
+  ...education.map(entry => {
+    const to = yearOf(entry.graduated ?? entry.passed)
+    return { from: entry.started ?? to, to, json: `{ "education" : ${jsonValue(withoutText(entry))} }` }
+  }),
   ...experience.map(job => ({
-    label: `${job.start} – ${job.end}`,
+    from: yearOf(job.start),
+    to: job.end === 'Present' ? CURRENT_YEAR : yearOf(job.end),
     json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
   }))
 ]
+const yearMin = Math.min(...timeline.map(entry => entry.from))
+const yearMax = CURRENT_YEAR
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
@@ -225,9 +233,11 @@ const sentence = items => {
   return words.length > 1 ? `${words.slice(0, -1).join(', ')} and ${words.at(-1)}` : words[0]
 }
 
-// The slider goes back to the first entry whenever the card changes view
-const xpIndex = ref(0)
-watch(view, () => (xpIndex.value = 0))
+// The slider starts on this year, and goes back to it whenever the card changes view
+const xpYear = ref(yearMax)
+watch(view, () => (xpYear.value = yearMax))
+const yearEntries = computed(() => timeline.filter(entry => entry.from <= xpYear.value && xpYear.value <= entry.to))
+const yearJson = computed(() => `{ "${xpYear.value}" : [ ${yearEntries.value.map(entry => entry.json).join(', ')} ] }`)
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
 // "poof": the old words fall away and sparkles burst from the press. Holding again,
