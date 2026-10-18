@@ -36,7 +36,7 @@
       @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
       @pointermove="onHoldMove"
-      @pointerup="cancelHold"
+      @pointerup="endHold"
       @pointercancel="cancelHold"
       @pointerleave="cancelHold"
       @contextmenu.prevent
@@ -332,6 +332,8 @@ const onTrackKey = event => {
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
+const HOLD_RELEASE_MS = 600 // after a hold, clicks outside the card are ignored this long (the text just changed under the finger)
+let suppressClicksUntil = 0
 const readable = ref(false)
 const charging = ref(false)
 const transitionName = ref('swap')
@@ -415,6 +417,19 @@ const onHoldMove = event => {
   if (moved > HOLD_SLOP_PX) cancelHold()
 }
 
+// Letting go of a hold: the text has just changed under the finger, so a click outside the
+// card (such as a social link) right after it is ignored. Clicks inside the card are handled
+// by onTap as usual.
+const endHold = () => {
+  if (held) suppressClicksUntil = performance.now() + HOLD_RELEASE_MS
+  cancelHold()
+}
+const swallowClickAfterHold = event => {
+  if (performance.now() >= suppressClicksUntil || panelEl.value?.contains(event.target)) return
+  event.preventDefault()
+  event.stopPropagation()
+}
+
 // Back to JSON once attention leaves the card
 const onPointerDownAnywhere = event => {
   if (!cardEl.value?.contains(event.target)) revert()
@@ -429,6 +444,7 @@ let observer = null
 
 onMounted(() => {
   document.addEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.addEventListener('click', swallowClickAfterHold, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
   // Mostly scrolled out of view counts as moving on
@@ -445,6 +461,7 @@ onBeforeUnmount(() => {
   cancelHold()
   clearTimeout(fxTimer)
   document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
+  document.removeEventListener('click', swallowClickAfterHold, true)
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
