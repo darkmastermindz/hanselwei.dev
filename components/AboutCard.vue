@@ -65,17 +65,10 @@
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
         <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
-          <li v-for="entry in education" :key="entry.program"><strong>{{ entry.graduated }}</strong> · {{ entry.readable }}</li>
+          <li v-for="entry in education" :key="entry.school"><strong>{{ entry.date }}</strong> · {{ entry.readable }}</li>
+          <li v-for="job in experience" :key="`${job.role}-${job.start}`"><strong>{{ job.start }} – {{ job.end }}</strong> · {{ job.role }} at {{ job.company }}<template v-if="job.location"> ({{ job.location }})</template>{{ job.highlight ? `. ${job.highlight}.` : '.' }}</li>
         </ul>
-        <p v-else key="edu" data-content class="json json--edu">
-          { "Education" : [
-          <span
-            v-for="(line, i) in educationJson"
-            :key="i"
-            :class="['json__line', `json__line--${line.depth}`]"
-          >{{ line.text }}</span>
-          ] }
-        </p>
+        <p v-else key="edu" data-content :class="['json json--edu json--xp motion-safe:animate-pulse']">{{ xpJson }}</p>
       </Transition>
 
       <!-- Fills up while the press is held, so it reads as a deliberate long press -->
@@ -118,7 +111,7 @@ const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
   { id: 'hobbies', label: '🧗 Hobbies' },
-  { id: 'edu', label: '🎓 Edu' }
+  { id: 'edu', label: '🎓 XP' }
 ])
 
 // Prerender shows Skills; each visit then opens on Skills or Hobbies at random
@@ -141,20 +134,24 @@ const hobbies = [
   'Paddleboarding', 'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
 ]
 
-// `graduated` is the graduation date; `readable` is the plain-English version
+// XP: certifications and education, then work history (newest first). `readable` and
+// `highlight` are the plain-English text; the JSON view uses the fields only.
 const education = [
   {
-    graduated: 2026,
-    program: 'Single Pitch Instructor Course',
+    certification: 'AMGA Single Pitch Instructor',
+    passed: 'May 2026',
+    status: 'SPI exam pending',
     school: 'Pisgah Climbing School',
     location: 'Brevard, NC',
-    readable: 'Single Pitch Instructor Course at Pisgah Climbing School in Brevard, NC'
+    date: 'Passed May 2026',
+    readable: 'Certification: AMGA Single Pitch Instructor from Pisgah Climbing School in Brevard, NC (SPI exam pending)'
   },
   {
     graduated: 2025,
     program: 'YTT200',
     school: 'Chakra Flow University',
     location: 'Charlotte, NC',
+    date: '2025',
     readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
   },
   {
@@ -162,23 +159,38 @@ const education = [
     program: 'Computer Science, BS / Communication Studies Minor',
     school: 'UNC Charlotte',
     location: 'Charlotte, NC',
+    date: '2019',
     readable: 'Bachelor of Science in Computer Science with a minor in Communication Studies from UNC Charlotte in Charlotte, NC'
   }
 ]
 
-// Valid JSON, one value per line, written out from the fields so quoting and commas are right
-const educationJson = education.flatMap((entry, i) => {
-  const fields = ['graduated', 'program', 'school', 'location'].map(key => [key, entry[key]])
-  const last = i === education.length - 1
-  return [
-    { depth: 1, text: '{' },
-    ...fields.map(([key, value], j) => ({
-      depth: 2,
-      text: `${JSON.stringify(key)} : ${JSON.stringify(value)}${j < fields.length - 1 ? ',' : ''}`
-    })),
-    { depth: 1, text: `}${last ? '' : ','}` }
-  ]
-})
+const experience = [
+  { role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineering, developing and maintaining GitHub Actions, ARC and Kubernetes platform solutions' },
+  { role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Custom GitHub Actions support for Python, Ruby, C#, Node.js and Java' },
+  { role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open source naloxone vending machine project' },
+  { role: 'Career break', company: 'Position eliminated', start: 'Apr 2024', end: 'Jun 2024', highlight: '' },
+  { role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit and compliance; 25% faster audit processing; Technology Achievement Award' },
+  { role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Developer Experience Guild founder; enterprise platform subject matter expert' },
+  { role: 'Developer II', company: 'TIAA', start: 'Jan 2021', end: 'Mar 2022', location: 'Charlotte, NC', highlight: 'Full stack development and solution architecture for imaging, data distribution and workflow systems' },
+  { role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and imaging distribution' },
+  { role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Robotics Process Automation and process intelligence on the TIAA Robotics Platform' },
+  { role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment and C# migration for material science applications' },
+  { role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Azure AI data modeling and cloud architecture work with Microsoft engineers' },
+  { role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring in programming and critical thinking; won Major League Hackathon 2019 at HackNC' },
+  { role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor; supervised a team and handled customer satisfaction' },
+  { role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote IT support, hardware repair and network design for small businesses' }
+]
+
+// Valid JSON on one line, like the other About views, built from the fields so quoting is right
+const jsonValue = value => {
+  if (Array.isArray(value)) return `[ ${value.map(jsonValue).join(', ')} ]`
+  if (value && typeof value === 'object') {
+    return `{ ${Object.entries(value).filter(([, v]) => v !== undefined).map(([key, v]) => `${JSON.stringify(key)} : ${jsonValue(v)}`).join(', ')} }`
+  }
+  return JSON.stringify(value)
+}
+const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable' && key !== 'date'))
+const xpJson = `{ "XP" : ${jsonValue({ education: education.map(withoutText), experience: experience.map(job => (job.highlight ? job : { ...job, highlight: undefined })) })} }`
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
@@ -477,15 +489,7 @@ cite {
   margin-top: 0.45rem;
 }
 
-/* One value per line, indented inside the array and each object */
-.json__line {
-  display: block;
-  padding-left: 1.25rem;
-}
 
-.json__line--2 {
-  padding-left: 2.5rem;
-}
 
 /* Long-press charge: a glowing bar fills under the text for the length of the hold */
 .hold-charge {
