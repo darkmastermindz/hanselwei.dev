@@ -21,6 +21,7 @@ netlify dev            # run the site *and* the Netlify functions locally
 These run before `npm run dev`, `npm test` and the builds. The files they write are git-ignored:
 - `build:access`: the sign-in allow-list, from `.github/CODEOWNERS` and `config.toml` → `netlify/lib/access.mjs`.
 - `build:projects`: the Projects settings in `config.toml` → `data/projects.generated.mjs`.
+- `build:background`: the topographic background settings in `config.toml` → `data/background.generated.mjs`.
 - `sync:contributions`: the GitHub contribution calendar for the Projects page → `data/contributions.generated.json`.
 - `sync:readme`: the GitHub profile README for the Bio page → `content/bio/github-readme.generated.md`.
 - `sync:devto`: dev.to posts (see below). Runs before `npm run build` and `npm run generate`.
@@ -46,6 +47,15 @@ Non-fork repos show automatically. In `config.toml`, under `[projects]`:
 - `wip`: marks repos as work in progress (everything else is active).
 - `forks`: forks to show.
 - `featured` and `hackathon`: tags for repos that are already shown.
+
+## Topographic background
+Faint purple-to-green contour lines sit behind every page and draw in as visitors stay. They're built in the browser at the screen's size, in a Web Worker (`workers/topo.worker.mjs`, `utils/topo.mjs`). Tune them in `config.toml` under `[background]`; the build fails on a value out of range:
+- `enabled`: `true` or `false`.
+- `contours` (8–60): how many contour lines. More is denser.
+- `feature_size` (80–800): the rough size of a hill or valley in pixels. Smaller is busier.
+- `index_every` (0–20): every Nth line is heavier. `0` turns them off.
+- `trails` (0–6): dashed trails that fade in at the end.
+- `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## About card (home page)
 `components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English.

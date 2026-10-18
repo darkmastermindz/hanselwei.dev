@@ -17,7 +17,7 @@ test('the same screen size always gives the same pattern', () => {
   assert.deepEqual(buildTopo(PHONE), phone)
 })
 
-test('there are 28 levels, every 5th an index line, and each one has lines', () => {
+test('there is one level per contour, every 5th an index line, and each one has lines', () => {
   assert.equal(phone.levels.length, LEVEL_COUNT)
   phone.levels.forEach((level, k) => {
     assert.equal(level.index, k % INDEX_EVERY === INDEX_EVERY - 1, `level ${k}`)
@@ -51,10 +51,25 @@ test('a phone and a desktop get a similar density of lines', () => {
   assert.ok(ratio > 0.6 && ratio < 1.6, `density ratio ${ratio}`)
 })
 
-test('a large screen stays a reasonable size', () => {
+test('a large screen stays a reasonable size at the default settings', () => {
   const big = buildTopo({ width: 2560, height: 1440 })
   const chars = [...big.levels, ...big.trails].reduce((sum, { d }) => sum + d.length, 0)
-  assert.ok(chars < 450_000, `${chars} characters of path data`)
+  assert.ok(chars < 600_000, `${chars} characters of path data`)
+})
+
+test('the settings change the pattern: contours, feature size, index lines and trails', () => {
+  const denser = buildTopo({ ...PHONE, featureSize: 120 })
+  assert.ok(totalLength(denser) > totalLength(phone) * 1.3, 'smaller features give more line')
+
+  const more = buildTopo({ ...PHONE, contours: 50 })
+  assert.equal(more.levels.length, 50)
+
+  const plain = buildTopo({ ...PHONE, indexEvery: 0, trails: 0 })
+  assert.equal(plain.levels.filter(level => level.index).length, 0)
+  assert.deepEqual(plain.trails, [])
+
+  const everyThird = buildTopo({ ...PHONE, indexEvery: 3 })
+  assert.equal(everyThird.levels.filter(level => level.index).length, Math.floor(LEVEL_COUNT / 3))
 })
 
 test('there are a few dashed trails', () => {

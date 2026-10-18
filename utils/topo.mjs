@@ -1,12 +1,15 @@
 // The faint topographic background: contour lines of a warped, seeded noise field, traced with
 // marching squares, joined into smooth lines, and sized to the screen in pixels (so a phone and a
-// desktop get the same density). Pure and deterministic for a given size.
-export const LEVEL_COUNT = 28
-export const INDEX_EVERY = 5 // every 5th contour is a heavier "index" line, as on a topo map
-const FEATURE_PX = 280 // roughly the size of a hill or valley
+// desktop get the same density). Pure and deterministic for a given size and settings.
+// The settings come from config.toml [background]; these are the defaults (utils/background.mjs).
+import { BACKGROUND_DEFAULTS } from './background.mjs'
+
+export const LEVEL_COUNT = BACKGROUND_DEFAULTS.contours
+export const INDEX_EVERY = BACKGROUND_DEFAULTS.indexEvery // every Nth contour is a heavier "index" line
+const FEATURE_PX = BACKGROUND_DEFAULTS.featureSize // roughly the size of a hill or valley
+const TRAIL_COUNT = BACKGROUND_DEFAULTS.trails
 const TARGET_CELL_PX = 8
 const MAX_CELLS = 25000
-const TRAIL_COUNT = 3
 
 // Integer lattice hash -> [0, 1]
 const hash = (x, y, seed) => {
@@ -47,16 +50,16 @@ const fbm = (x, y, seed, octaves) => {
 
 // The terrain, with its sample point pushed around by another noise field ("domain warping"),
 // which gives the winding ridges and nested rings around peaks
-const terrain = (x, y) => {
-  const u = x / FEATURE_PX
-  const v = y / FEATURE_PX
+const terrain = featureSize => (x, y) => {
+  const u = x / featureSize
+  const v = y / featureSize
   const warpX = fbm(u * 0.7 + 5.2, v * 0.7 + 1.3, 7, 3) - 0.5
   const warpY = fbm(u * 0.7 - 3.1, v * 0.7 + 8.7, 11, 3) - 0.5
   return fbm(u + warpX * 2.2, v + warpY * 2.2, 3, 4)
 }
 
 // A broad second field for the dashed trails
-const trailField = (x, y) => fbm(x / (FEATURE_PX * 2.5), y / (FEATURE_PX * 2.5), 23, 2)
+const trailField = featureSize => (x, y) => fbm(x / (featureSize * 2.5), y / (featureSize * 2.5), 23, 2)
 
 // Which corners are at or above the level: TL = 8, TR = 4, BR = 2, BL = 1
 // Each case lists the cell edges (0 top, 1 right, 2 bottom, 3 left) the line crosses.
@@ -192,11 +195,18 @@ export const gridFor = (width, height) => {
   return { cols, rows, cellW: width / cols, cellH: height / rows }
 }
 
-// The whole pattern for a screen size:
+// The whole pattern for a screen size and settings:
 // { width, height, levels: [{ d, length, index }], trails: [{ d }] }
-export const buildTopo = ({ width, height }) => {
+export const buildTopo = ({
+  width,
+  height,
+  contours = LEVEL_COUNT,
+  featureSize = FEATURE_PX,
+  indexEvery = INDEX_EVERY,
+  trails: trailCount = TRAIL_COUNT
+}) => {
   const grid = gridFor(width, height)
-  const values = sampleGrid(grid, terrain)
+  const values = sampleGrid(grid, terrain(featureSize))
   let low = Infinity
   let high = -Infinity
   for (const row of values) for (const value of row) {
@@ -205,24 +215,27 @@ export const buildTopo = ({ width, height }) => {
   }
 
   const levels = []
-  for (let k = 0; k < LEVEL_COUNT; k++) {
-    const level = low + ((high - low) * (k + 0.5)) / LEVEL_COUNT
+  for (let k = 0; k < contours; k++) {
+    const level = low + ((high - low) * (k + 0.5)) / contours
     const lines = contourLines(grid, values, level).filter(line => line.length > 2)
     levels.push({
       d: lines.map(smoothPath).join(''),
       length: lines.reduce((sum, line) => sum + lengthOf(line), 0),
-      index: k % INDEX_EVERY === INDEX_EVERY - 1
+      index: indexEvery > 0 && k % indexEvery === indexEvery - 1
     })
   }
 
   // Trails: the longest lines from a few levels of the broad second field
-  const trailValues = sampleGrid(grid, trailField)
-  const trails = [0.42, 0.5, 0.58]
-    .flatMap(level => contourLines(grid, trailValues, level))
-    .filter(line => line.length > 2)
-    .sort((a, b) => lengthOf(b) - lengthOf(a))
-    .slice(0, TRAIL_COUNT)
-    .map(line => ({ d: smoothPath(line) }))
+  let trails = []
+  if (trailCount > 0) {
+    const trailValues = sampleGrid(grid, trailField(featureSize))
+    trails = [0.42, 0.5, 0.58]
+      .flatMap(level => contourLines(grid, trailValues, level))
+      .filter(line => line.length > 2)
+      .sort((a, b) => lengthOf(b) - lengthOf(a))
+      .slice(0, trailCount)
+      .map(line => ({ d: smoothPath(line) }))
+  }
 
   return { width, height, levels, trails }
 }

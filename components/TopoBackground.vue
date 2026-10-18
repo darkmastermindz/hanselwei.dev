@@ -1,5 +1,6 @@
 <template>
   <svg
+    v-if="settings.enabled"
     class="topo"
     :viewBox="topo ? `0 0 ${topo.width} ${topo.height}` : undefined"
     preserveAspectRatio="xMidYMid slice"
@@ -20,7 +21,7 @@
         :class="['topo__line', { 'topo__line--index': line.index }]"
         :style="{
           strokeDasharray: `${line.length} ${line.length}`,
-          strokeDashoffset: `${line.length * (1 - levelProgress(drawn, i))}`
+          strokeDashoffset: `${line.length * (1 - levelProgress(drawn, i, topo.levels.length))}`
         }"
       />
       <path
@@ -36,9 +37,11 @@
 
 <script setup>
 import { buildTopo, levelProgress, trailOpacity } from '~/utils/topo.mjs'
+// config.toml [background], checked at build time (scripts/build-background.mjs)
+import settings from '~/data/background.generated.mjs'
 
 // The lines draw in as the visitor stays: the whole pattern takes this long with the tab visible
-const FULL_DRAW_MS = 90 * 1000
+const FULL_DRAW_MS = settings.drawSeconds * 1000
 const PAINT_EVERY_MS = 100 // the draw is slow, so ten updates a second is plenty
 const RESIZE_CHANGE = 0.15 // rebuild only for a real size change, not a mobile browser bar
 
@@ -62,7 +65,8 @@ const show = pattern => {
   topo.value = pattern
   if (drawing) return
   drawing = true
-  if (reducedMotion) {
+  // Reduced motion, or draw_seconds = 0: show the finished pattern straight away
+  if (reducedMotion || FULL_DRAW_MS <= 0) {
     progress = 1
     drawn.value = 1
   } else {
@@ -78,7 +82,14 @@ const buildHere = size => {
 
 // Build in a worker (workers/topo.worker.mjs), so the main thread stays free
 const build = () => {
-  const size = { width: window.innerWidth, height: window.innerHeight }
+  const size = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    contours: settings.contours,
+    featureSize: settings.featureSize,
+    indexEvery: settings.indexEvery,
+    trails: settings.trails
+  }
   try {
     worker ??= new Worker(new URL('../workers/topo.worker.mjs', import.meta.url), { type: 'module' })
     worker.onmessage = ({ data }) => show(data)
@@ -114,6 +125,7 @@ const onResize = () => {
 }
 
 onMounted(() => {
+  if (!settings.enabled) return
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   build()
   window.addEventListener('resize', onResize, { passive: true })
