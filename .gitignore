@@ -96,3 +96,4 @@ dist
 netlify/lib/access.mjs
 data/projects.generated.mjs
 data/contributions.generated.json
+data/profile.generated.json

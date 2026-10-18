@@ -93,5 +93,15 @@ export const JS_BREAKOUTS = ['";process.exit(1)//', "'};globalThis.pwned=1;//", 
 
 export const PROTOTYPE_KEYS = ['__proto__', 'constructor', 'prototype', 'toString', 'hasOwnProperty', '__defineGetter__']
 
+// GitHub profile bios: markup, control characters, line-break tricks and oversize text
+export const HOSTILE_BIOS = [
+  ...XSS_HTML,
+  'line one\u0000hidden\nline two',
+  'bell\u0007 and escape \u001b[31m red',
+  'crlf\r\n\r\nlines\rlone',
+  'a\n'.repeat(50),
+  'x'.repeat(1001)
+]
+
 // Long input for catastrophic-backtracking checks
 export const REDOS = 'a'.repeat(50_000) + '!'
