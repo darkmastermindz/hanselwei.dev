@@ -79,7 +79,7 @@
             :aria-valuemin="yearMin"
             :aria-valuemax="yearMax"
             :aria-valuenow="xpYear"
-            :aria-valuetext="String(xpYear)"
+            :aria-valuetext="`${xpYear}, ${yearEntries.length} ${yearEntries.length === 1 ? 'entry' : 'entries'}`"
             @pointerdown.stop="startDrag"
             @pointermove="dragTo"
             @pointerup.stop="endDrag"
@@ -97,7 +97,12 @@
           <Transition :name="transitionName" mode="out-in" type="transition">
             <ul v-if="readable" key="edu-readable" class="json--edu prose-line edu-list">
               <!-- The same entries as the JSON for the selected year -->
-              <li v-for="entry in yearEntries" :key="entry.text"><strong>{{ entry.label }}</strong> · {{ entry.text }}</li>
+              <li v-for="(entry, i) in yearEntries" :key="entry.text">
+                <span class="xp-entry__icon" aria-hidden="true">{{ CATEGORY_ICON[entry.category] }}</span>
+                <span class="xp-entry__count" aria-hidden="true">{{ i + 1 }}/{{ yearEntries.length }}</span>
+                <span class="visually-hidden">Entry {{ i + 1 }} of {{ yearEntries.length }}, {{ entry.category }}: </span>
+                <strong>{{ entry.label }}</strong> · {{ entry.text }}
+              </li>
             </ul>
             <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
           </Transition>
@@ -243,6 +248,16 @@ const CURRENT_YEAR = new Date().getFullYear()
 const yearOf = text => Number(String(text).match(/\d{4}/)?.[0])
 // Each entry has its JSON (for the card) and its plain-English line (for holding), so both views
 // always show the same things
+// One icon per category in the XP data (every category used has an entry)
+const CATEGORY_ICON = {
+  Certification: '📜',
+  Education: '🎓',
+  Work: '💼',
+  Volunteer: '🤝',
+  'Career break': '⏸️',
+  Achievement: '🏅'
+}
+
 const timeline = [
   ...education.map(entry => {
     const to = yearOf(entry.graduated ?? entry.passed)
@@ -250,6 +265,7 @@ const timeline = [
       from: entry.started ?? to,
       to,
       label: entry.date,
+      category: entry.category,
       text: entry.readable,
       json: `{ "education" : ${jsonValue(withoutText(entry))} }`
     }
@@ -258,6 +274,7 @@ const timeline = [
     from: yearOf(job.start),
     to: job.end === 'Present' ? CURRENT_YEAR : yearOf(job.end),
     label: `${job.start} – ${job.end}`,
+    category: job.category,
     text: `${job.role} at ${job.company}${job.location ? ` (${job.location})` : ''}${job.highlight ? `. ${job.highlight}.` : '.'}`,
     json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
   })),
@@ -265,6 +282,7 @@ const timeline = [
     from: yearOf(item.date),
     to: yearOf(item.date),
     label: item.date,
+    category: item.category,
     text: item.readable,
     json: `{ "achievement" : ${jsonValue(Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable')))} }`
   }))
@@ -282,6 +300,9 @@ const sentence = items => {
 // The slider starts on this year, and goes back to it whenever the card changes view
 const xpYear = ref(yearMax)
 watch(view, () => (xpYear.value = yearMax))
+// The pull-down reset (composables/useHardRefresh.js) starts the token over, and the XP slider with it
+const resetAt = useState('token:resetAt', () => 0)
+watch(resetAt, () => (xpYear.value = yearMax))
 const yearEntries = computed(() => timeline.filter(entry => entry.from <= xpYear.value && xpYear.value <= entry.to))
 const yearJson = computed(() => `{ "${xpYear.value}" : [ ${yearEntries.value.map(entry => entry.json).join(', ')} ] }`)
 
@@ -679,6 +700,29 @@ cite {
   .xp-thumb {
     transition: none;
   }
+}
+
+.xp-entry__icon,
+.xp-entry__count {
+  margin-right: 0.3rem;
+}
+
+.xp-entry__count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+/* Text for screen readers only (the same rule pages/projects.vue uses) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .xp-timeline__label {
