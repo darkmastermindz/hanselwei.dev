@@ -17,6 +17,9 @@
       </button>
     </div>
 
+    <p class="about-card__hint" aria-hidden="true">
+      tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
+    </p>
     <div
       :id="`about-panel-${view}`"
       ref="panelEl"
@@ -64,15 +67,6 @@
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
-        <p
-          v-else-if="view === 'about'"
-          data-content
-          :key="`about-${readable}`"
-          :class="['json--about motion-safe:animate-pulse', readable ? 'prose-line' : 'json']"
-        >
-          <template v-if="readable">{{ aboutLines.join(' ') }}</template>
-          <template v-else>{{ aboutJson }}</template>
-        </p>
         <ul v-else-if="readable" key="edu-readable" data-content class="json--edu prose-line edu-list">
           <li v-for="entry in education" :key="entry.school"><strong>{{ entry.date }}</strong> · {{ entry.readable }}</li>
           <li v-for="job in experience" :key="`${job.role}-${job.start}`"><strong>{{ job.start }} – {{ job.end }}</strong> · {{ job.role }} at {{ job.company }}<template v-if="job.location"> ({{ job.location }})</template>{{ job.highlight ? `. ${job.highlight}.` : '.' }}</li>
@@ -100,15 +94,10 @@
         aria-hidden="true"
       >{{ spark.char }}</span>
     </div>
-    <p class="about-card__hint" aria-hidden="true">
-      tap to switch · hold for {{ readable ? 'JSON' : 'plain English' }}
-    </p>
   </section>
 </template>
 
 <script setup>
-// The About me text: the GitHub profile bio, synced at build time (scripts/sync-profile.mjs)
-import aboutProfile from '~/data/profile.generated.json'
 // One card under the contact button: the token's latest fact, or the "I am a"
 // (skills), hobbies and education JSON, switched with the toggle on top.
 const props = defineProps({
@@ -121,7 +110,6 @@ const props = defineProps({
 const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
-  ...(aboutLines.length ? [{ id: 'about', label: '👋 Bio' }] : []),
   { id: 'hobbies', label: '🧗 Hobbies' },
   { id: 'edu', label: '🎓 XP' }
 ])
@@ -204,9 +192,6 @@ const jsonValue = value => {
 }
 const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key]) => key !== 'readable' && key !== 'date'))
 const xpJson = `{ "XP" : ${jsonValue({ education: education.map(withoutText), experience: experience.map(job => (job.highlight ? job : { ...job, highlight: undefined })) })} }`
-
-const aboutLines = aboutProfile.lines
-const aboutJson = `{ "Bio" : ${jsonValue(aboutLines)} }`
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
@@ -423,7 +408,7 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 }
 
 .about-card__hint {
-  margin-top: 0.6rem;
+  margin-bottom: 0.4rem;
   font-size: 0.7rem;
   text-align: right;
   color: #777;
