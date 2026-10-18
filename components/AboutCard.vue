@@ -163,6 +163,7 @@ const hobbies = [
 // `highlight` are the plain-English text; the JSON view uses the fields only.
 const education = [
   {
+    category: 'Certification',
     certification: 'AMGA Single Pitch Instructor',
     passed: 'May 2026',
     status: 'SPI exam pending',
@@ -172,6 +173,7 @@ const education = [
     readable: 'Certification: AMGA Single Pitch Instructor from Pisgah Climbing School in Brevard, NC (SPI exam pending)'
   },
   {
+    category: 'Education',
     graduated: 2025,
     program: 'YTT200',
     school: 'Chakra Flow University',
@@ -180,6 +182,7 @@ const education = [
     readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC'
   },
   {
+    category: 'Education',
     started: 2016,
     graduated: 2019,
     program: 'Computer Science, BS / Communication Studies Minor',
@@ -191,25 +194,26 @@ const education = [
 ]
 
 const experience = [
-  { role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC and Kubernetes platform solutions; lead projects and act as escalation point for less experienced staff' },
-  { role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Engineered language-specific GitHub Actions support across Python, Ruby, C#, Node.js and Java; built GitHub-hosted runners on Azure VNET and customized self-hosted runners for TKGI and OpenShift' },
-  { role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open source naloxone vending machine project' },
-  { role: 'Career break', company: 'Position eliminated', start: 'Apr 2024', end: 'Jun 2024', highlight: '' },
-  { role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit, compliance and risk; migrated a React app to Vite (95% faster build and runtime); AWS and Terraform infrastructure; Technology Achievement Award for a 25% cut in audit processing time' },
-  { role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Founded the Developer Experience Guild; platform SME across the enterprise; L3 platform support and continuous improvement on OpenShift, Kong and CI/CD' },
-  { role: 'Developer II', company: 'TIAA', start: 'Jan 2021', end: 'Mar 2022', location: 'Charlotte, NC', highlight: 'Full stack development and solution architecture for imaging, data distribution and workflow systems' },
-  { role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and Imaging Distribution; reverse engineered and refactored legacy monoliths into microservices with Spring Boot and OpenShift' },
-  { role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Automation Anywhere RPA bots and process intelligence systems; LSTM text classification model; cognitive services platform for text, voice and object detection' },
-  { role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment for material science; migrated ensemble ML from Python to C# .NET; UX research and an analytics dashboard' },
-  { role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Partnered with Microsoft engineers on Azure AI data modeling and data science pipelines for real-time and batch processing; prototyped Azure ML environments; built a PowerBI visualization and a data analytic dashboard proof of concept' },
-  { role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won Major League Hackathon 2019 at HackNC; gave over a dozen workshops at hackathons and campus events' },
-  { role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor responsible for handling money; supervised a team and improved customer satisfaction and accountability' },
-  { role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
+  { category: 'Work', role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC and Kubernetes platform solutions; lead projects and act as escalation point for less experienced staff' },
+  { category: 'Work', role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Engineered language-specific GitHub Actions support across Python, Ruby, C#, Node.js and Java; built GitHub-hosted runners on Azure VNET and customized self-hosted runners for TKGI and OpenShift' },
+  { category: 'Volunteer', role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open source naloxone vending machine project' },
+  { category: 'Career break', role: 'Career break', company: 'Position eliminated', start: 'Apr 2024', end: 'Jun 2024', highlight: '' },
+  { category: 'Work', role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit, compliance and risk; migrated a React app to Vite (95% faster build and runtime); AWS and Terraform infrastructure; Technology Achievement Award for a 25% cut in audit processing time' },
+  { category: 'Work', role: 'Senior Software Developer', company: 'TIAA', start: 'Mar 2022', end: 'Apr 2024', location: 'United States', highlight: 'Founded the Developer Experience Guild; platform SME across the enterprise; L3 platform support and continuous improvement on OpenShift, Kong and CI/CD' },
+  { category: 'Work', role: 'Developer II', company: 'TIAA', start: 'Jan 2021', end: 'Mar 2022', location: 'Charlotte, NC', highlight: 'Full stack development and solution architecture for imaging, data distribution and workflow systems' },
+  { category: 'Work', role: 'Developer', company: 'TIAA', start: 'Jan 2020', end: 'Jan 2021', location: 'Charlotte, NC', highlight: 'Full stack development on the TIAA Robotics Platform and Imaging Distribution; reverse engineered and refactored legacy monoliths into microservices with Spring Boot and OpenShift' },
+  { category: 'Work', role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Automation Anywhere RPA bots and process intelligence systems; LSTM text classification model; cognitive services platform for text, voice and object detection' },
+  { category: 'Work', role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment for material science; migrated ensemble ML from Python to C# .NET; UX research and an analytics dashboard' },
+  { category: 'Work', role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Partnered with Microsoft engineers on Azure AI data modeling and data science pipelines for real-time and batch processing; prototyped Azure ML environments; built a PowerBI visualization and a data analytic dashboard proof of concept' },
+  { category: 'Work', role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won Major League Hackathon 2019 at HackNC; gave over a dozen workshops at hackathons and campus events' },
+  { category: 'Work', role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor responsible for handling money; supervised a team and improved customer satisfaction and accountability' },
+  { category: 'Work', role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
 ]
 
 // Achievements: milestones on the XP timeline (the medal)
 const achievements = [
   {
+    category: 'Achievement',
     event: 'Around the Crown 10K',
     distance: '10K',
     first: true,
