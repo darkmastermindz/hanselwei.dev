@@ -9,7 +9,7 @@
         · best hold {{ best }}
         · {{ seenCount }}/{{ total }} discovered
       </template>
-      <template v-else>tap profile picture coin • discover a new fact</template>
+      <template v-else><span class="hint__touch">tap</span><span class="hint__mouse">click</span> profile picture coin • discover a new fact</template>
     </p>
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
@@ -65,5 +65,20 @@ const onRelease = (spins, heldMs) => {
 }
 .outer {
   text-align: center;
+}
+
+/* Phones say "tap"; a mouse says "click" (the same rule as the About card hint) */
+.hint__mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hint__touch {
+    display: none;
+  }
+
+  .hint__mouse {
+    display: inline;
+  }
 }
 </style>

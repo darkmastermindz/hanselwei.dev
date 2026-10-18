@@ -18,9 +18,9 @@
     </div>
 
     <!-- Holding does nothing on the fact view, so the tip only says tapping switches categories -->
-    <p v-if="view === 'fact'" class="about-card__hint" aria-hidden="true">tap to switch categories</p>
+    <p v-if="view === 'fact'" class="about-card__hint" aria-hidden="true"><span class="hint__touch">tap</span><span class="hint__mouse">click</span> to switch categories</p>
     <p v-else class="about-card__hint" aria-hidden="true">
-      tap to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
+      <span class="hint__touch">tap</span><span class="hint__mouse">click</span> to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
     </p>
     <div
       :id="`about-panel-${view}`"
