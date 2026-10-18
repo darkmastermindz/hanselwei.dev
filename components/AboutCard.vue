@@ -183,6 +183,15 @@ const education = [
     readable: 'Certification: AMGA Single Pitch Instructor from Pisgah Climbing School in Brevard, NC (SPI exam pending)'
   },
   {
+    category: 'Certification',
+    certification: 'Data Science and Machine Learning: Making Data-Driven Decisions',
+    passed: 'September 2024',
+    school: 'MIT Institute for Data, Systems, and Society (IDSS)',
+    location: 'Online',
+    date: 'Passed September 2024',
+    readable: 'Certification: Data Science and Machine Learning: Making Data-Driven Decisions from MIT IDSS (completed September 2024)'
+  },
+  {
     category: 'Education',
     graduated: 2025,
     program: 'YTT200',
@@ -216,6 +225,7 @@ const experience = [
   { category: 'Work', role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure machine learning deployment for material science; migrated ensemble ML from Python to C# .NET; UX research and an analytics dashboard' },
   { category: 'Work', role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Partnered with Microsoft engineers on Azure AI data modeling and data science pipelines for real-time and batch processing; prototyped Azure ML environments; built a PowerBI visualization and a data analytic dashboard proof of concept' },
   { category: 'Work', role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won Major League Hackathon 2019 at HackNC; gave over a dozen workshops at hackathons and campus events' },
+  { category: 'Volunteer', role: 'Guest speaker, GenCyber camp', company: 'Winthrop University, Richard W. Riley College of Education', start: '2017', end: '2017', location: 'Rock Hill, SC', highlight: 'Demonstrated open wireless network insecurity and how to ethically hack a network for teachers and students, as a student and computer science peer tutor at UNC Charlotte' },
   { category: 'Work', role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor responsible for handling money; supervised a team and improved customer satisfaction and accountability' },
   { category: 'Work', role: 'Computer Repair Technician / Network Designer', company: 'Self-employed', start: 'Jul 2014', end: 'Jul 2017', location: 'Self-Employed', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
 ]
