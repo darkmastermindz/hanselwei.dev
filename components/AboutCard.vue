@@ -136,7 +136,7 @@ const skills = [
 
 const hobbies = [
   'Hiking', 'Photography', 'Watching Anime', 'Coffee', 'Board Games', 'Rock Climbing',
-  'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
+  'Paddleboarding', 'Yoga', 'Running', 'Community Building', 'Maker', 'Stained Glass'
 ]
 
 // `parts` is the JSON line; `readable` is the plain-English version
