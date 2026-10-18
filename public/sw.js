@@ -5,7 +5,7 @@
 const VERSION = 'v7'
 const STATIC_CACHE = `static-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
-const PRECACHE = ['/', '/blog', '/blog/feed', '/gear', '/projects', '/manifest.webmanifest', '/icons/icon-192.png']
+const PRECACHE = ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', '/manifest.webmanifest', '/icons/icon-192.png']
 
 self.addEventListener('install', event => {
   event.waitUntil(

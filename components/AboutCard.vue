@@ -121,7 +121,7 @@ const props = defineProps({
 const tabs = computed(() => [
   ...(props.fact ? [{ id: 'fact', label: '✨ Fact' }] : []),
   { id: 'skills', label: '🧑‍💻 Skills' },
-  ...(aboutLines.length ? [{ id: 'about', label: '👋 About' }] : []),
+  ...(aboutLines.length ? [{ id: 'about', label: '👋 Bio' }] : []),
   { id: 'hobbies', label: '🧗 Hobbies' },
   { id: 'edu', label: '🎓 XP' }
 ])
@@ -206,7 +206,7 @@ const withoutText = item => Object.fromEntries(Object.entries(item).filter(([key
 const xpJson = `{ "XP" : ${jsonValue({ education: education.map(withoutText), experience: experience.map(job => (job.highlight ? job : { ...job, highlight: undefined })) })} }`
 
 const aboutLines = aboutProfile.lines
-const aboutJson = `{ "About me" : ${jsonValue(aboutLines)} }`
+const aboutJson = `{ "Bio" : ${jsonValue(aboutLines)} }`
 
 const quoted = items => items.map(i => `"${i}"`).join(', ')
 // "a, b and c" (drops a trailing "!" so the sentence can end with a period)
