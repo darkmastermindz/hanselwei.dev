@@ -1,6 +1,7 @@
 // The owner's session: a signed cookie (HMAC-SHA256) holding the verified email and
-// an expiry. Signed by SESSION_SECRET, which is separate from the GitHub client secret.
-import { createHmac, timingSafeEqual } from 'node:crypto'
+// an expiry. The signing key is derived from the GitHub client secret (HKDF with its own
+// label), so no extra variable has to be set, and the key itself is never the secret.
+import { createHmac, hkdfSync, timingSafeEqual } from 'node:crypto'
 
 export const SESSION_COOKIE = 'hw_session'
 export const SESSION_MAX_AGE = 60 * 60 // seconds; the client renews it while in use
@@ -13,7 +14,13 @@ const same = (a, b) => {
   return left.length === right.length && timingSafeEqual(left, right)
 }
 
-export const sessionSecret = env => (env.SESSION_SECRET && env.SESSION_SECRET.length >= 32 ? env.SESSION_SECRET : null)
+const MIN_CLIENT_SECRET = 16
+
+// Derived from GITHUB_CLIENT_SECRET; changing that secret signs everyone out
+export const sessionSecret = env =>
+  typeof env.GITHUB_CLIENT_SECRET === 'string' && env.GITHUB_CLIENT_SECRET.length >= MIN_CLIENT_SECRET
+    ? Buffer.from(hkdfSync('sha256', env.GITHUB_CLIENT_SECRET, '', 'hanselwei.dev owner session v1', 32)).toString('base64url')
+    : null
 
 export const createSession = ({ email, name = '' }, secret, now = Date.now()) => {
   const iat = Math.floor(now / 1000)

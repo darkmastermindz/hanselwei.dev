@@ -6,14 +6,14 @@ import callback from '../../netlify/functions/github-callback.mjs'
 import me from '../../netlify/functions/me.mjs'
 import refresh from '../../netlify/functions/auth-refresh.mjs'
 import logout from '../../netlify/functions/auth-logout.mjs'
-import { createSession } from '../../netlify/lib/session.mjs'
+import { createSession, sessionSecret } from '../../netlify/lib/session.mjs'
 import { STATE_COOKIE } from '../../netlify/lib/oauth.mjs'
 
-const SECRET = 'a'.repeat(48)
 const STATE = 'S'.repeat(43)
 const OWNER = 'hello@hanselwei.dev'
 const SITE = 'https://www.hanselwei.dev'
-const ENV = { GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'client-secret', SESSION_SECRET: SECRET }
+const ENV = { GITHUB_CLIENT_ID: 'client-id', GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length' }
+const SECRET = sessionSecret(ENV)
 const realFetch = globalThis.fetch
 const realInfo = console.info
 
@@ -124,8 +124,8 @@ test('/api/me answers 401 signed out, 403 for a non-owner, 200 for the owner, an
   for (const method of ['POST', 'PUT', 'DELETE', 'PATCH']) assert.equal((await me(req('/api/me', { method, cookie: ownerSession() }))).status, 405, method)
 })
 
-test('/api/me is a 503 when the session secret is missing', async () => {
-  delete process.env.SESSION_SECRET
+test('/api/me is a 503 when the session key cannot be derived', async () => {
+  delete process.env.GITHUB_CLIENT_SECRET
   assert.equal((await me(req('/api/me', { cookie: ownerSession() }))).status, 503)
 })
 
