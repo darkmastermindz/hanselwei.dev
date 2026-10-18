@@ -234,6 +234,14 @@ const experience = [
 const achievements = [
   {
     category: 'Achievement',
+    event: 'Collegiate Cyber Defense Competition (CCDC), Southeast Regional Finals',
+    place: 'Fourth at Kennesaw State University (UNC Charlotte team)',
+    date: '2018',
+    location: 'Kennesaw, GA',
+    readable: 'Fourth place: UNC Charlotte team at the Southeast Regional Finals of the Collegiate Cyber Defense Competition (CCDC) at Kennesaw State University, 2018'
+  },
+  {
+    category: 'Achievement',
     event: 'Around the Crown 10K',
     distance: '10K',
     first: true,
