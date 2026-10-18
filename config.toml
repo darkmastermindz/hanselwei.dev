@@ -31,7 +31,9 @@ enabled = true
 # automatically): "sparse" draws a lighter pattern (half the contours, larger hills, no trails,
 # about a quarter of the size), "skip" draws none, "full" ignores it.
 data_saver = "sparse"
-contours = 28       # how many contour lines (8–60); more lines = denser
+contours = 28       # how many contour lines at the peak (8–60); more lines = denser
+start_contours = 8  # lines in the starting pattern, drawn in the first seconds (1 to contours);
+                    # the rest are added one by one until all `contours` show at draw_seconds
 feature_size = 260  # rough size of a hill or valley, in pixels (80–800); smaller = busier
 index_every = 5     # every Nth line is heavier, like a topo map (0 = none, up to 20)
 trails = 3          # dashed trails that fade in at the end (0–6)

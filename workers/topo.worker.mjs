@@ -14,6 +14,7 @@ self.onmessage = ({ data }) => {
       featureSize: whole(data?.featureSize),
       indexEvery: whole(data?.indexEvery),
       trails: whole(data?.trails),
+      startContours: whole(data?.startContours),
       cellSize: whole(data?.cellSize)
     })
   )

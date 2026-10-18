@@ -52,14 +52,15 @@ Non-fork repos show automatically. In `config.toml`, under `[projects]`:
 Faint purple-to-green contour lines sit behind every page and draw in as visitors stay. They're built in the browser at the screen's size, in a Web Worker (`workers/topo.worker.mjs`, `utils/topo.mjs`). Tune them in `config.toml` under `[background]`; the build fails on a value out of range:
 - `enabled`: `true` or `false`.
 - `data_saver`: what to do when the browser asks to save data. That's detected automatically: Data Saver or Lite mode (`navigator.connection.saveData`), the `prefers-reduced-data` media query, or a 2G or slower connection.
-  - `"sparse"` (the default): a lighter pattern with half the contours, larger hills, no trails and a coarser grid, about a quarter of the size.
+  - `"sparse"` (the default): a lighter pattern with half the contours (and half the starting ones), larger hills, no trails and a coarser grid, about a quarter of the size.
   - `"skip"`: no background.
   - `"full"`: ignore the hint and draw the full pattern.
-- `contours` (8–60): how many contour lines. More is denser.
+- `contours` (8–60): how many contour lines once fully drawn (the peak). More is denser.
+- `start_contours` (1 to `contours`): the starting pattern, drawn in the first 3 seconds. The rest are added one at a time, each filling the widest gap between the heights already shown, until all `contours` are there at `draw_seconds`.
 - `feature_size` (80–800): the rough size of a hill or valley in pixels. Smaller is busier.
 - `index_every` (0–20): every Nth line is heavier. `0` turns them off.
 - `trails` (0–6): dashed trails that fade in at the end.
-- `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
+- `draw_seconds` (0–600): time on the page (tab visible) until the full density is reached. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## About card (home page)
 `components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English.

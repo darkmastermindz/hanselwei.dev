@@ -21,7 +21,7 @@
         :class="['topo__line', { 'topo__line--index': line.index }]"
         :style="{
           strokeDasharray: `${line.longest} ${line.longest}`,
-          strokeDashoffset: `${line.longest * (1 - levelProgress(drawn, line.order, topo.levels.length))}`
+          strokeDashoffset: `${line.longest * (1 - levelProgress(elapsed, line.order, schedule))}`
         }"
       />
       <path
@@ -29,29 +29,35 @@
         :key="`trail-${i}`"
         :d="trail.d"
         class="topo__trail"
-        :style="{ opacity: trailOpacity(drawn) }"
+        :style="{ opacity: trailOpacity(elapsed, FULL_DRAW_MS) }"
       />
     </template>
   </svg>
 </template>
 
 <script setup>
-import { buildTopo, easeDraw, levelProgress, trailOpacity } from '~/utils/topo.mjs'
+import { buildTopo, levelProgress, trailOpacity } from '~/utils/topo.mjs'
 import { topoOptions, wantsLessData } from '~/utils/background.mjs'
 // config.toml [background], checked at build time (scripts/build-background.mjs)
 import settings from '~/data/background.generated.mjs'
 
-// The lines draw in as the visitor stays: the whole pattern takes this long with the tab visible
+// The lines draw in as the visitor stays: a starting set in the first seconds, then more
+// contours one by one until the full configured density, this long with the tab visible
 const FULL_DRAW_MS = settings.drawSeconds * 1000
 const PAINT_EVERY_MS = 100 // the draw is slow, so ten updates a second is plenty
 const RESIZE_CHANGE = 0.15 // rebuild only for a real size change, not a mobile browser bar
 
 // Built in the browser at the screen's own size (the server renders an empty svg)
 const topo = shallowRef(null)
-// 0 = nothing drawn yet, 1 = the whole pattern
-const drawn = ref(0)
+// Visible time on the page so far, in ms (Infinity = show the finished pattern)
+const elapsed = ref(0)
+const schedule = computed(() => ({
+  count: topo.value?.levels.length ?? 0,
+  startCount: topo.value?.startCount ?? 0,
+  drawMs: FULL_DRAW_MS
+}))
 
-let progress = 0
+let clock = 0
 let frame = null
 let last = 0
 let lastPaint = 0
@@ -69,8 +75,8 @@ const show = pattern => {
   drawing = true
   // Reduced motion, or draw_seconds = 0: show the finished pattern straight away
   if (reducedMotion || FULL_DRAW_MS <= 0) {
-    progress = 1
-    drawn.value = 1
+    clock = Infinity
+    elapsed.value = Infinity
   } else {
     frame = requestAnimationFrame(tick)
   }
@@ -100,13 +106,13 @@ const build = () => {
 }
 
 const tick = now => {
-  if (last && document.visibilityState === 'visible') progress = Math.min(1, progress + (now - last) / FULL_DRAW_MS)
+  if (last && document.visibilityState === 'visible') clock = Math.min(FULL_DRAW_MS, clock + (now - last))
   last = now
-  if (progress >= 1 || now - lastPaint >= PAINT_EVERY_MS) {
-    drawn.value = easeDraw(progress) // fast at first, so lines show within the first seconds
+  if (clock >= FULL_DRAW_MS || now - lastPaint >= PAINT_EVERY_MS) {
+    elapsed.value = clock
     lastPaint = now
   }
-  if (progress < 1) frame = requestAnimationFrame(tick)
+  if (clock < FULL_DRAW_MS) frame = requestAnimationFrame(tick)
 }
 
 const changedEnough = (before, after) => Math.abs(after - before) / before > RESIZE_CHANGE

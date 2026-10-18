@@ -8,6 +8,7 @@ export const LEVEL_COUNT = BACKGROUND_DEFAULTS.contours
 export const INDEX_EVERY = BACKGROUND_DEFAULTS.indexEvery // every Nth contour is a heavier "index" line
 const FEATURE_PX = BACKGROUND_DEFAULTS.featureSize // roughly the size of a hill or valley
 const TRAIL_COUNT = BACKGROUND_DEFAULTS.trails
+const START_CONTOURS = BACKGROUND_DEFAULTS.startContours
 const TARGET_CELL_PX = 8
 const MAX_CELLS = 25000
 
@@ -197,10 +198,10 @@ export const gridFor = (width, height, cellSize = TARGET_CELL_PX) => {
 }
 
 // The whole pattern for a screen size and settings:
-// { width, height, levels: [{ d, length, longest, index, order }], trails: [{ d }] }
+// { width, height, levels: [{ d, length, longest, index, order }], trails: [{ d }], startCount }
 // length is the level's total line length, longest its longest single line (the dash the browser
 // draws each line along, since dashing restarts on every line of a path), and order its place in
-// the draw-in sequence: the longest levels go first, so the most visible lines show right away.
+// the draw-in sequence (densityOrder). startCount levels make up the starting pattern.
 export const buildTopo = ({
   width,
   height,
@@ -208,6 +209,7 @@ export const buildTopo = ({
   featureSize = FEATURE_PX,
   indexEvery = INDEX_EVERY,
   trails: trailCount = TRAIL_COUNT,
+  startContours = START_CONTOURS,
   cellSize = TARGET_CELL_PX
 }) => {
   const grid = gridFor(width, height, cellSize)
@@ -243,26 +245,70 @@ export const buildTopo = ({
       .map(line => ({ d: smoothPath(line) }))
   }
 
-  // Draw order: longest levels first (ties keep their height order)
-  levels
-    .map((level, k) => ({ k, length: level.length }))
-    .sort((a, b) => b.length - a.length || a.k - b.k)
-    .forEach(({ k }, rank) => (levels[k].order = rank))
+  // Draw order: a starting set spread evenly across the heights, then each new level goes into
+  // the biggest gap between heights already shown, so the map fills in evenly
+  const startCount = Math.min(levels.length, Math.max(1, startContours))
+  densityOrder(levels.length, startCount).forEach((k, rank) => (levels[k].order = rank))
 
-  return { width, height, levels, trails }
+  return { width, height, levels, trails, startCount }
 }
 
-// How far one contour level is drawn (0 to 1), given how far the whole pattern is drawn. Levels
-// start one after another across the first 70% and each takes 30%, so many grow at once.
-export const levelProgress = (drawn, index, count = LEVEL_COUNT) => {
-  if (drawn >= 1) return 1
-  const start = count > 1 ? (index / (count - 1)) * 0.7 : 0
-  return Math.min(1, Math.max(0, (drawn - start) / 0.3))
+// Level indexes (0..count-1) in the order they appear: `start` evenly spaced levels first, then
+// repeatedly the level farthest from every level already chosen (ties go to the lower one)
+export const densityOrder = (count, start) => {
+  const chosen = []
+  const used = new Set()
+  const take = k => {
+    if (used.has(k)) return
+    used.add(k)
+    chosen.push(k)
+  }
+  const first = Math.min(count, Math.max(1, start))
+  for (let i = 0; i < first; i++) take(Math.round(((i + 0.5) * count) / first - 0.5))
+  while (chosen.length < count) {
+    let best = -1
+    let bestGap = -1
+    for (let k = 0; k < count; k++) {
+      if (used.has(k)) continue
+      let gap = Infinity
+      for (const c of chosen) gap = Math.min(gap, Math.abs(k - c))
+      if (gap > bestGap) {
+        bestGap = gap
+        best = k
+      }
+    }
+    take(best)
+  }
+  return chosen
 }
 
-// Time on the page (0 to 1 of the full draw time) -> how far the pattern is drawn. It eases out:
-// fast at first, so lines show within the first seconds, then slower until it's complete.
-export const easeDraw = t => (t >= 1 ? 1 : t <= 0 ? 0 : 1 - (1 - t) ** 2)
+// The draw-in schedule, in milliseconds of time on the page:
+// - the starting set draws in together over the first START_MS
+// - the rest appear one by one, evenly spread over the remaining time, each growing over GROW_MS
+// - the pattern is complete (all configured contours) at drawMs
+export const START_MS = 3000
+const GROW_SHARE = 0.15 // each later level takes up to 15% of the draw time to grow...
+const GROW_MAX_MS = 8000 // ...but no more than 8 seconds
 
-// The dashed trails fade in over the last 20% of the drawing
-export const trailOpacity = drawn => (drawn >= 1 ? 1 : Math.min(1, Math.max(0, (drawn - 0.8) / 0.2)))
+const easeOut = t => 1 - (1 - t) ** 2
+const clamp01 = t => Math.min(1, Math.max(0, t))
+
+// How far the level at draw position `rank` is drawn (0 to 1) after `elapsed` ms
+export const levelProgress = (elapsed, rank, { count, startCount, drawMs }) => {
+  if (!(drawMs > 0) || elapsed >= drawMs) return 1
+  const startMs = Math.min(START_MS, drawMs)
+  if (rank < startCount) return easeOut(clamp01(elapsed / startMs))
+
+  const growMs = Math.min(GROW_MAX_MS, drawMs * GROW_SHARE)
+  const later = count - startCount
+  const window = Math.max(0, drawMs - startMs - growMs)
+  const begin = startMs + (later > 1 ? (rank - startCount) / (later - 1) : 0) * window
+  return easeOut(clamp01((elapsed - begin) / growMs))
+}
+
+// The dashed trails fade in over the last 10 seconds of the drawing (or its last 20%, if shorter)
+export const trailOpacity = (elapsed, drawMs) => {
+  if (!(drawMs > 0) || elapsed >= drawMs) return 1
+  const fadeMs = Math.min(10000, drawMs * 0.2)
+  return clamp01((elapsed - (drawMs - fadeMs)) / fadeMs)
+}

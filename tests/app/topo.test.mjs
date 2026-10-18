@@ -3,7 +3,8 @@
 // reasonable size, and draw in with overlapping levels.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buildTopo, easeDraw, INDEX_EVERY, LEVEL_COUNT, levelProgress, trailOpacity } from '../../utils/topo.mjs'
+import { BACKGROUND_DEFAULTS } from '../../utils/background.mjs'
+import { buildTopo, densityOrder, INDEX_EVERY, LEVEL_COUNT, levelProgress, START_MS, trailOpacity } from '../../utils/topo.mjs'
 
 const PHONE = { width: 390, height: 844 }
 const DESKTOP = { width: 1440, height: 900 }
@@ -77,52 +78,87 @@ test('there are a few dashed trails', () => {
   for (const { d } of phone.trails) assert.match(d, /^M\d+ \d+/)
 })
 
-test('nothing is drawn at the start, and everything at the end', () => {
-  for (let i = 0; i < LEVEL_COUNT; i++) {
-    assert.equal(levelProgress(0, i), 0)
-    assert.equal(levelProgress(1, i), 1)
-  }
-  assert.equal(trailOpacity(0), 0)
-  assert.equal(trailOpacity(0.8), 0)
-  assert.equal(trailOpacity(1), 1)
-})
+const DRAW_MS = BACKGROUND_DEFAULTS.drawSeconds * 1000
+const plan = { count: LEVEL_COUNT, startCount: BACKGROUND_DEFAULTS.startContours, drawMs: DRAW_MS }
+const shown = elapsed => [...Array(LEVEL_COUNT).keys()].filter(rank => levelProgress(elapsed, rank, plan) > 0).length
 
-test('levels overlap as they draw, and never go backwards', () => {
-  const growing = [...Array(LEVEL_COUNT).keys()].filter(i => levelProgress(0.5, i) > 0 && levelProgress(0.5, i) < 1)
-  assert.ok(growing.length >= 3, `${growing.length} levels drawing at once`)
-  for (let i = 0; i < LEVEL_COUNT; i++) {
-    let previous = 0
-    for (let step = 0; step <= 50; step++) {
-      const value = levelProgress(step / 50, i)
-      assert.ok(value >= previous)
-      previous = value
+test('density order: every level once, starting with evenly spaced heights', () => {
+  for (const [count, start] of [[28, 8], [14, 4], [8, 1], [60, 60], [10, 3]]) {
+    const order = densityOrder(count, start)
+    assert.deepEqual([...order].sort((a, b) => a - b), [...Array(count).keys()], `${count}/${start}`)
+    // the starting set is spread out: neighbours in height are never more than one step apart
+    // from an even spacing
+    const first = order.slice(0, start).sort((a, b) => a - b)
+    for (let i = 1; i < first.length; i++) {
+      const gap = first[i] - first[i - 1]
+      assert.ok(Math.abs(gap - count / start) <= 1, `${count}/${start}: gap ${gap}`)
     }
   }
 })
 
-test('the draw eases out: lines show within the first seconds, and it still ends complete', () => {
-  assert.equal(easeDraw(0), 0)
-  assert.equal(easeDraw(1), 1)
-  assert.equal(easeDraw(2), 1)
-  // 5 seconds into a 90-second draw, the pattern is well under way
-  assert.ok(easeDraw(5 / 90) > 0.1, `${easeDraw(5 / 90)}`)
-  let previous = 0
-  for (let step = 0; step <= 100; step++) {
-    const value = easeDraw(step / 100)
-    assert.ok(value >= previous)
-    previous = value
+test('density order: each new level fills the widest gap left', () => {
+  const order = densityOrder(28, 8)
+  for (let n = 8; n < order.length; n++) {
+    const chosen = order.slice(0, n)
+    const gapTo = k => Math.min(...chosen.map(c => Math.abs(k - c)))
+    const widest = Math.max(...[...Array(28).keys()].filter(k => !chosen.includes(k)).map(gapTo))
+    assert.equal(gapTo(order[n]), widest)
   }
 })
 
-test('each level knows its longest line, and the longest levels draw first', () => {
-  for (const level of phone.levels) {
-    assert.ok(level.longest > 0 && level.longest <= level.length + 1e-9)
+test('the starting pattern draws in the first seconds, then density grows to the configured peak', () => {
+  assert.equal(shown(0), 0)
+  // the starting set, and only it, is under way right away and finished by START_MS
+  assert.equal(shown(500), plan.startCount)
+  for (let rank = 0; rank < plan.startCount; rank++) assert.equal(levelProgress(START_MS, rank, plan), 1)
+  // more and more contours show as the visitor stays...
+  const counts = [START_MS, DRAW_MS * 0.25, DRAW_MS * 0.5, DRAW_MS * 0.75].map(shown)
+  for (let i = 1; i < counts.length; i++) assert.ok(counts[i] > counts[i - 1], `${counts}`)
+  assert.ok(counts[0] < LEVEL_COUNT / 2)
+  // ...up to every configured contour, fully drawn, at drawMs
+  for (let rank = 0; rank < LEVEL_COUNT; rank++) assert.equal(levelProgress(DRAW_MS, rank, plan), 1)
+  assert.equal(levelProgress(Infinity, LEVEL_COUNT - 1, plan), 1)
+})
+
+test('levels never go backwards, and a few grow at once', () => {
+  for (let rank = 0; rank < LEVEL_COUNT; rank++) {
+    let previous = 0
+    for (let step = 0; step <= 200; step++) {
+      const value = levelProgress((step / 200) * DRAW_MS, rank, plan)
+      assert.ok(value >= previous && value <= 1)
+      previous = value
+    }
   }
-  // order is a permutation of 0..n-1
+  const growing = [...Array(LEVEL_COUNT).keys()].filter(rank => {
+    const value = levelProgress(DRAW_MS / 2, rank, plan)
+    return value > 0 && value < 1
+  })
+  assert.ok(growing.length >= 2, `${growing.length} levels growing at once`)
+})
+
+test('a short or zero draw time still ends complete', () => {
+  for (const drawMs of [0, 1000, 5000]) {
+    for (let rank = 0; rank < LEVEL_COUNT; rank++) assert.equal(levelProgress(drawMs, rank, { ...plan, drawMs }), 1)
+  }
+  assert.equal(levelProgress(0, 0, { ...plan, drawMs: 0 }), 1)
+  const all = { count: 8, startCount: 8, drawMs: DRAW_MS }
+  assert.equal(levelProgress(START_MS, 7, all), 1)
+})
+
+test('trails fade in at the end of the drawing', () => {
+  assert.equal(trailOpacity(0, DRAW_MS), 0)
+  assert.equal(trailOpacity(DRAW_MS * 0.5, DRAW_MS), 0)
+  assert.ok(trailOpacity(DRAW_MS - 1000, DRAW_MS) > 0)
+  assert.equal(trailOpacity(DRAW_MS, DRAW_MS), 1)
+  assert.equal(trailOpacity(0, 0), 1)
+})
+
+test('each level knows its longest line and its place in the draw order', () => {
+  for (const level of phone.levels) {
+    assert.ok(level.longest >= 0 && level.longest <= level.length + 1e-9)
+  }
   const orders = phone.levels.map(level => level.order).sort((a, b) => a - b)
   assert.deepEqual(orders, [...Array(phone.levels.length).keys()])
-  // the first to draw is the level with the most line, the last the one with the least
-  const byOrder = [...phone.levels].sort((a, b) => a.order - b.order)
-  assert.equal(byOrder[0].length, Math.max(...phone.levels.map(level => level.length)))
-  assert.equal(byOrder.at(-1).length, Math.min(...phone.levels.map(level => level.length)))
+  assert.equal(phone.startCount, BACKGROUND_DEFAULTS.startContours)
+  assert.equal(buildTopo({ width: 390, height: 844, startContours: 99 }).startCount, LEVEL_COUNT)
 })

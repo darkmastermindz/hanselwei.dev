@@ -25,7 +25,8 @@ test('without a data-saving hint, the configured pattern is used as is', () => {
     contours: BACKGROUND_DEFAULTS.contours,
     featureSize: BACKGROUND_DEFAULTS.featureSize,
     indexEvery: BACKGROUND_DEFAULTS.indexEvery,
-    trails: BACKGROUND_DEFAULTS.trails
+    trails: BACKGROUND_DEFAULTS.trails,
+    startContours: BACKGROUND_DEFAULTS.startContours
   })
 })
 
@@ -36,6 +37,8 @@ test('"sparse" (the default) builds a lighter pattern when saving data', () => {
   assert.ok(light.featureSize > BACKGROUND_DEFAULTS.featureSize)
   assert.equal(light.trails, 0)
   assert.equal(light.cellSize, LIGHT_CELL_PX)
+  assert.equal(light.startContours, Math.round(BACKGROUND_DEFAULTS.startContours / 2))
+  assert.ok(light.startContours <= light.contours)
 
   // ...and it really is much smaller
   const size = topo => [...topo.levels, ...topo.trails].reduce((sum, { d }) => sum + d.length, 0)

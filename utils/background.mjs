@@ -5,6 +5,7 @@ export const BACKGROUND_DEFAULTS = {
   enabled: true,
   dataSaver: 'sparse',
   contours: 28,
+  startContours: 8,
   featureSize: 260,
   indexEvery: 5,
   trails: 3,
@@ -22,6 +23,7 @@ export const DATA_SAVER_MODES = ['sparse', 'skip', 'full']
 // config.toml key -> [setting, min, max] (whole numbers)
 const NUMBERS = {
   contours: ['contours', 8, 60],
+  start_contours: ['startContours', 1, 60],
   feature_size: ['featureSize', 80, 800],
   index_every: ['indexEvery', 0, 20],
   trails: ['trails', 0, 6],
@@ -51,6 +53,10 @@ export const buildBackgroundConfig = (toml = {}) => {
       problems.push(`[background] ${JSON.stringify(key)} isn't a setting`)
     }
   }
+  if (config.startContours > config.contours) {
+    problems.push(`[background] start_contours (${config.startContours}) can't be more than contours (${config.contours})`)
+    config.startContours = Math.min(BACKGROUND_DEFAULTS.startContours, config.contours)
+  }
   return { config, problems }
 }
 
@@ -62,7 +68,7 @@ export const wantsLessData = ({ saveData = false, reducedData = false, effective
 
 // The pattern to build for this visitor, as options for buildTopo (utils/topo.mjs), or null for
 // none. When the browser asks to save data and data_saver is "sparse", the pattern is lighter: half
-// the contours, larger hills, no trails, and a coarser grid (fewer points to draw).
+// the contours (and half the starting ones), larger hills, no trails, and a coarser grid (fewer points to draw).
 export const LIGHT_CELL_PX = 12
 export const topoOptions = (config, lessData = false) => {
   if (!config.enabled) return null
@@ -70,15 +76,18 @@ export const topoOptions = (config, lessData = false) => {
     contours: config.contours,
     featureSize: config.featureSize,
     indexEvery: config.indexEvery,
-    trails: config.trails
+    trails: config.trails,
+    startContours: config.startContours
   }
   if (!lessData || config.dataSaver === 'full') return full
   if (config.dataSaver === 'skip') return null
+  const contours = Math.max(8, Math.round(config.contours / 2))
   return {
-    contours: Math.max(8, Math.round(config.contours / 2)),
+    contours,
     featureSize: Math.min(800, Math.round(config.featureSize * 1.4)),
     indexEvery: config.indexEvery,
     trails: 0,
+    startContours: Math.min(contours, Math.max(1, Math.round(config.startContours / 2))),
     cellSize: LIGHT_CELL_PX
   }
 }
