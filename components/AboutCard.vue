@@ -22,6 +22,17 @@
     <p v-else class="about-card__hint" aria-hidden="true">
       <span class="hint__touch">tap</span><span class="hint__mouse">click</span> to switch · <span class="hint__touch">tap and hold</span><span class="hint__mouse">alt-click or hold</span> for {{ readable ? 'JSON' : 'plain English' }}
     </p>
+    <!-- In plain English, a link to read it in the visitor's own language (detected from the browser) -->
+    <p v-if="readable && translateTo" class="about-card__hint about-card__translate">
+      <a
+        :href="translateHref"
+        target="_blank"
+        rel="noopener noreferrer"
+        :hreflang="translateTo.code"
+        :aria-label="`Translate this into ${translateTo.name} with Google Translate`"
+        @click="onTranslate"
+      >🌐 Translate to <span :lang="translateTo.code">{{ translateTo.name }}</span> ↗</a>
+    </p>
     <div
       :id="`about-panel-${view}`"
       ref="panelEl"
@@ -133,6 +144,8 @@
 </template>
 
 <script setup>
+import { safeUrl } from '~/utils/safeUrl.js'
+import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
 import { swipeIntent, swipeYears } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 
@@ -478,6 +491,23 @@ const setReadable = (value, { animate = true, origin } = {}) => {
 }
 
 const toggleReadable = options => setReadable(!readable.value, options)
+
+// The plain-English text in the visitor's language, through Google Translate. Only offered
+// when the browser's preferred language isn't English.
+const translateTo = ref(null)
+const translateHref = ref(null)
+onMounted(() => {
+  const code = translateTarget(navigator.languages?.length ? navigator.languages : navigator.language)
+  if (!code) return
+  translateTo.value = { code, name: languageName(code) }
+  translateHref.value = safeUrl(translateUrl('', code))
+})
+// The link carries the text on screen, read when it's followed (the text changes with the tab)
+const onTranslate = event => {
+  const text = panelEl.value?.querySelector('[data-content]')?.innerText
+  const href = safeUrl(translateUrl(text, translateTo.value.code))
+  if (href) event.currentTarget.href = href
+}
 const revert = options => setReadable(false, options)
 
 const cancelHold = () => {
@@ -704,6 +734,22 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   font-size: 0.7rem;
   text-align: right;
   color: #777;
+}
+
+.about-card__translate {
+  margin-top: -0.25rem;
+}
+
+.about-card__translate a {
+  color: #9a9a9a;
+  text-decoration: underline;
+  text-decoration-color: rgba(192, 132, 252, 0.5);
+  text-underline-offset: 2px;
+}
+
+.about-card__translate a:hover,
+.about-card__translate a:focus-visible {
+  color: #c084fc;
 }
 
 /* Phones say "tap and hold"; a mouse says "alt-click or hold" */
