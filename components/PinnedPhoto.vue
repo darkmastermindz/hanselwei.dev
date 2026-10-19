@@ -48,11 +48,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* Pinned to the right of the title and intro on every screen size, a little smaller on phones */
 .pinned {
   position: relative;
-  width: min(15rem, 70vw);
-  margin: 1.75rem auto 1rem;
-  transform: rotate(-2.5deg);
+  float: right;
+  width: clamp(8.5rem, 40vw, 15rem);
+  margin: 0.75rem 0 1rem 1rem;
+  transform: rotate(3deg);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -60,9 +62,24 @@ onMounted(async () => {
 
 @media (min-width: 640px) {
   .pinned {
-    float: right;
-    margin: 0.75rem 0 1rem 1.5rem;
-    transform: rotate(3deg);
+    margin-left: 1.5rem;
+  }
+}
+
+/* Phones: a narrower film edge and caption to suit the smaller print */
+@media (max-width: 639px) {
+  .pinned__print {
+    padding: 0.4rem 0.4rem 0;
+  }
+
+  .pinned__edge {
+    flex-basis: 1rem;
+    font-size: 0.42rem;
+  }
+
+  .pinned__caption {
+    padding: 0.45rem 0 0.55rem;
+    font-size: 0.85rem;
   }
 }
 
