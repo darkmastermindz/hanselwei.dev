@@ -3,7 +3,7 @@
     <h1 class="page-title text-purple-300">Curiosity Feed</h1>
     <BlogTabs />
     <p class="intro">
-      Short, recurring updates over time: series I post to regularly, newsletter style.
+      Short, recurring updates over time: series I post to regularly, newsletter-style.
       One-off write-ups are under <NuxtLink to="/blog">Posts</NuxtLink>.
       <a href="/feed.xml" class="rss">Subscribe via RSS</a>
     </p>

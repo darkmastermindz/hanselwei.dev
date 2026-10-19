@@ -54,6 +54,16 @@ renderer.link = function (token) {
   return /^https?:\/\//.test(token.href) ? html.replace('<a ', '<a target="_blank" rel="noopener" ') : html
 }
 
+// A plain-text description from the body when a post has none: links and images become their
+// text, markdown marks go, hyphens and parentheses stay ("one-off", "(see below)")
+export const excerptOf = content =>
+  String(content)
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 160)
+
 export const toPost = (key, source) => {
   const { data, content } = parseFrontMatter(source)
   // Storage keys look like "devto:my-post.md" or "hello-world.md"
@@ -65,7 +75,7 @@ export const toPost = (key, source) => {
     slug,
     title: data.title || slug,
     date: data.date ? new Date(data.date).toISOString() : null,
-    description: data.description || content.replace(/[#>*_`[\]()!-]/g, '').trim().slice(0, 160),
+    description: data.description || excerptOf(content),
     tags,
     cover: safeUrl(data.cover_image),
     source: data.source || 'hanselwei.dev',

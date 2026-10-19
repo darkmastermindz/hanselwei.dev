@@ -50,11 +50,11 @@ const links = [
   {
     label: 'Strava',
     back: '🏃 Run with me',
-    backs: ['🏃 Run with me', '🗺️ Sidequest with me', '🛶 Paddle with me', '🧗 Rock climb with me'],
+    backs: ['🏃 Run with me', '🗺️ Side quest with me', '🛶 Paddle with me', '🧗 Rock climb with me'],
     href: 'https://www.strava.com/athletes/129101734',
     bg: 'bg-[#c73e00]'
   },
-  { label: 'Send Email', back: '✉️ Drop me a line', href: 'mailto:Hansel Wei (hanselwei.dev) <hello+hansel@hanselwei.dev>', bg: 'bg-[#008856]' }
+  { label: 'Send Email', back: '✉️ Drop me a line', href: 'mailto:hello+hansel@hanselwei.dev', bg: 'bg-[#008856]' }
 ]
 
 // Arrange the pills from their real widths: where three rows fit (tablet/desktop) the

@@ -3,7 +3,7 @@
     <h1 class="page-title text-purple-300">Blog</h1>
     <BlogTabs />
     <p class="intro">
-      One-shot write-ups: each post stands on its own. Posts from
+      One-off write-ups: each post stands on its own. Posts from
       <a href="https://dev.to/hansel" target="_blank" rel="noopener">DEV Community</a> are mirrored here too.
       For recurring updates, see the <NuxtLink to="/blog/feed">Curiosity Feed</NuxtLink>.
       <a href="/rss.xml" class="rss">RSS</a>

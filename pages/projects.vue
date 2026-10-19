@@ -107,7 +107,8 @@ const { githubProjects, filter, tag, query, sort, loaded, counts, visible, tags 
 const resultText = computed(() => {
   if (!loaded.value) return 'Loading projects…'
   const shown = visible.value.length
-  return shown === githubProjects.value.length ? `${shown} projects` : `${shown} of ${githubProjects.value.length} projects`
+  const total = githubProjects.value.length
+  return shown === total ? `${shown} ${total === 1 ? 'project' : 'projects'}` : `${shown} of ${total} projects`
 })
 
 const reset = () => {

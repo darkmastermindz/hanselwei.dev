@@ -21,7 +21,7 @@ export const hobbyFacts = [
   // Rock climbing
   fact('climb-olympics', 'climbing', 'Sport climbing made its Olympic debut at the Tokyo 2020 Games, held in 2021.'),
   fact('climb-freerider', 'climbing', 'In 2017 Alex Honnold free soloed Freerider on El Capitan, about 3,000 ft, in 3 hours 56 minutes.'),
-  fact('climb-vscale', 'climbing', 'The bouldering V-scale is named after John "Vermin" Sherman, who created it at Hueco Tanks, Texas.'),
+  fact('climb-vscale', 'climbing', 'The bouldering V-scale is named after John "Verm" Sherman, who created it at Hueco Tanks, Texas.'),
   fact('climb-chalk', 'climbing', 'Climbing chalk is magnesium carbonate. Gymnast-turned-boulderer John Gill brought it to climbing in the 1950s.'),
   quote('climb-lowe', 'climbing', "The best climber in the world is the one who's having the most fun.", 'Alex Lowe'),
   quote('climb-proverb', 'climbing', 'Fall seven times, stand up eight.', 'Japanese proverb'),
@@ -55,7 +55,7 @@ export const hobbyFacts = [
 
   // Board games
   fact('board-senet', 'boardgames', 'Senet, from ancient Egypt, is one of the oldest known board games: over 5,000 years old.'),
-  fact('board-shannon', 'boardgames', 'There are an estimated 10^120 possible chess games, far more than the ~10^80 atoms in the observable universe.'),
+  fact('board-shannon', 'boardgames', 'There are an estimated 10¹²⁰ possible chess games, far more than the ~10⁸⁰ atoms in the observable universe.'),
   fact('board-catan', 'boardgames', 'Catan was first published in Germany in 1995 as "Die Siedler von Catan".'),
   quote('board-chernev', 'boardgames', 'Every chess master was once a beginner.', 'Irving Chernev'),
 
