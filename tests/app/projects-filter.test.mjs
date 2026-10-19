@@ -60,7 +60,8 @@ test('featured and hackathon tags come from config, case-insensitively', () => {
   assert.deepEqual(tagsFor(repo('HackNC2019'), config), ['hackathon'])
   assert.deepEqual(tagsFor(repo('hanselwei.dev'), config), ['featured'])
   assert.deepEqual(tagsFor(repo('gear-tracker'), config), [])
-  assert.equal(tagLabel('featured'), 'Featured')
+  assert.equal(tagLabel('featured'), '#featured') // every tag is a hashtag, config ones too
+  assert.equal(tagLabel('hackathon'), '#hackathon')
   assert.equal(tagLabel('vue'), '#vue')
 })
 
@@ -105,6 +106,10 @@ test('search matches name, description, language and tags, ignoring case, as pla
   assert.equal(matchesQuery(r, 'vue'), true)
   assert.equal(matchesQuery(r, 'gear'), true)
   assert.equal(matchesQuery(r, 'nothing'), false)
+  // A hashtag search finds the tag, as the chips show it
+  assert.equal(matchesQuery(r, '#gear'), true)
+  assert.equal(matchesQuery(r, '#PWA'), true)
+  assert.equal(matchesQuery(r, '#'), true)
   for (const q of ['.*', '(a+)+$', '[', ...XSS_HTML, ...JS_BREAKOUTS, REDOS.slice(0, 500)]) {
     assert.equal(matchesQuery(r, q), false, q.slice(0, 30))
   }

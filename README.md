@@ -85,6 +85,11 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
   - These are deterrents: a screenshot still works, and anyone can forge request headers.
   - To change the photo: reduce it, then `BIO_PHOTO_KEY=… node scripts/encrypt-bio-photo.mjs photo.jpg`.
 
+## Chips
+Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity Feed, projects, gear):
+- Tags show as hashtags (`#FirstAid`, `#featured`); filters still use the raw tag. Searches accept the hashtag (`#crashpad` finds "Crash Pad").
+- A strip wraps naturally up to 3 rows on phones and 4 on wider screens. Longer lists become that many balanced rows that scroll sideways (`utils/chips.js`).
+
 ## Tests
 - `npm test` runs Node's built-in test runner over `tests/**/*.test.mjs`. App logic is in `tests/app/`, and injection and security checks are in `tests/security/`. Shared attack payloads live in `tests/security/payloads.mjs`.
 - Outside input (markdown, front matter, URLs, GitHub data, the profile README) renders only through `renderMarkdown` and `safeUrl`, and the security tests check that.

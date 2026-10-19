@@ -27,10 +27,8 @@
       </label>
     </form>
 
-    <div class="chips" role="group" aria-label="Filter projects">
+    <ChipStrip v-slot="{ item: chip }" :items="CHIPS" item-key="id" class="chips" label="Filter projects">
       <button
-        v-for="chip in CHIPS"
-        :key="chip.id"
         type="button"
         class="chip"
         :class="{ 'is-on': filter === chip.id }"
@@ -39,12 +37,10 @@
       >
         {{ chip.label }} <span class="chip__count">{{ counts[chip.id] }}</span>
       </button>
-    </div>
+    </ChipStrip>
 
-    <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
+    <ChipStrip v-if="tags.length" v-slot="{ item: t }" :items="tags" class="tags" label="Filter by tag">
       <button
-        v-for="t in tags"
-        :key="t"
         type="button"
         class="tag"
         :class="{ 'is-on': tag === t }"
@@ -53,7 +49,7 @@
       >
         {{ tagLabel(t) }}
       </button>
-    </div>
+    </ChipStrip>
 
     <p class="results" aria-live="polite">{{ resultText }}</p>
 
@@ -175,9 +171,6 @@ const reset = () => {
 }
 
 .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 
@@ -203,9 +196,6 @@ const reset = () => {
 }
 
 .chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
   margin-bottom: 0.5rem;
 }
 

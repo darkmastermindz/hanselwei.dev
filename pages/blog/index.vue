@@ -9,18 +9,16 @@
       <a href="/rss.xml" class="rss">RSS</a>
     </p>
 
-    <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
+    <ChipStrip v-if="tags.length" v-slot="{ item: tag }" :items="tags" class="tags" label="Filter by tag">
       <button
-        v-for="tag in tags"
-        :key="tag"
         type="button"
         :class="['badge badge-lg', activeTag === tag ? 'badge-secondary' : 'badge-outline text-gray-300']"
         :aria-pressed="activeTag === tag"
         @click="activeTag = activeTag === tag ? null : tag"
       >
-        #{{ tag }}
+        {{ hashtag(tag) }}
       </button>
-    </div>
+    </ChipStrip>
 
     <p v-if="!filtered.length" class="intro">No posts yet.</p>
 
@@ -42,6 +40,8 @@
 </template>
 
 <script setup>
+import { hashtag } from '~/utils/chips.js'
+
 useHead({ title: 'Blog · hanselwei.dev' })
 
 const { data: posts } = await useFetch('/api/blog', { default: () => [] })
@@ -78,9 +78,6 @@ const formatDate = iso =>
 }
 
 .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
   margin-bottom: 1.5rem;
 }
 

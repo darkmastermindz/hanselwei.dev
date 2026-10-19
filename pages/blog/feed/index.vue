@@ -8,10 +8,8 @@
       <a href="/feed.xml" class="rss">Subscribe via RSS</a>
     </p>
 
-    <div v-if="seriesList.length" class="tags" role="group" aria-label="Filter by series">
+    <ChipStrip v-if="seriesList.length" v-slot="{ item: name }" :items="seriesList" class="tags" label="Filter by series">
       <button
-        v-for="name in seriesList"
-        :key="name"
         type="button"
         :class="['badge badge-lg', activeSeries === name ? 'badge-success' : 'badge-outline text-gray-300']"
         :aria-pressed="activeSeries === name"
@@ -19,20 +17,18 @@
       >
         🔁 {{ name }}
       </button>
-    </div>
+    </ChipStrip>
 
-    <div v-if="tags.length" class="tags" role="group" aria-label="Filter by tag">
+    <ChipStrip v-if="tags.length" v-slot="{ item: tag }" :items="tags" class="tags" label="Filter by tag">
       <button
-        v-for="tag in tags"
-        :key="tag"
         type="button"
         :class="['badge badge-lg', activeTag === tag ? 'badge-secondary' : 'badge-outline text-gray-300']"
         :aria-pressed="activeTag === tag"
         @click="activeTag = activeTag === tag ? null : tag"
       >
-        #{{ tag }}
+        {{ hashtag(tag) }}
       </button>
-    </div>
+    </ChipStrip>
 
     <p v-if="!filtered.length" class="intro">Nothing here yet.</p>
 
@@ -42,7 +38,7 @@
         <p class="entry__meta">
           <time v-if="entry.date" :datetime="entry.date">{{ formatDate(entry.date) }}</time>
           <span v-if="entry.series" class="entry__series">🔁 {{ entry.series }} #{{ entry.seriesNumber }}</span>
-          <span v-for="tag in entry.tags" :key="tag">#{{ tag }}</span>
+          <span v-for="tag in entry.tags" :key="tag">{{ hashtag(tag) }}</span>
         </p>
         <h3 class="entry__title">
           <NuxtLink :to="`/blog/${entry.slug}`">{{ entry.title }}</NuxtLink>
@@ -57,6 +53,8 @@
 </template>
 
 <script setup>
+import { hashtag } from '~/utils/chips.js'
+
 useHead({ title: 'Curiosity Feed · hanselwei.dev' })
 
 const { data: entries } = await useFetch('/api/blog/feed', { default: () => [] })
@@ -116,9 +114,6 @@ const hostname = url => {
 }
 
 .tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
   margin-bottom: 1.5rem;
 }
 
