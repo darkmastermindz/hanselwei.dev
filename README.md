@@ -62,7 +62,15 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## About card (home page)
-`components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. Swipe left or right across the card to move through the years (left for later, right for earlier). While the card is in use the social links below pause (they move as the card changes size): on phones until the card is scrolled away or you tap elsewhere (a tap on a paused link just unpauses it), with a mouse for a second after the press. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English. In plain English, visitors whose browser prefers another language get a small link to read it in Google Translate (`utils/translate.js`); English readers don't see it.
+`components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. Swipe left or right across the card, or use a sideways wheel (trackpad swipe, tilt wheel, Shift+wheel), to move through the years (a finger swipe left or a wheel to the right goes to later years). While the card is in use the social links below pause (they move as the card changes size): on phones until the card is scrolled away or you tap elsewhere (a tap on a paused link just unpauses it), with a mouse for a second after the press. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English. In plain English, visitors whose browser prefers another language get a small link to read it in Google Translate (`utils/translate.js`); English readers don't see it.
+
+## Keyboard and controller
+`plugins/navigation.client.js` adds keyboard and game controller navigation on every page, detected from what the visitor uses. A focus ring shows only after a keyboard or controller is used (`html[data-input]`), and a mouse or touch hides it again.
+- Arrow keys or the D-pad (or left stick) move focus to the nearest link or button in that direction (`utils/spatialNav.js`). With nothing focused yet, arrow keys scroll the page as usual, and a controller starts at the top of the screen.
+- Enter or A activates. Escape or B closes an open menu, clears a search, turns the About card back to JSON, or goes back a page within the site.
+- PageUp/PageDown or the bumpers switch the About card's tabs, or step the years on the XP slider.
+- The right stick scrolls the page. Controller input is read in `utils/gamepad.js` (standard mapping).
+- The coin's press-and-hold still needs a real press (pointer, Space or Enter), since it doubles as the human check for the contact card.
 
 ## Bio (`/bio`)
 - `content/bio/bio.md`: hand-written markdown, with `title` and `description` in its front matter.

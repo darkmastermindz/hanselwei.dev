@@ -1,6 +1,6 @@
 <template>
-  <section ref="cardEl" class="about-card">
-    <div class="about-card__tabs" role="tablist" aria-label="About Hansel">
+  <section ref="cardEl" class="about-card" @keydown="onCardKey">
+    <div class="about-card__tabs" role="tablist" aria-label="About Hansel" @keydown="onTabsKey">
       <button
         v-for="tab in tabs"
         :id="`about-tab-${tab.id}`"
@@ -45,7 +45,7 @@
       aria-live="polite"
       :title="view === 'fact' ? 'tap to switch categories' : 'Tap to switch, press and hold for plain English'"
       @click="onTap"
-      @keydown.enter.space.exact.prevent="next"
+      @keydown.enter.space.exact.prevent="next()"
       @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
       @pointermove="onHoldMove"
@@ -146,7 +146,7 @@
 <script setup>
 import { safeUrl } from '~/utils/safeUrl.js'
 import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
-import { swipeIntent, swipeYears } from '~/utils/swipe.js'
+import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
@@ -427,6 +427,31 @@ const onTrackKey = event => {
     setYear(xpYear.value + step)
   } else if (event.key === 'Home') setYear(yearMin)
   else if (event.key === 'End') setYear(yearMax)
+  // PageUp / PageDown (a controller's bumpers) step a year too
+  else if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+    setYear(xpYear.value + (event.key === 'PageDown' ? 1 : -1))
+  }
+}
+
+// A sideways wheel over the XP view (trackpad swipe, tilt wheel, Shift+wheel) moves the years
+// like a touch swipe; an up/down wheel still scrolls the page (utils/swipe.js wheelDx)
+let wheelTravel = 0
+let wheelTimer = null
+const onWheel = event => {
+  if (view.value !== 'edu') return
+  const dx = wheelDx(event)
+  if (!dx) return
+  event.preventDefault()
+  clearTimeout(wheelTimer)
+  wheelTimer = setTimeout(() => (wheelTravel = 0), 250)
+  wheelTravel += dx
+  const steps = Math.trunc(wheelTravel / WHEEL_STEP_PX)
+  if (!steps) return
+  wheelTravel -= steps * WHEEL_STEP_PX
+  setYear(xpYear.value + steps)
+  lockSocials() // the entries change height under the pointer
+  releaseSocials()
 }
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
@@ -619,6 +644,7 @@ onMounted(() => {
     { threshold: [0, 0.25] }
   )
   if (cardEl.value) observer.observe(cardEl.value)
+  panelEl.value?.addEventListener('wheel', onWheel, { passive: false })
 })
 
 onBeforeUnmount(() => {
@@ -631,12 +657,35 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
+  panelEl.value?.removeEventListener('wheel', onWheel)
+  clearTimeout(wheelTimer)
 })
 
 // Tapping the card cycles through whatever views are available
-const next = () => {
+const next = (step = 1) => {
   const ids = tabs.value.map(tab => tab.id)
-  view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
+  view.value = ids[(ids.indexOf(view.value) + step + ids.length) % ids.length]
+}
+
+// Keyboard and controller (plugins/navigation.client.js): Left/Right move between the tabs,
+// PageUp/PageDown (the bumpers) switch tabs from anywhere on the card, and Escape takes plain
+// English back to JSON before it goes back a page
+const onTabsKey = event => {
+  const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key]
+  if (!step) return
+  event.preventDefault()
+  next(step)
+  nextTick(() => document.getElementById(`about-tab-${view.value}`)?.focus())
+}
+const onCardKey = event => {
+  if (event.defaultPrevented) return
+  if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+    next(event.key === 'PageDown' ? 1 : -1)
+  } else if (event.key === 'Escape' && readable.value) {
+    event.preventDefault()
+    revert()
+  }
 }
 
 // A hold (or a hold let go early) also ends in a click; only a quick tap switches views.

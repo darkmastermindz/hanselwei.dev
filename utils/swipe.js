@@ -15,3 +15,18 @@ export const swipeYears = dx => {
   const steps = Math.trunc(-dx / SWIPE_STEP_PX)
   return steps === 0 ? 0 : steps // never -0
 }
+
+// The mouse equivalent: a sideways wheel (trackpad two-finger swipe, tilt wheel, Shift+wheel)
+// over the XP view. Returns the horizontal travel in pixels, or 0 when the wheel is mostly
+// vertical, which is left to scroll the page. Positive = right = later years.
+export const WHEEL_STEP_PX = 60 // wheel travel per year
+const WHEEL_UNIT_PX = { 0: 1, 1: 16, 2: 400 } // deltaMode: pixels, lines, pages
+
+export const wheelDx = ({ deltaX = 0, deltaY = 0, deltaMode = 0, shiftKey = false } = {}) => {
+  const unit = WHEEL_UNIT_PX[deltaMode] ?? 1
+  // Some browsers leave Shift+wheel vertical; it means sideways
+  const dx = shiftKey && deltaX === 0 ? deltaY : deltaX
+  const dy = shiftKey && deltaX === 0 ? 0 : deltaY
+  if (Math.abs(dx) <= Math.abs(dy)) return 0
+  return dx * unit
+}

@@ -37,6 +37,19 @@ body {
   overscroll-behavior-y: contain;
 }
 
+/* Focus ring for keyboard and controller users only (plugins/navigation.client.js sets
+   data-input from what was used last); components with their own focus look keep it */
+html[data-input='keyboard'] :focus-visible,
+html[data-input='gamepad'] :focus {
+  outline: 3px solid #7cfc00;
+  outline-offset: 3px;
+}
+
+/* Keep focused controls clear of the screen edges and the nav when they scroll into view */
+:focus {
+  scroll-margin: 5rem 1rem;
+}
+
 .app-shell {
   min-height: 100vh;
   min-height: 100dvh;
