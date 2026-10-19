@@ -39,7 +39,7 @@
       @pointerdown="startHold"
       @pointermove="onHoldMove"
       @pointerup="endHold"
-      @pointercancel="cancelHold"
+      @pointercancel="endHold"
       @pointerleave="cancelHold"
       @contextmenu.prevent
     >
@@ -133,6 +133,7 @@
 </template>
 
 <script setup>
+import { swipeIntent, swipeYears } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
@@ -486,10 +487,12 @@ const cancelHold = () => {
 
 const startHold = event => {
   held = false
+  swiping = false
   pressStart = performance.now()
   cancelHold()
   if (view.value === 'fact') return
   holdOrigin = { x: event.clientX, y: event.clientY }
+  swipeFrom = view.value === 'edu' ? { year: xpYear.value, decided: false } : null
   charging.value = true
   holdTimer = setTimeout(() => {
     charging.value = false
@@ -501,12 +504,43 @@ const startHold = event => {
 }
 
 const onHoldMove = event => {
-  if (!charging.value) return
+  if (swipeMove(event) || !charging.value) return
   const moved = Math.hypot(event.clientX - holdOrigin.x, event.clientY - holdOrigin.y)
   if (moved > HOLD_SLOP_PX) cancelHold()
 }
 
-const endHold = () => cancelHold()
+// On the XP view, a sideways swipe moves the year slider (utils/swipe.js); up and down still
+// scroll the page. Returns true while the press is a swipe.
+let swipeFrom = null
+let swiping = false
+const swipeMove = event => {
+  if (!swipeFrom || held) return false
+  const dx = event.clientX - holdOrigin.x
+  if (!swipeFrom.decided) {
+    const intent = swipeIntent(dx, event.clientY - holdOrigin.y)
+    if (!intent) return false
+    swipeFrom.decided = true
+    if (intent === 'scroll') {
+      swipeFrom = null
+      return false
+    }
+    swiping = true
+    cancelHold()
+    lockSocials() // the entries change with the year, so the links below move
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  setYear(swipeFrom.year + swipeYears(dx))
+  return true
+}
+const endSwipe = () => {
+  if (swiping) releaseSocials()
+  swipeFrom = null
+}
+
+const endHold = () => {
+  endSwipe()
+  cancelHold()
+}
 
 // The social links stay paused from the switch until a moment after the press ends, wherever
 // it ends (lifted off the card, cancelled by a scroll or the system's long-press, ...)
@@ -554,8 +588,9 @@ const next = () => {
 // A hold (or a hold let go early) also ends in a click; only a quick tap switches views.
 // On desktop, alt-click flips the text the same way a hold does.
 const onTap = event => {
-  if (held) {
+  if (held || swiping) {
     held = false
+    swiping = false
     return
   }
   if (event.altKey) {
@@ -627,6 +662,11 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none; /* no iOS text menu on press-and-hold */
   user-select: none;
+}
+
+/* XP: sideways swipes move the year slider (handled in script); vertical still scrolls */
+#about-panel-edu {
+  touch-action: pan-y;
 }
 
 .about-card__panel:focus-visible {
