@@ -19,7 +19,13 @@
           <span class="token__shine" />
         </span>
         <span class="token__face token__face--back" aria-hidden="true">
-          <span class="token__monogram">HW</span>
+          <!-- During an event, once the bubble has shown, tails carries an engraved QR to the site -->
+          <span v-if="showQr" class="token__qr">
+            <svg :viewBox="`0 0 ${bubbleSettings.qrSize} ${bubbleSettings.qrSize}`" shape-rendering="crispEdges">
+              <path :d="bubbleSettings.qrPath" />
+            </svg>
+          </span>
+          <span v-else class="token__monogram">HW</span>
           <span class="token__caption">hanselwei.dev</span>
         </span>
         <span class="token__edge" />
@@ -32,6 +38,24 @@
       :style="{ left: `${pop.x}%` }"
       aria-hidden="true"
     >+1</span>
+    <!-- An iMessage-style speech bubble under the coin when a hold lands heads up, while an event
+         is on (config.toml [coin_bubble]) -->
+    <Transition name="bubble">
+      <span
+        v-if="bubble"
+        class="token__bubble"
+        :class="{ 'is-typing': bubble === 'typing' }"
+        :aria-hidden="bubble === 'typing' || undefined"
+        @pointerenter="holdBubble"
+        @pointerleave="releaseBubble"
+        @focusin="holdBubble"
+        @focusout="releaseBubble"
+      >
+        <span v-if="bubble === 'typing'" class="token__typing"><i /><i /><i /></span>
+        <template v-else>{{ parts[0] }}<a v-if="parts[1]" :href="bubbleSettings.link" target="_blank" rel="noopener">{{ parts[1] }}</a>{{ parts[2] }}</template>
+      </span>
+    </Transition>
+    <span class="sr-only" aria-live="polite">{{ bubble === 'message' ? bubbleSettings.text : '' }}</span>
   </div>
 </template>
 
@@ -41,6 +65,9 @@
 // Emits `spin` for every full turn (a quick tap counts as one) and `release`
 // with the number of spins in that hold and how long it was held (ms).
 // Only real (trusted) input counts.
+import bubbleSettings from '~/data/coinBubble.generated.mjs'
+import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
+
 const emit = defineEmits(['spin', 'release'])
 
 const MAX_SPEED = 24 // degrees per frame
@@ -63,7 +90,49 @@ onMounted(() => {
   setTimeout(() => (intro.value = false), 1600)
 })
 
-onBeforeUnmount(() => cancelAnimationFrame(frame))
+onBeforeUnmount(() => {
+  cancelAnimationFrame(frame)
+  hideBubble()
+})
+
+// The bubble: "typing…" for a moment once the coin settles heads up, then the message, which
+// fades after a while (not while it's hovered or focused, so its link can be used). A new press
+// clears it. Checked at release, so it stops on its own after the event. Once it has shown, the
+// coin's tails side carries the QR code.
+const bubble = ref(null) // null, 'typing' or 'message'
+const showQr = ref(false)
+const parts = bubbleParts(bubbleSettings)
+const MESSAGE_MS = 8000
+let bubbleTimers = []
+const clearBubbleTimers = () => {
+  bubbleTimers.forEach(clearTimeout)
+  bubbleTimers = []
+}
+const hideBubble = () => {
+  clearBubbleTimers()
+  bubble.value = null
+}
+const showMessage = () => {
+  bubble.value = 'message'
+  if (bubbleSettings.qrPath) showQr.value = true
+}
+const showBubble = settleMs => {
+  if (!bubbleActive(bubbleSettings)) return
+  const typingMs = reducedMotion ? 0 : 900
+  bubbleTimers.push(
+    setTimeout(() => (typingMs ? (bubble.value = 'typing') : showMessage()), settleMs),
+    setTimeout(showMessage, settleMs + typingMs),
+    setTimeout(() => (bubble.value = null), settleMs + typingMs + MESSAGE_MS)
+  )
+}
+const holdBubble = () => {
+  if (bubble.value === 'message') clearBubbleTimers()
+}
+const releaseBubble = () => {
+  if (bubble.value !== 'message') return
+  clearBubbleTimers()
+  bubbleTimers.push(setTimeout(() => (bubble.value = null), 3000))
+}
 
 const countSpin = () => {
   spinsThisHold++
@@ -87,6 +156,7 @@ const press = event => {
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   intro.value = false
+  hideBubble()
   pressStartAngle = angle.value
   pressStartTime = performance.now()
   spinsThisHold = 0
@@ -108,12 +178,17 @@ const release = () => {
   cancelAnimationFrame(frame)
   if (!spinsThisHold) countSpin()
   emit('release', spinsThisHold, performance.now() - pressStartTime)
-  if (reducedMotion) return
+  if (reducedMotion) {
+    if (landsHeads(angle.value)) showBubble(400)
+    return
+  }
 
   // Coast to the next face, taking longer the faster it was spinning
   const target = Math.ceil((angle.value + speed * 6) / 180) * 180
-  transition.value = `transform ${0.5 + speed / 30}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+  const coastSeconds = 0.5 + speed / 30
+  transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
   angle.value = target
+  if (landsHeads(target)) showBubble(coastSeconds * 1000)
   speed = 0
   navigator.vibrate?.([8, 40, 8])
 }
@@ -271,6 +346,147 @@ const release = () => {
   }
   100% {
     transform: translateX(120%);
+  }
+}
+
+/* The engraved QR on tails: dark modules cut into a light plate */
+.token__qr {
+  display: block;
+  width: 60%;
+  aspect-ratio: 1;
+  padding: 9%; /* the quiet zone: about 3 modules of plain plate around the code, so it scans */
+  border-radius: 10%;
+  background: #eaffdc;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.4), inset 0 -2px 0 rgba(255, 255, 255, 0.6), 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    fill: #10251a;
+  }
+}
+
+.token__qr + .token__caption {
+  margin-top: 0.3em;
+}
+
+/* An iMessage-blue speech bubble under the coin, its tail pointing up at it. Centered on the coin
+   without a transform (the pop-in animation uses transform) */
+.token__bubble {
+  position: absolute;
+  top: calc(100% + 0.75rem);
+  left: 0;
+  right: 0;
+  z-index: 3;
+  width: max-content;
+  max-width: min(18rem, 88vw);
+  margin: 0 auto;
+  padding: 0.5rem 0.9rem;
+  border-radius: 1.15rem;
+  background: #0a84ff;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  transform-origin: top center;
+
+  /* The tail */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -0.3rem;
+    left: 50%;
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-left: -0.45rem;
+    border-radius: 0.15rem;
+    background: inherit;
+    transform: rotate(45deg);
+  }
+
+  a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  a:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+.token__bubble.is-typing {
+  background: #3a3a3c;
+}
+
+.token__typing {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.3rem 0.1rem;
+
+  i {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #8e8e93;
+    animation: typing 1s ease-in-out infinite;
+  }
+
+  i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.bubble-enter-active {
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+.bubble-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.bubble-enter-from {
+  opacity: 0;
+  transform: translateY(-8px) scale(0.6);
+}
+
+.bubble-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token__typing i,
+  .bubble-enter-active {
+    animation: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .bubble-enter-from {
+    transform: none;
   }
 }
 
