@@ -16,7 +16,7 @@
       <input
         v-model="search"
         type="search"
-        class="input input-bordered input-sm w-full sm:max-w-xs"
+        class="input input-sm w-full sm:max-w-xs"
         placeholder="Search gear…"
         aria-label="Search gear"
       />

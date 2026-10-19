@@ -1,0 +1,75 @@
+/* Tailwind CSS v4 entry: plugins and daisyUI themes live here now that tailwind.config.js is gone. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+/*
+ * Utilities stay unlayered, as they were under Tailwind 3. Unlayered CSS always beats layered CSS,
+ * so in a layer they would lose to tachyons and the layouts' global styles (h1 sizes, prose margins)
+ * no matter how specific they are.
+ */
+@import "tailwindcss/utilities.css";
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui" {
+  themes: dark --default --prefersdark, night;
+}
+
+/* daisyUI 5 restyled its dark theme; keep the daisyUI 3 palette and shapes the site was designed on. */
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: hsl(212 18% 14%);
+  --color-base-200: hsl(213 18% 12%);
+  --color-base-300: hsl(213 18% 10%);
+  --color-base-content: hsl(220 13% 69%);
+  --color-primary: hsl(262 80% 50%);
+  --color-primary-content: hsl(0 0% 100%);
+  --color-secondary: hsl(316 70% 50%);
+  --color-secondary-content: hsl(0 0% 100%);
+  --color-accent: hsl(175 70% 41%);
+  --color-accent-content: hsl(0 0% 100%);
+  --color-neutral: hsl(213 18% 20%);
+  --color-neutral-content: hsl(220 13% 69%);
+  --color-info: hsl(198 93% 60%);
+  --color-info-content: hsl(198 100% 12%);
+  --color-success: hsl(158 64% 52%);
+  --color-success-content: hsl(158 100% 10%);
+  --color-warning: hsl(43 96% 56%);
+  --color-warning-content: hsl(43 100% 11%);
+  --color-error: hsl(0 91% 71%);
+  --color-error-content: hsl(0 100% 14%);
+  --radius-selector: 1.9rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/*
+ * daisyUI 3 painted the page with base-100 from an unlayered :root rule, which outranked the layout's
+ * html background. daisyUI 5's rule is layered and loses, so restore it here, unlayered.
+ */
+:root {
+  background-color: var(--color-base-100);
+}
+
+/* Tailwind 3 defaults that v4 dropped: gray-200 borders and pointer cursors on buttons. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
