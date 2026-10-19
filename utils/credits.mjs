@@ -80,7 +80,8 @@ export const copyrightLine = text => {
 // Plain, one-line, length-limited text (npm descriptions are outside input)
 export const plainText = (text, max = 160) => {
   if (typeof text !== 'string') return null
-  const plain = text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
+  // No angle brackets at all (stripping tags one pass at a time can leave one: <scr<script>ipt>)
+  const plain = text.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim().slice(0, max)
   return plain || null
 }
 

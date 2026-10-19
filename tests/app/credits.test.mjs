@@ -48,7 +48,11 @@ test('details come from the package; when that fails, the lockfile still gives v
 })
 
 test('npm descriptions are plain one-line text', () => {
-  assert.equal(plainText('  A <b>fast</b>\nmarkdown   parser  '), 'A fast markdown parser')
+  assert.equal(plainText('  A fast\nmarkdown   parser  '), 'A fast markdown parser')
+  assert.equal(plainText('a <b>bold</b> one'), 'a bbold/b one')
+  for (const tricky of ['<scr<script>ipt>alert(1)</script>', '<<img src=x onerror=1>>', '<a href=x>']) {
+    assert.doesNotMatch(plainText(tricky), /[<>]/, tricky)
+  }
   assert.equal(plainText('x'.repeat(500)).length, 160)
   assert.equal(plainText(''), null)
   assert.equal(plainText(42), null)
