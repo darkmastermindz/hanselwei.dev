@@ -44,7 +44,13 @@ const links = [
   { label: 'GitHub', back: '🦄 @darkmastermindz', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]', effect: 'unicorn' },
   { label: 'Mastodon', back: '🐘 Toot at me', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
   { label: 'Messenger', back: '💬 Say hi!', href: 'https://m.me/hanselwei', bg: 'bg-blue-600' },
-  { label: 'Instagram', back: '📸 See my photos', href: 'https://hansel.rocks', bg: 'bg-[#c7501a]' },
+  {
+    label: 'Instagram',
+    back: '🤘 Rock On! Hansel',
+    backs: ['🤘 Rock On! Hansel', '🧗 Keep Climbing', '📖 Follow the Story'],
+    href: 'https://hansel.rocks',
+    bg: 'bg-[#c7501a]'
+  },
   { label: 'DEV Community', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
   { label: 'LinkedIn', back: '💼 Let’s connect', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
   {
