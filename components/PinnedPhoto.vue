@@ -1,5 +1,6 @@
 <template>
-  <!-- A photo pinned to the page: an instant print with a strip of 35mm film edge down one side.
+  <!-- A photo pinned to the page: an instant print with a strip of 35mm film edge down one side,
+       marked with the camera it was shot on (a Fujifilm X-T5).
        Drawn into a canvas (no <img> to save, drag or long-press), from /api/bio-photo, which only
        answers this site's own page. Decorative markings are hidden from screen readers. -->
   <figure class="pinned" @contextmenu.prevent @dragstart.prevent @selectstart.prevent>
@@ -7,7 +8,7 @@
     <div class="pinned__print">
       <div class="pinned__shot">
         <div class="pinned__edge" aria-hidden="true">
-          <span>FUJIFILM 400H</span>
+          <span>FUJIFILM X-T5</span>
           <span>▶ 12</span>
           <span>12A</span>
         </div>
