@@ -1,7 +1,7 @@
 // Sideways swipes on the XP view move the year slider; vertical movement stays a page scroll.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { SWIPE_START_PX, SWIPE_STEP_PX, swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx } from '../../utils/swipe.js'
+import { SWIPE_START_PX, SWIPE_STEP_PX, swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx, wheelDy } from '../../utils/swipe.js'
 
 test('small movements are undecided, so taps and holds still work', () => {
   assert.equal(swipeIntent(0, 0), null)
@@ -40,4 +40,12 @@ test('Shift+wheel counts as sideways, and line or page wheels scale to pixels', 
   assert.equal(wheelDx({ deltaX: 3, deltaMode: 1 }), 48)
   assert.equal(wheelDx({ deltaX: 1, deltaMode: 2 }), 400)
   assert.ok(Math.abs(wheelDx({ deltaX: 3, deltaMode: 1 })) < WHEEL_STEP_PX * 1) // a wheel notch = under a year
+})
+
+test('the up/down wheel reads as vertical travel, never mixed with sideways or Shift', () => {
+  assert.equal(wheelDy({ deltaY: 100 }), 100)
+  assert.equal(wheelDy({ deltaY: -3, deltaMode: 1 }), -48)
+  assert.equal(wheelDy({ deltaY: 10, deltaX: 40 }), 0)
+  assert.equal(wheelDy({ deltaY: 100, shiftKey: true }), 0) // Shift+wheel is sideways
+  assert.equal(wheelDy(), 0)
 })

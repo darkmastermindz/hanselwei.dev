@@ -146,7 +146,7 @@
 <script setup>
 import { safeUrl } from '~/utils/safeUrl.js'
 import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
-import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx } from '~/utils/swipe.js'
+import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx, wheelDy } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
@@ -434,18 +434,29 @@ const onTrackKey = event => {
   }
 }
 
-// A sideways wheel over the XP view (trackpad swipe, tilt wheel, Shift+wheel) moves the years
-// like a touch swipe; an up/down wheel still scrolls the page (utils/swipe.js wheelDx)
+// The wheel on the XP view moves the years: a sideways wheel (trackpad swipe, tilt wheel,
+// Shift+wheel) or the up/down wheel (down = later). It applies while the pointer is over the
+// card, or while a keyboard or controller has focus in it; at the first or last year the page
+// scrolls on as usual (utils/swipe.js)
 let wheelTravel = 0
 let wheelTimer = null
 const onWheel = event => {
-  if (view.value !== 'edu') return
-  const dx = wheelDx(event)
-  if (!dx) return
+  if (view.value !== 'edu' || event.defaultPrevented || event.ctrlKey) return
+  const card = cardEl.value
+  const input = document.documentElement.dataset.input
+  const focusedHere = (input === 'keyboard' || input === 'gamepad') && card?.contains(document.activeElement)
+  if (!card?.contains(event.target) && !focusedHere) return
+  const travel = wheelDx(event) || wheelDy(event)
+  if (!travel) return
+  // Already at the end it's heading for: let the page scroll
+  if ((travel > 0 && xpYear.value >= yearMax) || (travel < 0 && xpYear.value <= yearMin)) {
+    wheelTravel = 0
+    return
+  }
   event.preventDefault()
   clearTimeout(wheelTimer)
   wheelTimer = setTimeout(() => (wheelTravel = 0), 250)
-  wheelTravel += dx
+  wheelTravel += travel
   const steps = Math.trunc(wheelTravel / WHEEL_STEP_PX)
   if (!steps) return
   wheelTravel -= steps * WHEEL_STEP_PX
@@ -644,7 +655,8 @@ onMounted(() => {
     { threshold: [0, 0.25] }
   )
   if (cardEl.value) observer.observe(cardEl.value)
-  panelEl.value?.addEventListener('wheel', onWheel, { passive: false })
+  // On the document (capture), so it runs before the wheel's focus moves elsewhere on the page
+  document.addEventListener('wheel', onWheel, { capture: true, passive: false })
 })
 
 onBeforeUnmount(() => {
@@ -657,7 +669,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
-  panelEl.value?.removeEventListener('wheel', onWheel)
+  document.removeEventListener('wheel', onWheel, { capture: true })
   clearTimeout(wheelTimer)
 })
 

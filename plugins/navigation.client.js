@@ -5,9 +5,16 @@
 //   once something is focused (until then arrows scroll the page as usual).
 // - Enter / A activates, Escape / B goes back (closing a popup first), PageUp/PageDown / the
 //   bumpers switch the About card's tabs or XP years. The right stick scrolls.
+// - With a keyboard or controller in use, the mouse wheel moves focus to the next / previous
+//   control while one is close by (the About card's XP view takes the wheel for its years).
+// - A controller's focus gets a sparkling border (one overlay that follows the focus).
 // The controller sends the same keys to the focused control, so components only handle keys.
 import { FOCUSABLE, pickNext } from '~/utils/spatialNav.js'
 import { buttonsDown, pressesFor, stickScroll } from '~/utils/gamepad.js'
+import { wheelDy } from '~/utils/swipe.js'
+
+const WHEEL_FOCUS_PX = 80 // wheel travel per focus step
+const NEAR_PX = 48 // the wheel only moves focus to a control on (or just off) the screen
 
 const NAV_KEYS = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Escape', 'PageUp', 'PageDown', 'Home', 'End'])
 const DIRECTIONS = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' }
@@ -40,24 +47,26 @@ export default defineNuxtPlugin(() => {
     el.scrollIntoView({ block: 'nearest', inline: 'nearest' })
   }
 
-  // Focus the nearest control in a direction; false when there's none (the page scrolls instead)
-  const move = direction => {
+  // The nearest control in a direction, or, with nothing focused yet (a controller's first
+  // press), the first one on screen
+  const nextFrom = direction => {
     const from = focused()
     const candidates = focusables().filter(el => el !== from && !el.contains(from))
     if (!from) {
-      // Nothing focused yet (a controller's first press): start at the top of the screen
       const onScreen = candidates.filter(el => {
         const rect = el.getBoundingClientRect()
         return rect.bottom > 0 && rect.top < innerHeight
       })
-      const first = onScreen.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0]
-      if (first) moveTo(first)
-      return Boolean(first)
+      return onScreen.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0] ?? null
     }
     const index = pickNext(from.getBoundingClientRect(), candidates.map(el => el.getBoundingClientRect()), direction)
-    if (index < 0) return false
-    moveTo(candidates[index])
-    return true
+    return index < 0 ? null : candidates[index]
+  }
+  // Focus it; false when there's none (the page scrolls instead)
+  const move = direction => {
+    const el = nextFrom(direction)
+    if (el) moveTo(el)
+    return Boolean(el)
   }
 
   // Back a page, unless a popup is open (its own Escape closes it) or a field has text (Escape
@@ -84,6 +93,38 @@ export default defineNuxtPlugin(() => {
       if (goBack()) event.preventDefault()
     }
   })
+  // The wheel, once a keyboard or controller is in use: next / previous control while the next
+  // one is near the screen; otherwise (long text between links) it scrolls as usual. Runs after
+  // the About card's own wheel handling, which takes the wheel for its years.
+  let wheelTravel = 0
+  let wheelTimer = null
+  document.addEventListener(
+    'wheel',
+    event => {
+      if (event.defaultPrevented || event.ctrlKey) return
+      if (root.dataset.input !== 'keyboard' && root.dataset.input !== 'gamepad') return
+      const from = focused()
+      const dy = wheelDy(event)
+      if (!from || !dy || from.matches(FIELDS)) return
+      const direction = dy > 0 ? 'down' : 'up'
+      const target = nextFrom(direction)
+      const rect = target?.getBoundingClientRect()
+      const near = rect && (direction === 'down' ? rect.top < innerHeight + NEAR_PX : rect.bottom > -NEAR_PX)
+      if (!near) {
+        wheelTravel = 0
+        return
+      }
+      event.preventDefault()
+      clearTimeout(wheelTimer)
+      wheelTimer = setTimeout(() => (wheelTravel = 0), 250)
+      wheelTravel += dy
+      if (Math.abs(wheelTravel) < WHEEL_FOCUS_PX) return
+      wheelTravel = 0
+      moveTo(target)
+    },
+    { passive: false }
+  )
+
   document.addEventListener(
     'pointerdown',
     event => {
@@ -117,6 +158,48 @@ export default defineNuxtPlugin(() => {
     if (intent === 'activate' && focused()) send('keyup', 'Enter')
   }
 
+  // Controller focus: a sparkling border that follows the focused control (one overlay, so no
+  // component's own styles are touched). Hidden for keyboard and pointer.
+  let sparkle = null
+  let sparkleFrame = 0
+  const placeSparkle = () => {
+    sparkleFrame = 0
+    const el = focused()
+    if (root.dataset.input !== 'gamepad' || !el) {
+      if (sparkle) sparkle.hidden = true
+      return
+    }
+    if (!sparkle) {
+      sparkle = document.createElement('div')
+      sparkle.className = 'focus-sparkle'
+      sparkle.setAttribute('aria-hidden', 'true')
+      sparkle.append(Object.assign(document.createElement('span'), { className: 'focus-sparkle__ring' }))
+      for (const char of ['✦', '✧', '✦', '✧']) {
+        sparkle.append(Object.assign(document.createElement('span'), { className: 'focus-sparkle__star', textContent: char }))
+      }
+      document.body.append(sparkle)
+    }
+    const rect = el.getBoundingClientRect()
+    // Follow the control's shape: a round coin gets a round ring
+    const radius = getComputedStyle(el).borderTopLeftRadius
+    Object.assign(sparkle.style, {
+      left: `${rect.left - 5}px`,
+      top: `${rect.top - 5}px`,
+      width: `${rect.width + 10}px`,
+      height: `${rect.height + 10}px`,
+      borderRadius: radius.endsWith('%') ? radius : `${Math.min((parseFloat(radius) || 0) + 5, (rect.height + 10) / 2)}px`
+    })
+    sparkle.hidden = false
+  }
+  const followFocus = () => {
+    if (!sparkleFrame) sparkleFrame = requestAnimationFrame(placeSparkle)
+  }
+  document.addEventListener('focusin', followFocus)
+  document.addEventListener('focusout', followFocus)
+  addEventListener('scroll', followFocus, { passive: true, capture: true })
+  addEventListener('resize', followFocus, { passive: true })
+  new MutationObserver(followFocus).observe(root, { attributes: true, attributeFilter: ['data-input'] })
+
   let state = new Map()
   let frame = 0
   const pads = () => [...(navigator.getGamepads?.() ?? [])].filter(Boolean)
@@ -141,6 +224,7 @@ export default defineNuxtPlugin(() => {
     result.fired.forEach(press)
     result.released.forEach(release)
     if (scroll.x || scroll.y) window.scrollBy(scroll.x, scroll.y)
+    followFocus() // controls can move (the About card changes size): keep the sparkle on them
     frame = requestAnimationFrame(poll)
   }
   // Poll only while a controller is connected and the tab is visible

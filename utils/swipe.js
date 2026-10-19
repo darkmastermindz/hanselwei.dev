@@ -30,3 +30,10 @@ export const wheelDx = ({ deltaX = 0, deltaY = 0, deltaMode = 0, shiftKey = fals
   if (Math.abs(dx) <= Math.abs(dy)) return 0
   return dx * unit
 }
+
+// Up/down wheel travel in pixels (positive = down), for the About card when it's hovered or
+// focused, and for moving focus with the wheel (plugins/navigation.client.js)
+export const wheelDy = ({ deltaX = 0, deltaY = 0, deltaMode = 0, shiftKey = false } = {}) => {
+  if (shiftKey || Math.abs(deltaY) <= Math.abs(deltaX)) return 0
+  return deltaY * (WHEEL_UNIT_PX[deltaMode] ?? 1)
+}
