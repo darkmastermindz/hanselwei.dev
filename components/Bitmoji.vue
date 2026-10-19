@@ -14,8 +14,22 @@
       @contextmenu.prevent
     >
       <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
-        <span class="token__face token__face--front">
+        <span class="token__face token__face--front" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
           <img src="~/assets/hanselbitmoji.svg" alt="" draggable="false" />
+          <!-- Each heads landing shows the next photo (utils/coinFaces.mjs); they load up front so a switch never flashes -->
+          <img
+            v-for="(photo, i) in COIN_FACES"
+            :key="photo.id"
+            :src="photo.src"
+            class="token__photo"
+            :class="{ 'is-shown': face === i }"
+            alt=""
+            draggable="false"
+            loading="eager"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            @error="dropFace(i)"
+          />
           <span class="token__shine" />
         </span>
         <span class="token__face token__face--back" aria-hidden="true">
@@ -66,12 +80,28 @@
 // with the number of spins in that hold and how long it was held (ms).
 // Only real (trusted) input counts.
 import bubbleSettings from '~/data/coinBubble.generated.mjs'
+import { COIN_FACES, nextFace } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
 
 const emit = defineEmits(['spin', 'release'])
 
 const MAX_SPEED = 24 // degrees per frame
 const angle = ref(0)
+// The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
+// reset), otherwise an index into COIN_FACES. A photo that can't load drops out of the rotation.
+const face = ref(-1)
+let brokenFaces = []
+const advanceFace = () => (face.value = nextFace(face.value, COIN_FACES.length, brokenFaces))
+const dropFace = i => {
+  brokenFaces = [...brokenFaces, i]
+  if (face.value === i) face.value = nextFace(i, COIN_FACES.length, brokenFaces)
+}
+const resetAt = useState('token:resetAt', () => 0)
+watch(resetAt, () => {
+  face.value = -1
+  transition.value = 'transform 0.5s ease'
+  angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
+})
 const pressed = ref(false)
 const intro = ref(true)
 const transition = ref('none')
@@ -179,7 +209,10 @@ const release = () => {
   if (!spinsThisHold) countSpin()
   emit('release', spinsThisHold, performance.now() - pressStartTime)
   if (reducedMotion) {
-    if (landsHeads(angle.value)) showBubble(400)
+    if (landsHeads(angle.value)) {
+      advanceFace()
+      showBubble(400)
+    }
     return
   }
 
@@ -188,7 +221,10 @@ const release = () => {
   const coastSeconds = 0.5 + speed / 30
   transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
   angle.value = target
-  if (landsHeads(target)) showBubble(coastSeconds * 1000)
+  if (landsHeads(target)) {
+    advanceFace() // swapped mid-spin, so it never pops on a still coin
+    showBubble(coastSeconds * 1000)
+  }
   speed = 0
   navigator.vibrate?.([8, 40, 8])
 }
@@ -291,6 +327,21 @@ const release = () => {
   background-color: #653496;
   background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
   background-size: 40px 40px;
+}
+
+/* The photos sit over the Bitmoji and fill the face; only the current one shows */
+.token__face .token__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.token__face .token__photo.is-shown {
+  opacity: 1;
 }
 
 .token__face--back {
