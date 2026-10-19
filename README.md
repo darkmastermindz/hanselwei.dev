@@ -73,6 +73,7 @@ When a press-and-hold on the coin lands it heads up (the profile picture), a blu
 - `until`: the event's last day.
 - `link_text` and `link`: the part of the text to link, and where it goes (https only). `{year}` in `link` is the year of `until`, e.g. `https://{year}.allthingsopen.org`.
 - `qr`: where the tails-side QR points (https only).
+- `home_title` and `footer_code`: plain text for the event, shown as the home page title ("… · hanselwei.dev") and as a line at the top of the footer on every page.
 
 It shows through the end of `until` (Eastern time), then switches itself off without a redeploy. `npm run build:coin-bubble` (before tests and dev) writes `data/coinBubble.generated.mjs`, with the QR already turned into an SVG path (`utils/coinQr.mjs`, using `uqr`), and fails the build on a bad setting (`utils/coinBubble.mjs`).
 

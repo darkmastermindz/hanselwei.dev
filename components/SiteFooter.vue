@@ -1,9 +1,22 @@
 <template>
   <footer class="site-footer">
+    <!-- During an event (config.toml [coin_bubble] footer_code, through its last day) -->
+    <p v-if="eventCode" class="site-footer__code">{{ eventCode }}</p>
     <p class="site-footer__line">Designed &amp; created with &lt;3 by Hansel Wei • ©️ 2026 hanselwei.dev</p>
     <p><NuxtLink to="/terms">Terms of Service</NuxtLink> • <NuxtLink to="/credits">Open source software &lt;3</NuxtLink></p>
   </footer>
 </template>
+
+<script setup>
+import eventSettings from '~/data/coinBubble.generated.mjs'
+import { bubbleActive } from '~/utils/coinBubble.mjs'
+
+// In the prerendered page while the event is on at build time; the browser drops it once it's over
+const eventCode = ref(bubbleActive(eventSettings) ? eventSettings.footerCode : null)
+onMounted(() => {
+  if (!bubbleActive(eventSettings)) eventCode.value = null
+})
+</script>
 
 <style scoped>
 .site-footer {
@@ -26,6 +39,15 @@
   .site-footer__line {
     white-space: nowrap;
   }
+}
+
+/* Small and muted, but readable: the footer's own grey (#999, 4.7:1 on the page, WCAG AA) at
+   about 11px, so it isn't hidden text in search engines' eyes */
+.site-footer__code {
+  font-family: 'Nova Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: #999;
 }
 
 .site-footer a {

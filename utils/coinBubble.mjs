@@ -5,11 +5,21 @@
 // of an event, then switches itself off.
 import { safeUrl } from './safeUrl.js'
 
-export const COIN_BUBBLE_DEFAULTS = { enabled: false, text: '', until: null, link: null, linkText: null, qr: null }
+export const COIN_BUBBLE_DEFAULTS = {
+  enabled: false,
+  text: '',
+  until: null,
+  link: null,
+  linkText: null,
+  qr: null,
+  homeTitle: null,
+  footerCode: null
+}
 
 // `until` is a calendar day here (the events are in Raleigh): the bubble shows through the end of it
 export const COIN_BUBBLE_TIME_ZONE = 'America/New_York'
 export const MAX_TEXT = 80
+export const MAX_CODE = 40
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/
 // "YYYY-MM-DD" from a TOML date (2026-10-20) or a string ("2026-10-20"), or null if it isn't a real day
@@ -49,6 +59,12 @@ export const buildCoinBubbleConfig = (toml = {}) => {
     } else if (key === 'link_text') {
       if (typeof value === 'string' && value.trim()) config.linkText = value.trim()
       else problems.push('[coin_bubble] link_text must be text from `text`')
+    } else if (key === 'home_title' || key === 'footer_code') {
+      // Plain text shown during the event: the home page title, and a line in the footer
+      const max = key === 'home_title' ? MAX_TEXT : MAX_CODE
+      const text = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : ''
+      if (text && text.length <= max && !/[<>]/.test(text)) config[key === 'home_title' ? 'homeTitle' : 'footerCode'] = text
+      else problems.push(`[coin_bubble] ${key} must be 1 to ${max} characters of plain text`)
     } else if (key === 'qr') {
       const qr = httpsUrl(value)
       if (qr) config.qr = qr

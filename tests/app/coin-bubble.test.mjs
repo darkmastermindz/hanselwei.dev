@@ -98,3 +98,23 @@ test('settings are checked: off by default, text and date needed when on', () =>
     assert.equal(buildCoinBubbleConfig({ coin_bubble }).problems.length, 1, JSON.stringify(coin_bubble))
   }
 })
+
+test('the event home title and footer code are plain text with a length limit', () => {
+  const ok = buildCoinBubbleConfig({ coin_bubble: { home_title: '  Hansel Wei,  Senior Software Engineer ', footer_code: 'WKZBHNUJRETD' } })
+  assert.deepEqual(ok.problems, [])
+  assert.equal(ok.config.homeTitle, 'Hansel Wei, Senior Software Engineer')
+  assert.equal(ok.config.footerCode, 'WKZBHNUJRETD')
+  for (const coin_bubble of [{ home_title: '' }, { home_title: 'x'.repeat(81) }, { footer_code: 'x'.repeat(41) }, { footer_code: 42 }]) {
+    assert.equal(buildCoinBubbleConfig({ coin_bubble }).problems.length, 1, JSON.stringify(coin_bubble))
+  }
+})
+
+test('config.toml sets the ATO home title and footer code', async () => {
+  const { config } = buildCoinBubbleConfig(parse(await readFile(new URL('../../config.toml', import.meta.url), 'utf8')))
+  assert.equal(config.homeTitle, 'Hansel Wei, Senior Software Engineer')
+  assert.equal(config.footerCode, 'WKZBHNUJRETD')
+  // ATO is October 19–20; it stays on through the 21st as a day of cooldown
+  assert.equal(config.until, '2026-10-21')
+  assert.equal(bubbleActive(config, new Date('2026-10-22T03:59:00Z')), true)
+  assert.equal(bubbleActive(config, new Date('2026-10-22T04:00:00Z')), false)
+})

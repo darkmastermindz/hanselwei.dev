@@ -44,7 +44,10 @@ draw_seconds = 90   # time on the page to draw everything (0 = show it all at on
 # time) and then switches itself off, no redeploy needed. `enabled = false` turns it off right away.
 enabled = true
 text = "Catch me at @AllThingsOpen in Raleigh! 👋"  # plain text, up to 80 characters
-until = 2026-10-20  # All Things Open 2026: October 19–20, Raleigh, NC
+until = 2026-10-21  # All Things Open 2026: October 19–20, Raleigh, NC, plus a day of cooldown
 link_text = "@AllThingsOpen"  # the part of `text` that links to `link`
 link = "https://{year}.allthingsopen.org"  # https only; {year} is the year of `until`
 qr = "https://hanselwei.dev"  # where the QR on the coin's tails side points (https only)
+# Also during the event: the home page title, and a line at the top of the footer on every page
+home_title = "Hansel Wei, Senior Software Engineer"  # up to 80 characters
+footer_code = "WKZBHNUJRETD"  # up to 40 characters
