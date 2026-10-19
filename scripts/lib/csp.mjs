@@ -1,0 +1,58 @@
+// Content-Security-Policy for the generated site (tested in tests/security/headers.test.mjs).
+// Scripts may only come from this site; the few inline scripts Nuxt writes into the
+// prerendered pages (and the font links' onload) are allowed by hash, so an injected
+// <script> or on*= handler still can't run.
+import { createHash } from 'node:crypto'
+
+const sha256 = text => `'sha256-${createHash('sha256').update(text, 'utf8').digest('base64')}'`
+
+const decodeAttr = value =>
+  value.replace(/&(quot|#39|apos|lt|gt|amp);/g, (_, e) => ({ quot: '"', '#39': "'", apos: "'", lt: '<', gt: '>', amp: '&' })[e])
+
+// Executable inline <script> bodies (JSON data blocks don't run, so they need no hash)
+export const inlineScriptHashes = html => {
+  const hashes = new Set()
+  for (const [, attrs, body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi)) {
+    if (/\ssrc\s*=/i.test(attrs)) continue
+    const type = attrs.match(/\stype\s*=\s*["']?([^"'\s>]+)/i)?.[1]?.toLowerCase()
+    if (type && !['module', 'text/javascript', 'application/javascript'].includes(type)) continue
+    hashes.add(sha256(body))
+  }
+  return hashes
+}
+
+// Inline event handler attributes (on*="...") the build itself wrote
+export const handlerHashes = html => {
+  const hashes = new Set()
+  for (const tag of html.match(/<[a-z][^>]*>/gi) ?? []) {
+    for (const [, , value] of tag.matchAll(/\son[a-z]+\s*=\s*(["'])([\s\S]*?)\1/gi)) hashes.add(sha256(decodeAttr(value)))
+  }
+  return hashes
+}
+
+export const FONT_STYLES = ['https://fonts.googleapis.com', 'https://use.typekit.net', 'https://p.typekit.net']
+export const FONT_FILES = ['https://fonts.gstatic.com', 'https://use.typekit.net']
+// The projects page lists repos from the GitHub API
+export const CONNECT = ['https://api.github.com']
+
+export const buildCsp = ({ scripts = [], handlers = [] } = {}) => {
+  const handlerList = [...handlers].sort()
+  return [
+    "default-src 'self'",
+    ['script-src', "'self'", ...[...scripts].sort(), ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])].join(' '),
+    // Vue and the components set inline styles; styles can't run code
+    ['style-src', "'self'", "'unsafe-inline'", ...FONT_STYLES].join(' '),
+    ['font-src', "'self'", 'data:', ...FONT_FILES].join(' '),
+    "img-src 'self' https: data:",
+    ['connect-src', "'self'", ...CONNECT].join(' '),
+    "manifest-src 'self'",
+    "worker-src 'self'",
+    "media-src 'self' https:",
+    "frame-src 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    'upgrade-insecure-requests'
+  ].join('; ')
+}

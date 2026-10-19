@@ -1,0 +1,12 @@
+---
+title: "Welcome to the Curiosity Feed"
+date: "2026-10-17"
+series: "Site Updates"
+description: "My newsletter-style feed: short, recurring updates that build up over time."
+tags: [meta]
+---
+
+This is my newsletter-style feed: short, recurring updates that build up over time,
+like logs and series I post to regularly. One-off write-ups are under [Posts](/blog).
+
+Follow along with [RSS](/feed.xml).

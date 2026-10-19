@@ -1,0 +1,38 @@
+# hanselwei.dev site settings
+
+[access]
+# Owner sign-in (GitHub) is invite-only. Everyone in .github/CODEOWNERS can sign in,
+# plus the extra emails listed here. Each GitHub account signs in with a verified email
+# address, so the email must be verified on that account.
+additional = []
+
+# Give the email for each @username in CODEOWNERS (the build fails if one is missing).
+# Emails written directly in CODEOWNERS work as they are.
+[access.github]
+darkmastermindz = "hello@hanselwei.dev"
+
+[projects]
+# Projects page (/projects). Non-fork repos show automatically; each one is "Active"
+# unless it's listed under `wip`. Forks show only when listed under `forks`.
+# `featured` and `hackathon` add a tag to repos that are already shown (a name here
+# never adds a hidden repo). Names are GitHub repo names (case doesn't matter).
+wip = []
+forks = ["HackNC2019", "iole-python"]
+featured = []
+hackathon = ["HackNC2019"]
+
+[background]
+# The faint topographic lines behind every page (purple-to-green, drawing in as visitors stay).
+# Leave a setting out to use its default. The build fails on a value out of range.
+# More contours or smaller features mean more drawing data on big screens (about 0.3 MB at
+# these values on a 2560px-wide screen, up to about 1.6 MB at 60 contours and 80px features).
+enabled = true
+# When the browser asks to save data (Data Saver / Lite mode, reduced data, 2G; detected
+# automatically): "sparse" draws a lighter pattern (half the contours, larger hills, no trails,
+# about a quarter of the size), "skip" draws none, "full" ignores it.
+data_saver = "sparse"
+contours = 28       # how many contour lines (8–60); more lines = denser
+feature_size = 260  # rough size of a hill or valley, in pixels (80–800); smaller = busier
+index_every = 5     # every Nth line is heavier, like a topo map (0 = none, up to 20)
+trails = 3          # dashed trails that fade in at the end (0–6)
+draw_seconds = 90   # time on the page to draw everything (0 = show it all at once, up to 600)
