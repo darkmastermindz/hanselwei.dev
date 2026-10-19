@@ -46,19 +46,34 @@ const links = [
   position: sticky;
   top: 0;
   z-index: 20;
-  /* Keep well clear of the notch / Dynamic Island and status bar when installed as an app */
+  /* Keep clear of the notch / status bar when installed as an app */
+  padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
+    max(env(safe-area-inset-left), 0.5rem);
+}
+
+/* Installed as an app (html.is-installed, plugins/pwa.client.js): the status bar and Dynamic
+   Island sit over the page, so the nav gets more room under them and between its rows */
+:global(html.is-installed .app-nav) {
   padding: calc(env(safe-area-inset-top) + 0.75rem) max(env(safe-area-inset-right), 0.75rem) 0.75rem
     max(env(safe-area-inset-left), 0.75rem);
+}
+
+:global(html.is-installed .app-nav__links) {
+  row-gap: 0.5rem;
 }
 
 .app-nav__links {
   display: flex;
   flex-wrap: wrap; /* wraps onto a second line on small screens, like before */
-  gap: 0.5rem 0.25rem; /* a little more room between the two rows on phones */
+  gap: 0.25rem;
 
   a {
     flex: 0 0 auto;
     white-space: nowrap;
+    /* No scale "pop" on the links: iOS (above all the installed app) can leave scaled text
+       rasterized and blurry in the sticky nav */
+    animation: none;
+    transform: none;
   }
 
   .is-current {
