@@ -34,7 +34,7 @@ const shown = (r, cfg = config) => {
   const category = categorize(r, cfg)
   return category === null ? null : { ...r, category, tags: [...new Set(tagsFor(r, cfg).concat(r.topics))] }
 }
-const list = repos => repos.map(r => shown(r)).filter(Boolean)
+const list = (repos, cfg = config) => repos.map(r => shown(r, cfg)).filter(Boolean)
 
 test('non-forks show as active unless listed as work in progress, case-insensitively', () => {
   assert.equal(categorize(repo('hanselwei.dev'), config), 'active')

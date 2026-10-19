@@ -23,7 +23,7 @@ export const buildRss = ({ title, description, path, home = path, posts }) => {
 <rss version="2.0">
   <channel>
     <title>${escape(title)}</title>
-    <link>${SITE}${home}</link>
+    <link>${escape(`${SITE}${home}`)}</link>
     <description>${escape(description)}</description>
 ${items}
   </channel>

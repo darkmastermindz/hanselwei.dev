@@ -56,13 +56,58 @@ renderer.link = function (token) {
 
 // A plain-text description from the body when a post has none: links and images become their
 // text, markdown marks go, hyphens and parentheses stay ("one-off", "(see below)")
-export const excerptOf = content =>
-  String(content)
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/[#>*_`]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 160)
+export const excerptOf = content => {
+  let text = String(content)
+  let out = ''
+  let i = 0
+
+  while (i < text.length) {
+    if (text[i] === '!' && text[i + 1] === '[') {
+      const start = i + 2
+      let j = start
+      while (j < text.length && text[j] !== ']') j++
+      if (j < text.length && text[j + 1] === '(') {
+        let depth = 0
+        let k = j + 2
+        while (k < text.length) {
+          if (text[k] === '(') depth++
+          if (text[k] === ')') {
+            if (depth === 0) break
+            depth--
+          }
+          k++
+        }
+        out += text.slice(start, j)
+        i = k < text.length ? k + 1 : text.length
+        continue
+      }
+    } else if (text[i] === '[') {
+      const start = i + 1
+      let j = start
+      while (j < text.length && text[j] !== ']') j++
+      if (j < text.length && text[j + 1] === '(') {
+        let depth = 0
+        let k = j + 2
+        while (k < text.length) {
+          if (text[k] === '(') depth++
+          if (text[k] === ')') {
+            if (depth === 0) break
+            depth--
+          }
+          k++
+        }
+        out += text.slice(start, j)
+        i = k < text.length ? k + 1 : text.length
+        continue
+      }
+    }
+
+    out += text[i]
+    i++
+  }
+
+  return out.replace(/[#>*_`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 160)
+}
 
 export const toPost = (key, source) => {
   const { data, content } = parseFrontMatter(source)

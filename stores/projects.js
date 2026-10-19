@@ -45,19 +45,27 @@ export const useProjectsStore = defineStore('projects', {
         }
 
         this.githubProjects = repos
-          .map(repo => ({
-            id: repo.id,
-            name: repo.name,
-            language: repo.language,
-            description: repo.description,
-            topics: Array.isArray(repo.topics) ? repo.topics : [],
-            stargazers_count: repo.stargazers_count,
-            homepage: repo.homepage,
-            html_url: repo.html_url,
-            updated_at: repo.updated_at,
-            category: categorize(repo, CONFIG),
-            tags: tagsFor(repo, CONFIG).concat(Array.isArray(repo.topics) ? repo.topics : [])
-          }))
+          .map(repo => {
+            const project = {
+              id: repo.id,
+              name: repo.name,
+              fork: repo.fork,
+              language: repo.language,
+              description: repo.description,
+              topics: Array.isArray(repo.topics) ? repo.topics : [],
+              stargazers_count: repo.stargazers_count,
+              homepage: repo.homepage,
+              html_url: repo.html_url,
+              license: repo.license,
+              updated_at: repo.updated_at
+            }
+
+            return {
+              ...project,
+              category: categorize(project, CONFIG),
+              tags: tagsFor(project, CONFIG).concat(project.topics)
+            }
+          })
           .filter(project => project.category !== null)
           .map(project => ({ ...project, tags: [...new Set(project.tags)] }))
       } catch (err) {
