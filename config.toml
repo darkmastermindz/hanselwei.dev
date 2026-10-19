@@ -36,3 +36,12 @@ feature_size = 260  # rough size of a hill or valley, in pixels (80–800); smal
 index_every = 5     # every Nth line is heavier, like a topo map (0 = none, up to 20)
 trails = 3          # dashed trails that fade in at the end (0–6)
 draw_seconds = 90   # time on the page to draw everything (0 = show it all at once, up to 600)
+
+[coin_bubble]
+# A blue iMessage-style thought bubble that pops up from the home page coin when a press-and-hold
+# lands it heads up (the profile picture). Set it up for an event each year: it shows through the
+# end of `until` (a date, Eastern time) and then switches itself off, no redeploy needed.
+# `enabled = false` turns it off right away. Text is plain, up to 80 characters.
+enabled = true
+text = "Catch me at @AllThingsOpen in Raleigh! 👋"
+until = 2026-10-20  # All Things Open 2026: October 19–20, Raleigh, NC

@@ -32,6 +32,18 @@
       :style="{ left: `${pop.x}%` }"
       aria-hidden="true"
     >+1</span>
+    <!-- An iMessage-style thought bubble when a hold lands heads up, while an event is on (config.toml [coin_bubble]) -->
+    <Transition name="bubble">
+      <span v-if="bubble" class="token__bubble" :class="{ 'is-typing': bubble === 'typing' }" aria-hidden="true">
+        <span class="token__bubble-body">
+          <span v-if="bubble === 'typing'" class="token__typing"><i /><i /><i /></span>
+          <template v-else>{{ bubbleSettings.text }}</template>
+        </span>
+        <span class="token__bubble-dot token__bubble-dot--big" />
+        <span class="token__bubble-dot token__bubble-dot--small" />
+      </span>
+    </Transition>
+    <span class="sr-only" aria-live="polite">{{ bubble === 'message' ? bubbleSettings.text : '' }}</span>
   </div>
 </template>
 
@@ -41,6 +53,9 @@
 // Emits `spin` for every full turn (a quick tap counts as one) and `release`
 // with the number of spins in that hold and how long it was held (ms).
 // Only real (trusted) input counts.
+import bubbleSettings from '~/data/coinBubble.generated.mjs'
+import { bubbleActive, landsHeads } from '~/utils/coinBubble.mjs'
+
 const emit = defineEmits(['spin', 'release'])
 
 const MAX_SPEED = 24 // degrees per frame
@@ -63,7 +78,29 @@ onMounted(() => {
   setTimeout(() => (intro.value = false), 1600)
 })
 
-onBeforeUnmount(() => cancelAnimationFrame(frame))
+onBeforeUnmount(() => {
+  cancelAnimationFrame(frame)
+  hideBubble()
+})
+
+// The bubble: "typing…" for a moment once the coin settles heads up, then the message, then it
+// fades. A new press clears it. Checked at release, so it stops on its own after the event.
+const bubble = ref(null) // null, 'typing' or 'message'
+let bubbleTimers = []
+const hideBubble = () => {
+  bubbleTimers.forEach(clearTimeout)
+  bubbleTimers = []
+  bubble.value = null
+}
+const showBubble = settleMs => {
+  if (!bubbleActive(bubbleSettings)) return
+  const typingMs = reducedMotion ? 0 : 900
+  bubbleTimers.push(
+    setTimeout(() => (bubble.value = typingMs ? 'typing' : 'message'), settleMs),
+    setTimeout(() => (bubble.value = 'message'), settleMs + typingMs),
+    setTimeout(() => (bubble.value = null), settleMs + typingMs + 5000)
+  )
+}
 
 const countSpin = () => {
   spinsThisHold++
@@ -87,6 +124,7 @@ const press = event => {
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   intro.value = false
+  hideBubble()
   pressStartAngle = angle.value
   pressStartTime = performance.now()
   spinsThisHold = 0
@@ -108,12 +146,17 @@ const release = () => {
   cancelAnimationFrame(frame)
   if (!spinsThisHold) countSpin()
   emit('release', spinsThisHold, performance.now() - pressStartTime)
-  if (reducedMotion) return
+  if (reducedMotion) {
+    if (landsHeads(angle.value)) showBubble(400)
+    return
+  }
 
   // Coast to the next face, taking longer the faster it was spinning
   const target = Math.ceil((angle.value + speed * 6) / 180) * 180
-  transition.value = `transform ${0.5 + speed / 30}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+  const coastSeconds = 0.5 + speed / 30
+  transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
   angle.value = target
+  if (landsHeads(target)) showBubble(coastSeconds * 1000)
   speed = 0
   navigator.vibrate?.([8, 40, 8])
 }
@@ -271,6 +314,133 @@ const release = () => {
   }
   100% {
     transform: translateX(120%);
+  }
+}
+
+/* iMessage blue, with a thought bubble's trail of dots down to the coin */
+.token__bubble {
+  position: absolute;
+  /* Phones: over the coin's upper right, clear of the menu, in the room left to the screen edge
+     (the coin is about 55vw wide) */
+  bottom: 70%;
+  left: 52%;
+  z-index: 3;
+  width: max-content;
+  max-width: min(14rem, 44vw);
+  pointer-events: none;
+
+  /* Wider screens: beside the coin */
+  @media (min-width: 640px) {
+    bottom: 62%;
+    left: 90%;
+    max-width: 16rem;
+  }
+}
+
+.token__bubble-body {
+  display: block;
+  padding: 0.5rem 0.85rem;
+  border-radius: 1.15rem;
+  background: #0a84ff;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  text-align: left;
+  overflow-wrap: anywhere;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.token__bubble.is-typing .token__bubble-body {
+  background: #3a3a3c;
+}
+
+.token__bubble-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: #0a84ff;
+}
+
+.token__bubble.is-typing .token__bubble-dot {
+  background: #3a3a3c;
+}
+
+.token__bubble-dot--big {
+  left: 0.3rem;
+  bottom: -0.55rem;
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.token__bubble-dot--small {
+  left: -0.2rem;
+  bottom: -1.05rem;
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+.token__typing {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.3rem 0.1rem;
+
+  i {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: #8e8e93;
+    animation: typing 1s ease-in-out infinite;
+  }
+
+  i:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  i:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes typing {
+  0%,
+  60%,
+  100% {
+    opacity: 0.4;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+
+.bubble-enter-active {
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+.bubble-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.bubble-enter-from {
+  opacity: 0;
+  transform: translateY(8px) scale(0.6);
+  transform-origin: bottom left;
+}
+
+.bubble-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token__typing i,
+  .bubble-enter-active {
+    animation: none;
+    transition: opacity 0.25s ease;
+  }
+
+  .bubble-enter-from {
+    transform: none;
   }
 }
 

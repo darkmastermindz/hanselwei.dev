@@ -63,6 +63,14 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 - `trails` (0–6): dashed trails that fade in at the end.
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
+## Coin bubble (home page)
+When a press-and-hold on the coin lands it heads up (the profile picture), a blue iMessage-style thought bubble pops up: "typing…" for a moment, then the message, then it fades. It's for events. Set it in `config.toml` `[coin_bubble]` each year:
+- `enabled`: true or false.
+- `text`: plain text, up to 80 characters.
+- `until`: the event's last day.
+
+It shows through the end of `until` (Eastern time), then switches itself off without a redeploy. `npm run build:coin-bubble` (before tests and dev) writes `data/coinBubble.generated.mjs` and fails the build on a bad setting (`utils/coinBubble.mjs`).
+
 ## About card (home page)
 `components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. Swipe left or right across the card to move through the years (a swipe left goes to later years). The mouse wheel works too while the pointer is over the card, or while a keyboard or controller has focus in it: sideways or down goes to later years, and at the first or last year the page scrolls on. While the card is in use the social links below pause (they move as the card changes size): on phones until the card is scrolled away or you tap elsewhere (a tap on a paused link just unpauses it), with a mouse for a second after the press. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English. In plain English, visitors whose browser prefers another language get a small link to read it in Google Translate (`utils/translate.js`); English readers don't see it.
 
