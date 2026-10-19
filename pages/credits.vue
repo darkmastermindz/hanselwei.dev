@@ -39,8 +39,8 @@
       </ul>
 
       <p class="note">
-        This list is kept up to date automatically: it's every package the site depends on, at the
-        installed version, with details from the npm registry. The full license text of each package
+        This list is kept up to date automatically: it's every package in the project's dependencies
+        on GitHub, at the installed version, with details from the npm registry. The full license text of each package
         ships with it and is in its GitHub repository.
       </p>
     </article>

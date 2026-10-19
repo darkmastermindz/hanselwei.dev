@@ -89,27 +89,67 @@ test('package names that are not npm names are never fetched', async () => {
   assert.deepEqual(targets.map(t => t.name).filter(n => names.includes(n)), [])
 })
 
-test('the /api/credits function answers from the registry and caches at the CDN', async () => {
+const registryAndCdn = requested => async url => {
+  requested.push(url)
+  if (url.startsWith('https://registry.npmjs.org/')) {
+    return new Response(JSON.stringify({ repository: 'git+https://github.com/example/pkg.git', license: 'MIT', description: 'Example' }))
+  }
+  if (url.startsWith('https://data.jsdelivr.com/')) return new Response(JSON.stringify({ files: [{ name: '/LICENSE' }] }))
+  if (url.startsWith('https://cdn.jsdelivr.net/')) return new Response('MIT License\n\nCopyright (c) 2024 Example')
+  return new Response('not found', { status: 404 })
+}
+
+test("the /api/credits function reads the project's dependencies from GitHub, then the registry", async () => {
   const { creditsResponse, headers, resetCreditsCache } = await import('../../netlify/functions/credits.mjs')
   resetCreditsCache()
   const requested = []
+  const others = registryAndCdn(requested)
   const fakeFetch = async url => {
-    requested.push(url)
-    if (url.startsWith('https://registry.npmjs.org/')) {
-      return new Response(JSON.stringify({ repository: 'git+https://github.com/example/pkg.git', license: 'MIT', description: 'Example' }))
+    if (url === 'https://raw.githubusercontent.com/darkmastermindz/hanselwei.dev/main/package.json') {
+      requested.push(url)
+      return new Response(JSON.stringify({ dependencies: { nuxt: '^3', 'left-pad': '^1.3.0' } }))
     }
-    if (url.startsWith('https://data.jsdelivr.com/')) return new Response(JSON.stringify({ files: [{ name: '/LICENSE' }] }))
-    return new Response('MIT License\n\nCopyright (c) 2024 Example')
+    if (url === 'https://raw.githubusercontent.com/darkmastermindz/hanselwei.dev/main/package-lock.json') {
+      requested.push(url)
+      return new Response(JSON.stringify({ packages: { 'node_modules/nuxt': { version: '3.99.0' }, 'node_modules/left-pad': { version: '1.3.0' } } }))
+    }
+    return others(url)
   }
-  const response = await creditsResponse(fakeFetch, 1_000_000)
-  const body = await response.json()
-  assert.ok(body.packages.length >= 10)
-  assert.ok(body.packages.every(p => p.url === 'https://github.com/example/pkg' && p.copyright === 'Copyright (c) 2024 Example'))
-  assert.ok(requested.every(url => /^https:\/\/(registry\.npmjs\.org|data\.jsdelivr\.com|cdn\.jsdelivr\.net)\//.test(url)), 'only the expected hosts')
+  const body = await (await creditsResponse(fakeFetch, 1_000_000)).json()
+  assert.equal(body.source, 'github')
+  // A dependency merged on GitHub shows up, at the version its lockfile installs
+  assert.equal(body.packages.find(p => p.name === 'left-pad')?.version, '1.3.0')
+  assert.equal(body.packages.find(p => p.name === 'nuxt')?.version, '3.99.0')
+  assert.ok(body.packages.every(p => p.url === 'https://github.com/example/pkg'))
+  // Copyright lines are read for the installed version (libraries missing from this lockfile have none)
+  assert.ok(body.packages.filter(p => p.version).every(p => p.copyright === 'Copyright (c) 2024 Example'))
+  assert.ok(
+    requested.every(url => /^https:\/\/(raw\.githubusercontent\.com\/darkmastermindz\/hanselwei\.dev\/main\/|registry\.npmjs\.org\/|data\.jsdelivr\.com\/|cdn\.jsdelivr\.net\/)/.test(url)),
+    'only the expected hosts'
+  )
   assert.match(headers['netlify-cdn-cache-control'], /s-maxage=86400/)
   // A warm function reuses its answer for an hour
   const before = requested.length
   await creditsResponse(fakeFetch, 1_000_000 + 60_000)
   assert.equal(requested.length, before)
+  resetCreditsCache()
+})
+
+test("if GitHub can't be read, the function uses the dependencies bundled at deploy", async () => {
+  const { creditsResponse, resetCreditsCache } = await import('../../netlify/functions/credits.mjs')
+  const pkg = (await import('../../package.json', { with: { type: 'json' } })).default
+  for (const github of [
+    () => new Response('down', { status: 503 }),
+    () => new Response('not json'),
+    () => new Response(JSON.stringify(['an', 'array'])),
+    () => { throw new Error('network') }
+  ]) {
+    resetCreditsCache()
+    const others = registryAndCdn([])
+    const fakeFetch = async url => (url.startsWith('https://raw.githubusercontent.com/') ? github() : others(url))
+    const body = await (await creditsResponse(fakeFetch, 2_000_000)).json()
+    assert.equal(body.source, 'bundled')
+    for (const name of Object.keys(pkg.dependencies)) assert.ok(body.packages.some(p => p.name === name), name)
+  }
   resetCreditsCache()
 })
