@@ -28,7 +28,11 @@ const shown = ref(false)
 onMounted(async () => {
   try {
     const response = await fetch('/api/bio-photo', { credentials: 'same-origin', cache: 'no-store' })
-    if (!response.ok) return // no photo: the empty print stays as a placeholder
+    if (!response.ok) {
+      // No photo: the empty print stays as a placeholder (403 = request refused, 404 = no key)
+      console.warn(`[bio-photo] ${response.status}`)
+      return
+    }
     const bitmap = await createImageBitmap(await response.blob())
     const el = canvas.value
     if (!el) return
@@ -37,8 +41,8 @@ onMounted(async () => {
     el.getContext('2d').drawImage(bitmap, 0, 0)
     bitmap.close?.()
     shown.value = true
-  } catch {
-    // Offline or blocked: keep the placeholder
+  } catch (error) {
+    console.warn('[bio-photo]', error) // offline or blocked: keep the placeholder
   }
 })
 </script>

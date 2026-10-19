@@ -1,8 +1,9 @@
 // hanselwei.dev service worker: makes the site installable and usable offline.
 // - Build assets (/_nuxt/*, icons) are cache-first: their names are content-hashed.
 // - Pages are network-first, falling back to the last cached copy when offline.
-// - API responses (/api/*) are network-first so the gear inventory stays fresh.
-const VERSION = 'v7'
+// - API responses (/api/*) are network-first so the gear inventory stays fresh. Sign-in, /api/me
+//   and the Bio photo bypass the worker entirely (never cached).
+const VERSION = 'v8'
 const STATIC_CACHE = `static-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
 const PRECACHE = ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', '/manifest.webmanifest', '/icons/icon-192.png']
@@ -58,8 +59,9 @@ self.addEventListener('fetch', event => {
   if (url.origin !== self.location.origin) return
   // Let the browser follow the contact card redirect itself
   if (url.pathname === '/connect') return
-  // Never cache sign-in traffic or who's signed in
+  // Never cache sign-in traffic or who's signed in, or the Bio photo (served no-store, only to the page)
   if (url.pathname.startsWith('/.netlify/') || url.pathname.startsWith('/api/auth/') || url.pathname === '/api/me') return
+  if (url.pathname === '/api/bio-photo') return
 
   if (url.pathname.startsWith('/_nuxt/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(cacheFirst(request))
