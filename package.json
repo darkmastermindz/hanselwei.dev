@@ -29,7 +29,7 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@pinia/nuxt": "^1.0.2",
+    "@pinia/nuxt": "^1.0.3",
     "daisyui": "^3.9.4",
     "marked": "^14.1.4",
     "nuxt": "^3.8.0",
@@ -43,9 +43,9 @@
     "@netlify/plugin-lighthouse": "^6.0.4",
     "@nuxtjs/tailwindcss": "^6.8.1",
     "@tailwindcss/typography": "^0.5.20",
-    "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31",
-    "sass": "^1.69.5",
+    "autoprefixer": "^10.6.1",
+    "postcss": "^8.5.28",
+    "sass": "^1.104.0",
     "smol-toml": "^1.9.0",
     "uqr": "0.1.3"
   }
