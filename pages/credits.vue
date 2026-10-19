@@ -6,10 +6,13 @@
       <p class="intro">
         This site is built with open-source software. Thank you to everyone who makes and maintains
         it. Each project is credited here under its license, with a link to its source on GitHub.
+        <LiveBadge :live="live" />
       </p>
 
-      <ul class="list">
-        <li v-for="pkg in credits.packages" :key="pkg.name" class="card">
+      <template v-for="group in groups" :key="group.id">
+        <h2 v-if="group.packages.length" class="section">{{ group.title }}</h2>
+        <ul class="list">
+        <li v-for="pkg in group.packages" :key="pkg.name" class="card">
           <h2>
             <a v-if="pkg.url" :href="pkg.url" target="_blank" rel="noopener">{{ pkg.name }}</a>
             <template v-else>{{ pkg.name }}</template>
@@ -21,7 +24,8 @@
             <span v-if="pkg.copyright">{{ pkg.copyright }}</span>
           </p>
         </li>
-      </ul>
+        </ul>
+      </template>
 
       <h2 class="section">Fonts</h2>
       <ul class="list">
@@ -35,15 +39,24 @@
       </ul>
 
       <p class="note">
-        The full license text of each package ships with it and is in its GitHub repository.
+        This list is kept up to date automatically: it's every package the site depends on, at the
+        installed version, with details from the npm registry. The full license text of each package
+        ships with it and is in its GitHub repository.
       </p>
     </article>
   </main>
 </template>
 
 <script setup>
-// Generated at build time from the installed packages (scripts/build-credits.mjs)
-import credits from '~/data/credits.generated.json'
+const { credits, live } = useCredits()
+
+const GROUPS = [
+  { id: 'site', title: 'Runs the site' },
+  { id: 'build', title: 'Builds the site' }
+]
+const groups = computed(() =>
+  GROUPS.map(group => ({ ...group, packages: credits.value.packages.filter(pkg => pkg.group === group.id) }))
+)
 
 useHead({
   title: 'Open source software · hanselwei.dev',
@@ -78,6 +91,10 @@ h1 {
 .section {
   font-size: 1.3rem;
   margin: 1.75rem 0 0.75rem;
+}
+
+.intro + .section {
+  margin-top: 0.5rem;
 }
 
 .list {

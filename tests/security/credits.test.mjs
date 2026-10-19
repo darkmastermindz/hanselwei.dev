@@ -64,3 +64,52 @@ test('license ids and copyright lines are short plain text', () => {
   assert.equal(copyrightLine(null), null)
   assert.ok(copyrightLine(`Copyright ${'x'.repeat(500)}`).length <= 200)
 })
+
+test('hostile registry data never becomes a link or markup', async () => {
+  const { buildCredits } = await import('../../utils/credits.mjs')
+  for (const payload of [...UNSAFE_URLS, ...XSS_HTML, ...JS_BREAKOUTS]) {
+    const credits = await buildCredits({
+      pkg: { dependencies: { marked: '^14' } },
+      lock: { packages: { 'node_modules/marked': { version: '14.1.4', license: 'MIT' } } },
+      packageInfo: async () => ({ repository: payload, license: payload, description: payload }),
+      licenseText: async () => `Copyright ${payload}`
+    })
+    for (const entry of credits.packages) {
+      assert.ok(entry.url === `https://www.npmjs.com/package/${entry.name}` || entry.url.startsWith('https://github.com/'), entry.url)
+      assert.doesNotMatch(entry.use ?? '', /<[a-z/!]/i)
+      assert.ok(entry.license === null || /^[\w.+() -]+$/.test(entry.license), entry.license)
+    }
+  }
+})
+
+test('package names that are not npm names are never fetched', async () => {
+  const { creditTargets } = await import('../../utils/credits.mjs')
+  const names = ['../../etc/passwd', 'a b', '<script>', '@scope/../x', 'http://evil.example', ...PROTOTYPE_KEYS.filter(k => k.startsWith('_'))]
+  const targets = creditTargets({ dependencies: Object.fromEntries(names.map(n => [n, '1'])) }, {})
+  assert.deepEqual(targets.map(t => t.name).filter(n => names.includes(n)), [])
+})
+
+test('the /api/credits function answers from the registry and caches at the CDN', async () => {
+  const { creditsResponse, headers, resetCreditsCache } = await import('../../netlify/functions/credits.mjs')
+  resetCreditsCache()
+  const requested = []
+  const fakeFetch = async url => {
+    requested.push(url)
+    if (url.startsWith('https://registry.npmjs.org/')) {
+      return new Response(JSON.stringify({ repository: 'git+https://github.com/example/pkg.git', license: 'MIT', description: 'Example' }))
+    }
+    if (url.startsWith('https://data.jsdelivr.com/')) return new Response(JSON.stringify({ files: [{ name: '/LICENSE' }] }))
+    return new Response('MIT License\n\nCopyright (c) 2024 Example')
+  }
+  const response = await creditsResponse(fakeFetch, 1_000_000)
+  const body = await response.json()
+  assert.ok(body.packages.length >= 10)
+  assert.ok(body.packages.every(p => p.url === 'https://github.com/example/pkg' && p.copyright === 'Copyright (c) 2024 Example'))
+  assert.ok(requested.every(url => /^https:\/\/(registry\.npmjs\.org|data\.jsdelivr\.com|cdn\.jsdelivr\.net)\//.test(url)), 'only the expected hosts')
+  assert.match(headers['netlify-cdn-cache-control'], /s-maxage=86400/)
+  // A warm function reuses its answer for an hour
+  const before = requested.length
+  await creditsResponse(fakeFetch, 1_000_000 + 60_000)
+  assert.equal(requested.length, before)
+  resetCreditsCache()
+})
