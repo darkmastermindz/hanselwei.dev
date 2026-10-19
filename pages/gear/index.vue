@@ -3,7 +3,7 @@
     <h1 class="page-title text-[#41b883]">Gear Inventory</h1>
     <p class="intro">
       Lists of the stuff I use, served by a
-      <a href="/api/inventory" target="_blank">Netlify function</a>.
+      <a href="/api/inventory" target="_blank" rel="noopener">Netlify function</a>.
       <LiveBadge :live="live" />
     </p>
     <div class="lists">
@@ -11,7 +11,7 @@
         <span class="emoji">{{ list.emoji }}</span>
         <span>
           <strong>{{ list.title }}</strong>
-          <span class="count">{{ list.count }} items</span>
+          <span class="count">{{ list.count }} {{ list.count === 1 ? 'item' : 'items' }}</span>
           <span class="desc">{{ list.description }}</span>
         </span>
       </NuxtLink>

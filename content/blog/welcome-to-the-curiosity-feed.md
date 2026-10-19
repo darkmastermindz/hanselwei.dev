@@ -2,6 +2,7 @@
 title: "Welcome to the Curiosity Feed"
 date: "2026-10-17"
 series: "Site Updates"
+description: "My newsletter-style feed: short, recurring updates that build up over time."
 tags: [meta]
 ---
 

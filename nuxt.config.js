@@ -31,7 +31,7 @@ export default defineNuxtConfig({
         },
         {
           name: 'description',
-          content: 'Hello Hansel!'
+          content: "Hansel Wei, senior software engineer in Charlotte, NC: projects, blog, gear lists and the things I'm curious about."
         },
         { name: 'theme-color', content: '#2c2f33' },
         // Installable web app (iOS + Android)

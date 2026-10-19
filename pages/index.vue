@@ -9,7 +9,7 @@
         · best hold {{ best }}
         · {{ seenCount }}/{{ total }} discovered
       </template>
-      <template v-else><span class="hint__touch">tap</span><span class="hint__mouse">click</span> profile picture coin • discover a new fact</template>
+      <template v-else><span class="hint__touch">tap</span><span class="hint__mouse">click</span> the coin · discover a new fact</template>
     </p>
     <h1 class="title text-4xl md:text-5xl lg:text-6xl">
       <strong>Hansel Wei</strong>
