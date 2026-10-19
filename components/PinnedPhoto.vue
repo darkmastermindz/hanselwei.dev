@@ -28,7 +28,11 @@ const shown = ref(false)
 onMounted(async () => {
   try {
     const response = await fetch('/api/bio-photo', { credentials: 'same-origin', cache: 'no-store' })
-    if (!response.ok) return // no photo: the empty print stays as a placeholder
+    if (!response.ok) {
+      // No photo: the empty print stays as a placeholder (403 = request refused, 404 = no key)
+      console.warn(`[bio-photo] ${response.status}`)
+      return
+    }
     const bitmap = await createImageBitmap(await response.blob())
     const el = canvas.value
     if (!el) return
@@ -37,18 +41,20 @@ onMounted(async () => {
     el.getContext('2d').drawImage(bitmap, 0, 0)
     bitmap.close?.()
     shown.value = true
-  } catch {
-    // Offline or blocked: keep the placeholder
+  } catch (error) {
+    console.warn('[bio-photo]', error) // offline or blocked: keep the placeholder
   }
 })
 </script>
 
 <style scoped>
+/* Pinned to the right of the title and intro on every screen size, a little smaller on phones */
 .pinned {
   position: relative;
-  width: min(15rem, 70vw);
-  margin: 1.75rem auto 1rem;
-  transform: rotate(-2.5deg);
+  float: right;
+  width: clamp(8.5rem, 40vw, 15rem);
+  margin: 0.75rem 0 1rem 1rem;
+  transform: rotate(3deg);
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
@@ -56,9 +62,24 @@ onMounted(async () => {
 
 @media (min-width: 640px) {
   .pinned {
-    float: right;
-    margin: 0.75rem 0 1rem 1.5rem;
-    transform: rotate(3deg);
+    margin-left: 1.5rem;
+  }
+}
+
+/* Phones: a narrower film edge and caption to suit the smaller print */
+@media (max-width: 639px) {
+  .pinned__print {
+    padding: 0.4rem 0.4rem 0;
+  }
+
+  .pinned__edge {
+    flex-basis: 1rem;
+    font-size: 0.42rem;
+  }
+
+  .pinned__caption {
+    padding: 0.45rem 0 0.55rem;
+    font-size: 0.85rem;
   }
 }
 
