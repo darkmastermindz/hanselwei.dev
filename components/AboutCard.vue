@@ -489,6 +489,7 @@ const startHold = event => {
   held = false
   swiping = false
   pressStart = performance.now()
+  pressType = event.pointerType
   cancelHold()
   if (view.value === 'fact') return
   holdOrigin = { x: event.clientX, y: event.clientY }
@@ -533,7 +534,7 @@ const swipeMove = event => {
   return true
 }
 const endSwipe = () => {
-  if (swiping) releaseSocials()
+  if (swiping) endPause()
   swipeFrom = null
 }
 
@@ -542,30 +543,52 @@ const endHold = () => {
   cancelHold()
 }
 
-// The social links stay paused from the switch until a moment after the press ends, wherever
-// it ends (lifted off the card, cancelled by a scroll or the system's long-press, ...)
-const { lockSocials, releaseSocials } = useSocialsLock()
+// The social links pause from the switch. With a mouse they come back a moment after the press
+// ends. On touch they stay paused while the card is in use (no flashing between presses) and
+// come back once the visitor moves on: the card scrolled away, a tap elsewhere, or a tap on the
+// links themselves (Socials.vue).
+const { lockSocials, releaseSocials, unlockSocials } = useSocialsLock()
+let pressType = ''
+const endPause = () => {
+  if (pressType !== 'touch' && pressType !== 'pen') releaseSocials()
+}
+// Wherever the press ends: lifted off the card, cancelled by a scroll or the system's long-press
 const onPressEndAnywhere = () => {
-  if (held) releaseSocials()
+  if (held) endPause()
 }
 
 // Back to JSON once the visitor does something else. A click (not a pointerdown) so a scroll
 // that starts on a link doesn't count.
 const onClickAnywhere = event => {
-  if (!cardEl.value?.contains(event.target) && isActionTarget(event.target)) revert()
+  if (cardEl.value?.contains(event.target)) return
+  if (!event.target?.closest?.('.socials')) unlockSocials()
+  if (isActionTarget(event.target)) revert()
 }
 const onFocusOut = event => {
   if (event.relatedTarget && !cardEl.value?.contains(event.relatedTarget)) revert()
 }
 const onVisibility = () => {
-  if (document.hidden) revert({ animate: false })
+  if (document.hidden) {
+    revert({ animate: false })
+    unlockSocials()
+  }
 }
+let observer = null
 onMounted(() => {
   document.addEventListener('click', onClickAnywhere, true)
   document.addEventListener('pointerup', onPressEndAnywhere, true)
   document.addEventListener('pointercancel', onPressEndAnywhere, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
+  // Scrolling the card mostly out of view counts as moving on: the links come back (the text
+  // stays as it is)
+  observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.intersectionRatio < 0.25) unlockSocials()
+    },
+    { threshold: [0, 0.25] }
+  )
+  if (cardEl.value) observer.observe(cardEl.value)
 })
 
 onBeforeUnmount(() => {
@@ -574,9 +597,10 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onClickAnywhere, true)
   document.removeEventListener('pointerup', onPressEndAnywhere, true)
   document.removeEventListener('pointercancel', onPressEndAnywhere, true)
-  releaseSocials()
+  unlockSocials()
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
+  observer?.disconnect()
 })
 
 // Tapping the card cycles through whatever views are available

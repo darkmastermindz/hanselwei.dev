@@ -8,5 +8,6 @@ const lock = createLock(value => (locked.value = value))
 export const useSocialsLock = () => ({
   locked: readonly(locked),
   lockSocials: lock.lock,
-  releaseSocials: lock.release
+  releaseSocials: lock.release,
+  unlockSocials: lock.unlock
 })

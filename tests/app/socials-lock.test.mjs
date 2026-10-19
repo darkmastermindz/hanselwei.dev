@@ -68,3 +68,26 @@ test('releasing without a lock does nothing', () => {
     mock.timers.reset()
   }
 })
+
+test('unlock is immediate and drops a pending unlock', () => {
+  mock.timers.enable({ apis: ['setTimeout'] })
+  try {
+    const { changes, lock } = tracked()
+    lock.lock()
+    lock.release()
+    lock.unlock()
+    assert.equal(lock.isLocked(), false)
+    lock.lock() // a new pause right after must not be undone by the old timer
+    mock.timers.tick(RELEASE_GRACE_MS * 2)
+    assert.equal(lock.isLocked(), true)
+    assert.deepEqual(changes, [true, false, true])
+  } finally {
+    mock.timers.reset()
+  }
+})
+
+test('unlocking without a lock reports no change', () => {
+  const { changes, lock } = tracked()
+  lock.unlock()
+  assert.deepEqual(changes, [])
+})

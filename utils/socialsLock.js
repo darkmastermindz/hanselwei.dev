@@ -1,7 +1,8 @@
 // Pauses the home page's social links while a press on the About card switches its text: the
 // card changes height, so the links jump under the finger. Locked from the switch until a
-// moment after the press ends (RELEASE_GRACE_MS), so neither the release nor a quick next tap
-// opens a link by accident. `onChange(locked)` reports every change.
+// moment after the press ends (release: RELEASE_GRACE_MS later), or, on touch, until the visitor
+// moves on (unlock), so neither the release nor a quick next tap opens a link by accident.
+// `onChange(locked)` reports every change.
 export const RELEASE_GRACE_MS = 1000
 
 export const createLock = (onChange, graceMs = RELEASE_GRACE_MS) => {
@@ -27,6 +28,12 @@ export const createLock = (onChange, graceMs = RELEASE_GRACE_MS) => {
         timer = null
         set(false)
       }, graceMs)
+    },
+    // Unlock now (and drop any pending unlock)
+    unlock() {
+      clearTimeout(timer)
+      timer = null
+      set(false)
     },
     isLocked: () => locked
   }
