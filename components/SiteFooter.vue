@@ -1,6 +1,6 @@
 <template>
   <footer class="site-footer">
-    <p>©️ 2026 hanselwei.dev • Designed and created with &lt;3 by Hansel Wei</p>
+    <p class="site-footer__line">Designed &amp; created with &lt;3 by Hansel Wei • ©️ 2026 hanselwei.dev</p>
     <p><NuxtLink to="/terms">Terms of Service</NuxtLink></p>
   </footer>
 </template>
@@ -14,6 +14,18 @@
   font-size: 0.8rem;
   line-height: 1.6;
   color: #999;
+}
+
+/* One line: the text shrinks a little on phones instead of wrapping. Only the smallest screens
+   (under 340px), where it would be too small to read, let it wrap. */
+.site-footer__line {
+  font-size: clamp(0.6rem, calc((100vw - 2rem) / 34), 0.8rem); /* the line is about 34 font-sizes wide */
+}
+
+@media (min-width: 340px) {
+  .site-footer__line {
+    white-space: nowrap;
+  }
 }
 
 .site-footer a {
