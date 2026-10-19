@@ -113,4 +113,8 @@ test('config.toml sets the ATO home title and footer code', async () => {
   const { config } = buildCoinBubbleConfig(parse(await readFile(new URL('../../config.toml', import.meta.url), 'utf8')))
   assert.equal(config.homeTitle, 'Hansel Wei, Senior Software Engineer')
   assert.equal(config.footerCode, 'WKZBHNUJRETD')
+  // ATO is October 19–20; it stays on through the 21st as a day of cooldown
+  assert.equal(config.until, '2026-10-21')
+  assert.equal(bubbleActive(config, new Date('2026-10-22T03:59:00Z')), true)
+  assert.equal(bubbleActive(config, new Date('2026-10-22T04:00:00Z')), false)
 })
