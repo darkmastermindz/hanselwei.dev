@@ -4,6 +4,7 @@ export default defineEventHandler(async event => {
     title: 'Curiosity Feed · hanselwei.dev',
     description: 'Short notes, links and things Hansel Wei is curious about',
     path: '/blog',
+    self: '/feed.xml',
     home: '/blog/feed',
     posts: (await getPosts()).filter(post => post.series)
   })

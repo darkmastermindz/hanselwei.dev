@@ -4,8 +4,9 @@ const escape = s =>
   String(s ?? '').replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' })[c])
 
 // RSS 2.0 for a list of posts from getPosts(); `path` is where the items live (e.g. /blog),
-// `home` the page the channel links to (defaults to `path`)
-export const buildRss = ({ title, description, path, home = path, posts }) => {
+// `home` the page the channel links to (defaults to `path`), `self` the feed's own URL path
+// (e.g. /rss.xml), given to readers as atom:link rel="self"
+export const buildRss = ({ title, description, path, home = path, self, posts }) => {
   const items = posts
     .map(post => ({ post, url: escape(`${SITE}${path}/${encodeURIComponent(post.slug)}`) }))
     .map(
@@ -20,11 +21,11 @@ export const buildRss = ({ title, description, path, home = path, posts }) => {
     .join('\n')
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escape(title)}</title>
-    <link>${SITE}${home}</link>
-    <description>${escape(description)}</description>
+    <link>${escape(`${SITE}${home}`)}</link>
+${self ? `    <atom:link href="${escape(`${SITE}${self}`)}" rel="self" type="application/rss+xml" />\n` : ''}    <description>${escape(description)}</description>
 ${items}
   </channel>
 </rss>

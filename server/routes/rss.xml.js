@@ -4,6 +4,7 @@ export default defineEventHandler(async event => {
     title: 'Blog · hanselwei.dev',
     description: 'Posts and series updates by Hansel Wei',
     path: '/blog',
+    self: '/rss.xml',
     posts: await getPosts()
   })
 })

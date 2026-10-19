@@ -23,3 +23,19 @@ test('channel fields are escaped too', () => {
   const xml = buildRss({ title: '</title><evil/>', description: ']]><evil/>', path: '/blog', posts: [] })
   assert.doesNotMatch(xml, /<evil/)
 })
+
+test('the channel link and self link are escaped like everything else', () => {
+  for (const payload of XML_INJECTION) {
+    const xml = buildRss({ title: 't', description: 'd', path: '/blog', home: `/blog/${payload}`, self: `/${payload}`, posts: [] })
+    assert.doesNotMatch(xml, /<script|<evil|<!DOCTYPE|<!ENTITY|]]>/i, xml)
+    assert.equal((xml.match(/<channel>/g) ?? []).length, 1)
+    assert.equal((xml.match(/<\/channel>/g) ?? []).length, 1)
+  }
+})
+
+test('each feed links to its home page and to itself', () => {
+  const xml = buildRss({ title: 't', description: 'd', path: '/blog', home: '/blog/feed', self: '/feed.xml', posts: [] })
+  assert.match(xml, /<link>https:\/\/www\.hanselwei\.dev\/blog\/feed<\/link>/)
+  assert.match(xml, /<atom:link href="https:\/\/www\.hanselwei\.dev\/feed\.xml" rel="self" type="application\/rss\+xml" \/>/)
+  assert.match(xml, /xmlns:atom="http:\/\/www\.w3\.org\/2005\/Atom"/)
+})
