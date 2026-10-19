@@ -3,6 +3,7 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { parse } from 'smol-toml'
 import { buildCoinBubbleConfig, coinBubbleModule } from '../utils/coinBubble.mjs'
+import { qrPath } from '../utils/coinQr.mjs'
 
 const root = new URL('../', import.meta.url)
 const toml = parse((await readFile(new URL('config.toml', root), 'utf8').catch(() => '')) || '')
@@ -13,5 +14,11 @@ if (problems.length) {
   process.exit(1)
 }
 
-await writeFile(new URL('data/coinBubble.generated.mjs', root), coinBubbleModule(config))
-console.log(`[build-coin-bubble] ${config.enabled ? `on through ${config.until}: ${JSON.stringify(config.text)}` : 'off'}`)
+// The tails-side QR as an SVG path, so the page needs no QR library
+const qr = config.qr ? qrPath(config.qr) : null
+await writeFile(new URL('data/coinBubble.generated.mjs', root), coinBubbleModule({ ...config, qrSize: qr?.size ?? 0, qrPath: qr?.path ?? '' }))
+console.log(
+  `[build-coin-bubble] ${config.enabled ? `on through ${config.until}: ${JSON.stringify(config.text)}` : 'off'}` +
+    (config.link ? `, ${JSON.stringify(config.linkText)} -> ${config.link}` : '') +
+    (qr ? `, QR ${qr.size}×${qr.size} -> ${config.qr}` : '')
+)

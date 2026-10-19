@@ -2,7 +2,9 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { parse } from 'smol-toml'
 import { readFile } from 'node:fs/promises'
-import { bubbleActive, buildCoinBubbleConfig, calendarDay, dayIn, landsHeads } from '../../utils/coinBubble.mjs'
+import { encode } from 'uqr'
+import { COIN_BUBBLE_DEFAULTS, bubbleActive, bubbleParts, buildCoinBubbleConfig, calendarDay, dayIn, landsHeads } from '../../utils/coinBubble.mjs'
+import { qrPath } from '../../utils/coinQr.mjs'
 
 const ATO = { enabled: true, text: 'Catch me at @AllThingsOpen in Raleigh! 👋', until: '2026-10-20' }
 
@@ -44,10 +46,50 @@ test('config.toml [coin_bubble] builds', async () => {
   const { problems, config } = buildCoinBubbleConfig(parse(await readFile(new URL('../../config.toml', import.meta.url), 'utf8')))
   assert.deepEqual(problems, [])
   assert.match(config.text, /@AllThingsOpen/)
+  assert.equal(config.link, 'https://2026.allthingsopen.org')
+  assert.equal(config.qr, 'https://hanselwei.dev')
+})
+
+const EVENT = { enabled: true, text: 'Catch me at @AllThingsOpen in Raleigh!', until: '2027-10-26' }
+
+test('the link fills {year} from until, and links its part of the text', () => {
+  const { config, problems } = buildCoinBubbleConfig({
+    coin_bubble: { ...EVENT, link: 'https://{year}.allthingsopen.org', link_text: '@AllThingsOpen' }
+  })
+  assert.deepEqual(problems, [])
+  assert.equal(config.link, 'https://2027.allthingsopen.org')
+  assert.deepEqual(bubbleParts(config), ['Catch me at ', '@AllThingsOpen', ' in Raleigh!'])
+  assert.deepEqual(bubbleParts({ text: 'Hi' }), ['Hi', '', ''])
+})
+
+test('link settings are checked', () => {
+  const bad = [
+    { link: 'https://{year}.allthingsopen.org', link_text: '@AllThingsOpen', until: undefined },
+    { link: 'http://allthingsopen.org', link_text: '@AllThingsOpen' },
+    { link: 'https://allthingsopen.org', link_text: '@SomethingElse' },
+    { link: 'https://allthingsopen.org' },
+    { link_text: '@AllThingsOpen' },
+    { qr: 'http://hanselwei.dev' },
+    { qr: '/bio' }
+  ]
+  for (const extra of bad) {
+    const coin_bubble = { ...EVENT, ...extra }
+    for (const [k, v] of Object.entries(coin_bubble)) if (v === undefined) delete coin_bubble[k]
+    assert.ok(buildCoinBubbleConfig({ coin_bubble }).problems.length >= 1, JSON.stringify(extra))
+  }
+})
+
+test('the QR path draws exactly the dark modules of the code', () => {
+  const { size, path } = qrPath('https://hanselwei.dev')
+  const { data } = encode('https://hanselwei.dev', { ecc: 'M', border: 0 })
+  assert.equal(size, data.length)
+  assert.match(path, /^(M\d+ \d+h\d+v1h-\d+z)+$/)
+  const drawn = [...path.matchAll(/h(\d+)v1/g)].reduce((sum, [, n]) => sum + Number(n), 0)
+  assert.equal(drawn, data.flat().filter(Boolean).length)
 })
 
 test('settings are checked: off by default, text and date needed when on', () => {
-  assert.deepEqual(buildCoinBubbleConfig({}), { config: { enabled: false, text: '', until: null }, problems: [] })
+  assert.deepEqual(buildCoinBubbleConfig({}), { config: COIN_BUBBLE_DEFAULTS, problems: [] })
   assert.equal(buildCoinBubbleConfig({ coin_bubble: { enabled: false } }).problems.length, 0)
   assert.equal(buildCoinBubbleConfig({ coin_bubble: { enabled: true } }).problems.length, 1)
   assert.equal(buildCoinBubbleConfig({ coin_bubble: { enabled: true, text: 'Hi' } }).problems.length, 1)
