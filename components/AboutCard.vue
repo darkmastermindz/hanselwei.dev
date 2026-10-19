@@ -50,7 +50,7 @@
       @pointerdown="startHold"
       @pointermove="onHoldMove"
       @pointerup="endHold"
-      @pointercancel="cancelHold"
+      @pointercancel="endHold"
       @pointerleave="cancelHold"
       @contextmenu.prevent
     >
@@ -146,6 +146,8 @@
 <script setup>
 import { safeUrl } from '~/utils/safeUrl.js'
 import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
+import { swipeIntent, swipeYears } from '~/utils/swipe.js'
+import { isActionTarget } from '~/utils/actionTarget.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
 // (skills), hobbies and education JSON, switched with the toggle on top.
@@ -428,13 +430,12 @@ const onTrackKey = event => {
 }
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
-// "poof": the old words fall away and sparkles burst from the press. Holding again,
-// or moving on (tap/tab elsewhere, scroll the card away, leave the page), flips back.
+// "poof": the old words fall away and sparkles burst from the press. It stays through
+// scrolling and taps on the background; holding again, or a real action elsewhere (a link,
+// a button, tabbing away, leaving the page), flips back.
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
-const HOLD_RELEASE_MS = 600 // after a hold, clicks outside the card are ignored this long (the text just changed under the finger)
-let suppressClicksUntil = 0
 const readable = ref(false)
 const charging = ref(false)
 const transitionName = ref('swap')
@@ -516,59 +517,104 @@ const cancelHold = () => {
 
 const startHold = event => {
   held = false
+  swiping = false
   pressStart = performance.now()
+  pressType = event.pointerType
   cancelHold()
   if (view.value === 'fact') return
   holdOrigin = { x: event.clientX, y: event.clientY }
+  swipeFrom = view.value === 'edu' ? { year: xpYear.value, decided: false } : null
   charging.value = true
   holdTimer = setTimeout(() => {
     charging.value = false
     held = true
+    lockSocials() // the card changes height, so the links below move under the finger
     toggleReadable({ origin: holdOrigin })
     navigator.vibrate?.(15)
   }, HOLD_MS)
 }
 
 const onHoldMove = event => {
-  if (!charging.value) return
+  if (swipeMove(event) || !charging.value) return
   const moved = Math.hypot(event.clientX - holdOrigin.x, event.clientY - holdOrigin.y)
   if (moved > HOLD_SLOP_PX) cancelHold()
 }
 
-// Letting go of a hold: the text has just changed under the finger, so a click outside the
-// card (such as a social link) right after it is ignored. Clicks inside the card are handled
-// by onTap as usual.
-const endHold = () => {
-  if (held) suppressClicksUntil = performance.now() + HOLD_RELEASE_MS
-  cancelHold()
+// On the XP view, a sideways swipe moves the year slider (utils/swipe.js); up and down still
+// scroll the page. Returns true while the press is a swipe.
+let swipeFrom = null
+let swiping = false
+const swipeMove = event => {
+  if (!swipeFrom || held) return false
+  const dx = event.clientX - holdOrigin.x
+  if (!swipeFrom.decided) {
+    const intent = swipeIntent(dx, event.clientY - holdOrigin.y)
+    if (!intent) return false
+    swipeFrom.decided = true
+    if (intent === 'scroll') {
+      swipeFrom = null
+      return false
+    }
+    swiping = true
+    cancelHold()
+    lockSocials() // the entries change with the year, so the links below move
+    event.currentTarget.setPointerCapture?.(event.pointerId)
+  }
+  setYear(swipeFrom.year + swipeYears(dx))
+  return true
 }
-const swallowClickAfterHold = event => {
-  if (performance.now() >= suppressClicksUntil || panelEl.value?.contains(event.target)) return
-  event.preventDefault()
-  event.stopPropagation()
+const endSwipe = () => {
+  if (swiping) endPause()
+  swipeFrom = null
 }
 
-// Back to JSON once attention leaves the card
-const onPointerDownAnywhere = event => {
-  if (!cardEl.value?.contains(event.target)) revert()
+const endHold = () => {
+  endSwipe()
+  cancelHold()
+}
+
+// The social links pause from the switch. With a mouse they come back a moment after the press
+// ends. On touch they stay paused while the card is in use (no flashing between presses) and
+// come back once the visitor moves on: the card scrolled away, a tap elsewhere, or a tap on the
+// links themselves (Socials.vue).
+const { lockSocials, releaseSocials, unlockSocials } = useSocialsLock()
+let pressType = ''
+const endPause = () => {
+  if (pressType !== 'touch' && pressType !== 'pen') releaseSocials()
+}
+// Wherever the press ends: lifted off the card, cancelled by a scroll or the system's long-press
+const onPressEndAnywhere = () => {
+  if (held) endPause()
+}
+
+// Back to JSON once the visitor does something else. A click (not a pointerdown) so a scroll
+// that starts on a link doesn't count.
+const onClickAnywhere = event => {
+  if (cardEl.value?.contains(event.target)) return
+  if (!event.target?.closest?.('.socials')) unlockSocials()
+  if (isActionTarget(event.target)) revert()
 }
 const onFocusOut = event => {
   if (event.relatedTarget && !cardEl.value?.contains(event.relatedTarget)) revert()
 }
 const onVisibility = () => {
-  if (document.hidden) revert({ animate: false })
+  if (document.hidden) {
+    revert({ animate: false })
+    unlockSocials()
+  }
 }
 let observer = null
-
 onMounted(() => {
-  document.addEventListener('pointerdown', onPointerDownAnywhere, true)
-  document.addEventListener('click', swallowClickAfterHold, true)
+  document.addEventListener('click', onClickAnywhere, true)
+  document.addEventListener('pointerup', onPressEndAnywhere, true)
+  document.addEventListener('pointercancel', onPressEndAnywhere, true)
   document.addEventListener('visibilitychange', onVisibility)
   cardEl.value?.addEventListener('focusout', onFocusOut)
-  // Mostly scrolled out of view counts as moving on
+  // Scrolling the card mostly out of view counts as moving on: the links come back (the text
+  // stays as it is)
   observer = new IntersectionObserver(
     ([entry]) => {
-      if (entry.intersectionRatio < 0.25) revert({ animate: false })
+      if (entry.intersectionRatio < 0.25) unlockSocials()
     },
     { threshold: [0, 0.25] }
   )
@@ -578,8 +624,10 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cancelHold()
   clearTimeout(fxTimer)
-  document.removeEventListener('pointerdown', onPointerDownAnywhere, true)
-  document.removeEventListener('click', swallowClickAfterHold, true)
+  document.removeEventListener('click', onClickAnywhere, true)
+  document.removeEventListener('pointerup', onPressEndAnywhere, true)
+  document.removeEventListener('pointercancel', onPressEndAnywhere, true)
+  unlockSocials()
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
@@ -594,11 +642,14 @@ const next = () => {
 // A hold (or a hold let go early) also ends in a click; only a quick tap switches views.
 // On desktop, alt-click flips the text the same way a hold does.
 const onTap = event => {
-  if (held) {
+  if (held || swiping) {
     held = false
+    swiping = false
     return
   }
   if (event.altKey) {
+    lockSocials()
+    releaseSocials()
     toggleReadable({ origin: { x: event.clientX, y: event.clientY } })
     return
   }
@@ -665,6 +716,11 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none; /* no iOS text menu on press-and-hold */
   user-select: none;
+}
+
+/* XP: sideways swipes move the year slider (handled in script); vertical still scrolls */
+#about-panel-edu {
+  touch-action: pan-y;
 }
 
 .about-card__panel:focus-visible {

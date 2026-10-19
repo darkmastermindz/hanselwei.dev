@@ -1,5 +1,13 @@
 <template>
-  <nav ref="nav" class="socials" :class="{ 'is-lens': layout }" aria-label="Find me elsewhere">
+  <nav
+    ref="nav"
+    class="socials"
+    :class="{ 'is-lens': layout, 'is-locked': locked }"
+    :aria-disabled="locked || undefined"
+    aria-label="Find me elsewhere"
+    @pointerdown.capture="onPausedPress"
+    @click.capture="onPausedClick"
+  >
     <SocialFlipLink
       v-for="(link, i) in links"
       :key="link.label"
@@ -13,6 +21,25 @@
 </template>
 
 <script setup>
+// Paused while a press on the About card switches its text, since the links move
+// (useSocialsLock). While paused, a tap on a link only brings them back; the next one opens it.
+const { locked, unlockSocials } = useSocialsLock()
+let pausedPress = false
+const onPausedPress = event => {
+  if (!locked.value) return
+  event.stopPropagation() // no sparkles or spin from the link
+  pausedPress = true
+}
+const onPausedClick = event => {
+  if (!locked.value) return
+  event.preventDefault()
+  event.stopPropagation()
+  // Only a tap that started here (or a keyboard Enter) unpauses: the release of the card's
+  // hold, landing here because the links moved, is just swallowed
+  if (pausedPress || event.detail === 0) unlockSocials()
+  pausedPress = false
+}
+
 const links = [
   { label: 'GitHub', back: '🦄 @darkmastermindz', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]', effect: 'unicorn' },
   { label: 'Mastodon', back: '🐘 Toot at me', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
@@ -159,6 +186,23 @@ onBeforeUnmount(() => resizeObserver?.disconnect())
 
 .socials.is-lens > .flip-link {
   margin: 0.375rem 0;
+}
+
+/* Paused while the card above is in use: a soft dim that eases in and drifts slowly back,
+   so a pause and its end never read as a flash */
+.socials {
+  transition: opacity 0.8s ease;
+}
+
+.socials.is-locked {
+  opacity: 0.7;
+  transition: opacity 0.4s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socials {
+    transition: none;
+  }
 }
 
 .socials__break {
