@@ -131,3 +131,6 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 `public/manifest.webmanifest`, `public/sw.js` and the icons in `public/icons/` make the site installable:
 - **Android / Chrome:** menu → *Install app*
 - **iOS / Safari:** Share → *Add to Home Screen*
+
+## License
+The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.
