@@ -4,7 +4,16 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { safeUrl } from '../../utils/safeUrl.js'
 import { toPost } from '../../server/utils/blog.js'
-import { UNSAFE_URLS, SAFE_URLS, PROTOTYPE_KEYS } from './payloads.mjs'
+import { opensXp } from '../../utils/aboutCard.js'
+import { UNSAFE_URLS, SAFE_URLS, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
+
+// The home page reads location.hash to open the About card on XP: nothing else switches it
+test('hostile URL hashes never switch the About card', () => {
+  for (const value of [...UNSAFE_URLS, ...XSS_HTML, ...PROTOTYPE_KEYS, null, undefined, 42, {}, ['#xp']]) {
+    assert.equal(opensXp(value), false, JSON.stringify(value))
+    if (typeof value === 'string') assert.equal(opensXp(`#${value}`), false, value)
+  }
+})
 
 test('unsafe URLs are dropped', () => {
   for (const url of [...UNSAFE_URLS, ...PROTOTYPE_KEYS, '', '   ', null, undefined, 42, {}, ['https://x.example']]) {

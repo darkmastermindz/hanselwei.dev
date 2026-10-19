@@ -10,4 +10,4 @@ description: "Hansel Wei, senior software engineer in Charlotte, NC, who loves e
 - UNC Charlotte '19 🎓, Bachelor of Science in Computer Science
 - CompTIA Secure Infrastructure Specialist
 
-I'm a senior software engineer at Wells Fargo, working on GitHub Actions, ARC and Kubernetes platform solutions. Find my work history on the home page card under XP.
+I'm currently a senior software engineer at Wells Fargo, working on GitHub Actions, ARC, Workflows, and Kubernetes enterprise-wide platform solutions. Find my work history, courses, and achievements on the home page card under [XP](/#xp).
