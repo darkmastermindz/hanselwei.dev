@@ -2,6 +2,9 @@
   <main class="page">
     <article class="bio">
       <NuxtLink to="/" class="back">← Home</NuxtLink>
+      <ClientOnly>
+        <PinnedPhoto />
+      </ClientOnly>
       <h1>{{ bio.title }}</h1>
       <div class="prose prose-invert max-w-none" v-html="bio.html" />
 
@@ -24,7 +27,11 @@ if (error.value || !bio.value) {
 
 useHead({
   title: `${bio.value.title} · hanselwei.dev`,
-  meta: [{ name: 'description', content: bio.value.description }]
+  meta: [
+    { name: 'description', content: bio.value.description },
+    // The pinned photo isn't for AI training or image search (also sent as headers by /api/bio-photo)
+    { name: 'robots', content: 'noai, noimageai' }
+  ]
 })
 </script>
 

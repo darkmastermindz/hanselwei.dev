@@ -3,3 +3,24 @@ User-agent: *
 Disallow: /connect
 # Live JSON APIs (Netlify functions)
 Disallow: /api/
+
+# AI crawlers: no training on this site's photos (the Bio photo is served only to the page
+# itself by /api/bio-photo, which also sends noai / noimageai)
+User-agent: GPTBot
+User-agent: ChatGPT-User
+User-agent: OAI-SearchBot
+User-agent: CCBot
+User-agent: Google-Extended
+User-agent: anthropic-ai
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: PerplexityBot
+User-agent: Bytespider
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: Amazonbot
+User-agent: cohere-ai
+User-agent: Diffbot
+User-agent: ImagesiftBot
+Disallow: /api/
+Disallow: /connect

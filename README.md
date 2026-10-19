@@ -34,6 +34,7 @@ If a sync can't reach GitHub or dev.to, the last copy is kept (or an empty one w
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Owner sign-in with a GitHub OAuth App. Callback: `https://www.hanselwei.dev/api/auth/github/callback` | For sign-in |
 | `GITHUB_TOKEN` | Projects contribution graph. Read-only, with no permissions selected | Optional |
 | `DEVTO_USERNAME`, `DEVTO_API_KEY` | dev.to mirror (see Blog) | Optional |
+| `BIO_PHOTO_KEY` | Decrypts the Bio page photo (`netlify/lib/bioPhoto.sealed.mjs`). Secret, functions scope | For the photo |
 | `CSP_MODE` | `enforce` or `report-only`, overriding the default Content-Security-Policy mode | Optional |
 
 The session key is derived from `GITHUB_CLIENT_SECRET`, so changing that secret signs everyone out.
@@ -77,6 +78,12 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 ## Bio (`/bio`)
 - `content/bio/bio.md`: hand-written markdown, with `title` and `description` in its front matter.
 - Below it, the GitHub profile README (`darkmastermindz/darkmastermindz`) is synced on every build.
+- A photo is pinned at the top, framed as an instant print with a strip of 35mm film edge (`components/PinnedPhoto.vue`). It's served only to the page itself, by the `/api/bio-photo` Netlify function:
+  - The repo is public, so it holds only an encrypted copy; the function decrypts it with `BIO_PHOTO_KEY`. What's encrypted is already reduced: 640px wide, quality 60, no camera metadata, a faint `hanselwei.dev` watermark.
+  - The function answers only a same-origin `fetch` from the page (fetch metadata, or a same-site referrer), so direct visits, other sites and `<img>` embeds get a 403. Nothing is cached, and it sends `noindex, noimageindex, noai, noimageai`.
+  - The page draws it into a canvas (no image to save, drag or long-press, right-click blocked), and `robots.txt` turns away AI crawlers.
+  - These are deterrents: a screenshot still works, and anyone can forge request headers.
+  - To change the photo: reduce it, then `BIO_PHOTO_KEY=… node scripts/encrypt-bio-photo.mjs photo.jpg`.
 
 ## Tests
 - `npm test` runs Node's built-in test runner over `tests/**/*.test.mjs`. App logic is in `tests/app/`, and injection and security checks are in `tests/security/`. Shared attack payloads live in `tests/security/payloads.mjs`.
