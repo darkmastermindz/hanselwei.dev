@@ -51,6 +51,29 @@ const links = [
     max(env(safe-area-inset-left), 0.5rem);
 }
 
+/* Installed as an app: a little more room around the nav and between its rows. The media query
+   applies from the first paint; html.is-installed (plugins/pwa.client.js) also covers iOS
+   versions that only report navigator.standalone */
+@media (display-mode: standalone) {
+  .app-nav {
+    padding: calc(env(safe-area-inset-top) + 0.75rem) max(env(safe-area-inset-right), 0.75rem) 0.75rem
+      max(env(safe-area-inset-left), 0.75rem);
+  }
+
+  .app-nav__links {
+    row-gap: 0.5rem;
+  }
+}
+
+:global(html.is-installed .app-nav) {
+  padding: calc(env(safe-area-inset-top) + 0.75rem) max(env(safe-area-inset-right), 0.75rem) 0.75rem
+    max(env(safe-area-inset-left), 0.75rem);
+}
+
+:global(html.is-installed .app-nav__links) {
+  row-gap: 0.5rem;
+}
+
 .app-nav__links {
   display: flex;
   flex-wrap: wrap; /* wraps onto a second line on small screens, like before */
@@ -59,6 +82,10 @@ const links = [
   a {
     flex: 0 0 auto;
     white-space: nowrap;
+    /* No scale "pop" on the links: iOS (above all the installed app) can leave scaled text
+       rasterized and blurry in the sticky nav */
+    animation: none;
+    transform: none;
   }
 
   .is-current {
