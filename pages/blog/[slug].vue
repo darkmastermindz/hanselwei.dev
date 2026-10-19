@@ -11,7 +11,7 @@
         · {{ post.readingTime }} min read
         <span v-if="post.series" class="series">· 🔁 {{ post.series }} #{{ post.seriesNumber }}</span>
         <template v-if="post.tags.length">
-          · <span v-for="tag in post.tags" :key="tag" class="tag">#{{ tag }}</span>
+          · <span v-for="tag in post.tags" :key="tag" class="tag">{{ hashtag(tag) }}</span>
         </template>
       </p>
       <p v-if="post.source === 'dev.to'" class="mirror">
@@ -24,6 +24,8 @@
 </template>
 
 <script setup>
+import { hashtag } from '~/utils/chips.js'
+
 const route = useRoute()
 const slug = String(route.params.slug)
 
@@ -34,7 +36,11 @@ if (error.value || !post.value) {
 
 useHead({
   title: `${post.value.title} · hanselwei.dev`,
-  meta: [{ name: 'description', content: post.value.description }],
+  meta: [
+    { name: 'description', content: post.value.description },
+    // The post's tags, for search engines and site search
+    ...(post.value.tags.length ? [{ name: 'keywords', content: post.value.tags.join(', ') }] : [])
+  ],
   link: post.value.canonical ? [{ rel: 'canonical', href: post.value.canonical }] : []
 })
 

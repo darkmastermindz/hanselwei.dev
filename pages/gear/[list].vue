@@ -7,9 +7,9 @@
     </p>
 
     <nav v-if="showSectionHeadings" class="sections" aria-label="Sections">
-      <a v-for="name in inventory.sections" :key="name" :href="`#${slugify(name)}`" class="badge badge-lg badge-success badge-outline">
-        {{ name }}
-      </a>
+      <ChipStrip v-slot="{ item: name }" :items="inventory.sections" label="Jump to a section">
+        <a :href="`#${slugify(name)}`" class="badge badge-lg badge-success badge-outline">{{ name }}</a>
+      </ChipStrip>
     </nav>
 
     <div class="filters">
@@ -20,10 +20,8 @@
         placeholder="Search gear…"
         aria-label="Search gear"
       />
-      <div v-if="inventory.statuses.length > 1" class="tags" role="group" aria-label="Filter by status">
+      <ChipStrip v-if="inventory.statuses.length > 1" v-slot="{ item: key }" :items="inventory.statuses" label="Filter by status">
         <button
-          v-for="key in inventory.statuses"
-          :key="key"
           type="button"
           :class="['badge badge-lg', activeStatus === key ? 'badge-warning' : 'badge-outline text-gray-300']"
           :aria-pressed="activeStatus === key"
@@ -31,24 +29,20 @@
         >
           {{ statuses[key].emoji }} {{ statuses[key].label }}
         </button>
-      </div>
+      </ChipStrip>
       <button v-if="activeTag" type="button" class="badge badge-lg badge-success self-start" @click="activeTag = null">
-        ✕ {{ activeTag }}
+        ✕ {{ hashtag(activeTag) }}
       </button>
-      <div class="tag-strip" role="group" aria-label="Filter by tag">
-        <div v-for="(row, i) in tagRows" :key="i" class="tag-row">
-          <button
-            v-for="tag in row"
-            :key="tag"
-            type="button"
-            :class="['badge badge-lg', activeTag === tag ? 'badge-success' : 'badge-outline text-gray-300']"
-            :aria-pressed="activeTag === tag"
-            @click="activeTag = activeTag === tag ? null : tag"
-          >
-            {{ tag }}
-          </button>
-        </div>
-      </div>
+      <ChipStrip v-slot="{ item: tag }" :items="inventory.tags" label="Filter by tag">
+        <button
+          type="button"
+          :class="['badge badge-lg', activeTag === tag ? 'badge-success' : 'badge-outline text-gray-300']"
+          :aria-pressed="activeTag === tag"
+          @click="activeTag = activeTag === tag ? null : tag"
+        >
+          {{ hashtag(tag) }}
+        </button>
+      </ChipStrip>
     </div>
 
     <p v-if="!grouped.length" class="empty">No gear matches that filter.</p>
@@ -71,7 +65,7 @@
               <span v-if="item.status !== 'owned'" :class="['status', `status--${item.status}`]">
                 {{ statuses[item.status]?.emoji }} {{ statuses[item.status]?.label ?? item.status }}
               </span>
-              <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
+              <span v-for="tag in item.tags" :key="tag" class="tag">{{ hashtag(tag) }}</span>
             </div>
           </li>
         </ul>
@@ -85,6 +79,7 @@
 </template>
 
 <script setup>
+import { hashtag, searchText, tagSearchText } from '~/utils/chips.js'
 import { hasInventory, inventories, statuses } from '~/data/inventory.mjs'
 
 const route = useRoute()
@@ -104,36 +99,16 @@ const activeStatus = ref(null)
 const slugify = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 const showSectionHeadings = computed(() => inventory.value.sections.length > 1)
 
-// Split the alphabetical tags into three rows of roughly equal width (by characters),
-// keeping each row in order, so the strip scrolls sideways instead of growing tall
-const TAG_ROWS = 3
-const tagRows = computed(() => {
-  const tags = inventory.value.tags
-  const width = tag => tag.length + 4 // chip padding and gap, in characters
-  const target = tags.reduce((sum, tag) => sum + width(tag), 0) / TAG_ROWS
-  const rows = [[]]
-  let used = 0
-  for (const tag of tags) {
-    if (used >= target && rows.length < TAG_ROWS) {
-      rows.push([])
-      used = 0
-    }
-    rows[rows.length - 1].push(tag)
-    used += width(tag)
-  }
-  return rows
-})
-
 // section -> category -> items, in the list's section order
 const grouped = computed(() => {
-  const needle = search.value.trim().toLowerCase()
+  const needle = searchText(search.value).toLowerCase() // "#climbing" finds climbing
   const sections = new Map(inventory.value.sections.map(name => [name, new Map()]))
 
   for (const item of inventory.value.items) {
     if (activeTag.value && !item.tags.includes(activeTag.value)) continue
     if (activeStatus.value && item.status !== activeStatus.value) continue
     if (needle) {
-      const haystack = [item.name, item.brand, item.notes, item.section, item.category, ...item.tags].filter(Boolean).join(' ')
+      const haystack = [item.name, item.brand, item.notes, item.section, item.category, tagSearchText(item.tags)].filter(Boolean).join(' ')
       if (!haystack.toLowerCase().includes(needle)) continue
     }
     if (!sections.has(item.section)) sections.set(item.section, new Map())
@@ -164,37 +139,11 @@ const grouped = computed(() => {
   margin-bottom: 1.5rem;
 }
 
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
-
-// Long tag lists stay at three rows and scroll sideways instead of filling the screen
-.tag-strip {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  padding-bottom: 0.25rem;
-}
-
-.tag-row {
-  display: flex;
-  gap: 0.4rem;
-  width: max-content;
-}
-
 .empty {
   color: #ccc;
 }
 
 .sections {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
   margin-bottom: 1rem;
 }
 

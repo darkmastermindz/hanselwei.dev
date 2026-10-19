@@ -6,9 +6,10 @@
 //   featured  repos tagged "featured" (shown first when sorting by featured)
 //   hackathon repos tagged "hackathon"
 
+import { hashtag, searchText, tagSearchText } from './chips.js'
+
 export const REPO_NAME = /^[A-Za-z0-9._-]{1,100}$/
 export const FILTERS = ['all', 'active', 'wip', 'fork']
-export const TAG_LABELS = { featured: 'Featured', hackathon: 'Hackathon' }
 const CONFIG_TAGS = ['featured', 'hackathon']
 const SORTS = {
   updated: (a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')),
@@ -18,7 +19,8 @@ const SORTS = {
     Number(b.tags.includes('featured')) - Number(a.tags.includes('featured')) || SORTS.updated(a, b)
 }
 
-export const tagLabel = tag => (Object.hasOwn(TAG_LABELS, tag) ? TAG_LABELS[tag] : `#${tag}`)
+// Every tag shows as a hashtag, config ones included (#featured, #hackathon)
+export const tagLabel = hashtag
 
 // Validates the config and returns lowercased name sets; any problem should fail the build
 export const buildProjectConfig = (toml = {}) => {
@@ -62,9 +64,9 @@ export const tagsFor = (repo, config) => {
 
 // Plain text search over name, description, language and tags; no patterns
 export const matchesQuery = (repo, query) => {
-  const needle = String(query ?? '').trim().toLowerCase()
+  const needle = searchText(query).toLowerCase() // "#vue" finds vue
   if (!needle) return true
-  const haystack = [repo.name, repo.description, repo.language, ...(Array.isArray(repo.tags) ? repo.tags : [])]
+  const haystack = [repo.name, repo.description, repo.language, tagSearchText(repo.tags)]
     .filter(Boolean)
     .join(' ')
     .toLowerCase()

@@ -5,9 +5,9 @@ export const PULL_MAX = 96
 const RESISTANCE = 0.5
 const DECIDE_PX = 8 // movement before we decide whether it's a pull or a scroll/swipe
 
-// Places a pull must not start from: sideways-scrolling strips, the token (long press)
+// Places a pull must not start from: sideways-scrolling chip strips, the token (long press)
 // and form fields
-export const NO_PULL = '.tag-strip, .socials.is-lens, .token, input, textarea, select, [data-no-pull]'
+export const NO_PULL = '.chip-strip.is-scroll, .socials.is-lens, .token, input, textarea, select, [data-no-pull]'
 
 export const canStartPull = (scrollY, target) => scrollY <= 0 && !target?.closest?.(NO_PULL)
 
