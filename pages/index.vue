@@ -28,6 +28,16 @@
 </template>
 
 <script setup>
+import eventSettings from '~/data/coinBubble.generated.mjs'
+import { bubbleActive } from '~/utils/coinBubble.mjs'
+
+// During an event (config.toml [coin_bubble] home_title), the home page title names Hansel
+const eventTitle = ref(bubbleActive(eventSettings) ? eventSettings.homeTitle : null)
+onMounted(() => {
+  if (!bubbleActive(eventSettings)) eventTitle.value = null
+})
+useHead({ title: () => (eventTitle.value ? `${eventTitle.value} · hanselwei.dev` : 'hanselwei.dev') })
+
 const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useSpinStats()
 
 // Spinning the token (with real input) proves there's a human here, which

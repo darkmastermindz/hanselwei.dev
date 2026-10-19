@@ -67,3 +67,14 @@ test('hostile link text stays plain text in the module', async () => {
     assert.equal(globalThis.pwned, undefined)
   }
 })
+
+test('markup in the home title or footer code is refused', () => {
+  for (const payload of XSS_HTML) {
+    for (const key of ['home_title', 'footer_code']) {
+      const { config, problems } = buildCoinBubbleConfig({ coin_bubble: { [key]: payload } })
+      assert.equal(problems.length, 1, `${key}: ${payload}`)
+      assert.equal(config.homeTitle, null)
+      assert.equal(config.footerCode, null)
+    }
+  }
+})
