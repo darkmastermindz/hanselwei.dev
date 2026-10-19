@@ -188,15 +188,16 @@ const hobbies = [
 // XP: certifications and education, then work history (newest first). `readable` and
 // `highlight` are the plain-English text; the JSON view uses the fields only.
 const education = [
+  // The AMGA SPI certification is the course plus a separate exam: only the course is done
   {
-    category: 'Certification',
-    certification: 'AMGA Single Pitch Instructor',
+    category: 'Education',
+    program: 'AMGA Single Pitch Instructor (SPI) Course',
     passed: 'May 2026',
-    status: 'SPI exam pending',
+    status: 'Course passed; SPI exam not yet taken (certification needs both)',
     school: 'Pisgah Climbing School',
     location: 'Brevard, NC',
     date: 'Passed May 2026',
-    readable: 'Certification: AMGA Single Pitch Instructor from Pisgah Climbing School in Brevard, NC (SPI exam pending)'
+    readable: 'AMGA Single Pitch Instructor (SPI) Course with Pisgah Climbing School in Brevard, NC. The SPI certification also needs the separate SPI exam, which I haven\'t taken yet.'
   },
   {
     category: 'Certification',
