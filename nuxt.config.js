@@ -25,6 +25,8 @@ export default defineNuxtConfig({
       title: 'hanselwei.dev',
       meta: [
         { charset: 'utf-8' },
+        // All Things Open verification string, in the head of every page (not shown in search results)
+        { name: 'ato-verification', content: 'WKZBHNUJRETD' },
         {
           name: 'viewport',
           content: 'width=device-width, initial-scale=1, viewport-fit=cover'
