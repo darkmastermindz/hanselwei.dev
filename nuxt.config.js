@@ -39,8 +39,11 @@ export default defineNuxtConfig({
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-title', content: 'Hansel' },
         {
+          // An opaque status bar: the installed app starts below it. With "black-translucent" the
+          // page drew under it, and newer iOS blurs whatever sits in and just below that strip.
+          // iOS reads this when the app is added to the Home Screen, so re-add it to pick it up.
           name: 'apple-mobile-web-app-status-bar-style',
-          content: 'black-translucent'
+          content: 'black'
         }
       ],
       link: [

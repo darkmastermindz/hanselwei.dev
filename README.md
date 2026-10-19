@@ -143,7 +143,7 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 ## Install as an app (PWA)
 `public/manifest.webmanifest`, `public/sw.js` and the icons in `public/icons/` make the site installable:
 - **Android / Chrome:** menu → *Install app*
-- **iOS / Safari:** Share → *Add to Home Screen*
+- **iOS / Safari:** Share → *Add to Home Screen*. The installed app uses an opaque status bar (`apple-mobile-web-app-status-bar-style: black`) and starts below it. iOS reads that when the app is added, so remove and re-add the app after changing it. When it runs installed, the page gets `html.is-installed` (`utils/installed.js`) and the nav gets a little more room.
 
 ## License
 The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.
