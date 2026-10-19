@@ -62,7 +62,7 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## About card (home page)
-`components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English.
+`components/AboutCard.vue` holds the Skills, Hobbies and XP tabs. XP is a timeline by year: a slider from 2014 to now shows each year's education, work, volunteer, career-break and achievement entries, with a category icon for each. The data lives in the component's `education`, `experience` and `achievements` arrays. Hold the card (or alt-click on desktop) for plain English. In plain English, visitors whose browser prefers another language get a small link to read it in Google Translate (`utils/translate.js`); English readers don't see it.
 
 ## Bio (`/bio`)
 - `content/bio/bio.md`: hand-written markdown, with `title` and `description` in its front matter.
