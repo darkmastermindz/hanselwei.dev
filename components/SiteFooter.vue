@@ -1,7 +1,7 @@
 <template>
   <footer class="site-footer">
     <!-- During an event (config.toml [coin_bubble] footer_code, through its last day) -->
-    <p v-if="eventCode" class="site-footer__code">{{ eventCode }}</p>
+    <p v-if="eventCode" class="site-footer__code" aria-hidden="true">{{ eventCode }}</p>
     <p class="site-footer__line">Designed &amp; created with &lt;3 by Hansel Wei • ©️ 2026 hanselwei.dev</p>
     <p><NuxtLink to="/terms">Terms of Service</NuxtLink> • <NuxtLink to="/credits">Open source software &lt;3</NuxtLink></p>
   </footer>
@@ -41,11 +41,13 @@ onMounted(() => {
   }
 }
 
+/* On the page and in the HTML for search engines, but too small and faint to read */
 .site-footer__code {
   font-family: 'Nova Mono', monospace;
-  font-size: 0.5rem; /* very small, still real text for search engines */
-  letter-spacing: 0.15em;
-  color: #7cfc00;
+  font-size: 4px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  color: #3a3d42;
 }
 
 .site-footer a {
