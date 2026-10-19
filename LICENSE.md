@@ -1,9 +1,24 @@
-BSD 3-Clause License
+Modified BSD 3-Clause License
 
 Copyright (c) 2026, Hansel Wei
+All rights reserved.
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
+This license applies to the source code of the hanselwei.dev website (the
+"Software"). It grants no rights in the Personal Content defined below.
+
+"Personal Content" means material of a personal nature that appears on or is
+included with the website, whether stored in separate files or within the
+source code, including, without limitation: written content such as blog posts
+and biographical or "about" text; photographs, images and other likenesses of
+Hansel Wei; personal information, accounts and contact details; and personal
+lists and data such as gear inventories and hobby facts. In this repository,
+Personal Content includes, without limitation, the contents of the `content/`
+folder, `data/inventory.mjs`, `data/hobbyFacts.mjs` and
+`netlify/lib/bioPhoto.sealed.mjs`, and any copy, excerpt or derivative of them.
+
+Redistribution and use of the Software in source and binary forms, with or
+without modification, are permitted provided that the following conditions
+are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
    list of conditions and the following disclaimer.
@@ -15,6 +30,12 @@ modification, are permitted provided that the following conditions are met:
 3. Neither the name of the copyright holder nor the names of its
    contributors may be used to endorse or promote products derived from
    this software without specific prior written permission.
+
+4. Personal Content may not be reproduced, distributed, publicly displayed or
+   otherwise made available, in whole or in part, by itself or as part of the
+   Software or any redistribution or derivative of it, without specific prior
+   written permission from the copyright holder. Personal Content must be
+   removed from any redistribution of the Software.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

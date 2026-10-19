@@ -4,23 +4,29 @@
       <NuxtLink to="/" class="back">← Home</NuxtLink>
       <h1>Terms of Service</h1>
       <p>©️ 2026 hanselwei.dev</p>
-
-      <h2>Website content</h2>
       <p>
-        The writing, photographs, images and design of this website are © Hansel Wei, all rights reserved. They may
-        not be reproduced without written permission.
-      </p>
-      <p>
-        To ask for permission, email
-        <a href="mailto:hello+hansel@hanselwei.dev">hello+hansel@hanselwei.dev</a>.
-      </p>
-
-      <h2>Source code</h2>
-      <p>
-        The website's
+        This website's
         <a href="https://github.com/darkmastermindz/hanselwei.dev" target="_blank" rel="noopener">source code</a>
-        is licensed under the BSD 3-Clause License. Copyright (c) 2026, Hansel Wei. Redistribution and use in source
-        and binary forms, with or without modification, are permitted provided that the following conditions are met:
+        is licensed under a Modified BSD 3-Clause License. The fourth condition keeps the site's personal content,
+        such as its writing and photographs, from being reproduced or distributed.
+      </p>
+
+      <h2>Modified BSD 3-Clause License</h2>
+      <p>Copyright (c) 2026, Hansel Wei<br />All rights reserved.</p>
+      <p>
+        This license applies to the source code of the hanselwei.dev website (the "Software"). It grants no rights in
+        the Personal Content defined below.
+      </p>
+      <p>
+        "Personal Content" means material of a personal nature that appears on or is included with the website,
+        whether stored in separate files or within the source code, including, without limitation: written content
+        such as blog posts and biographical or "about" text; photographs, images and other likenesses of Hansel Wei;
+        personal information, accounts and contact details; and personal lists and data such as gear inventories and
+        hobby facts.
+      </p>
+      <p>
+        Redistribution and use of the Software in source and binary forms, with or without modification, are
+        permitted provided that the following conditions are met:
       </p>
       <ol>
         <li>
@@ -35,6 +41,12 @@
           Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
         </li>
+        <li>
+          Personal Content may not be reproduced, distributed, publicly displayed or otherwise made available, in
+          whole or in part, by itself or as part of the Software or any redistribution or derivative of it, without
+          specific prior written permission from the copyright holder. Personal Content must be removed from any
+          redistribution of the Software.
+        </li>
       </ol>
       <p class="terms__disclaimer">
         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
@@ -46,9 +58,15 @@
         OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
         DAMAGE.
       </p>
+
+      <h2>Permission</h2>
       <p>
-        The license covers the code only, not the website content above. Open-source software used by the site keeps
-        its own licenses; see <NuxtLink to="/credits">Open source software &lt;3</NuxtLink>.
+        To ask for permission, email
+        <a href="mailto:hello+hansel@hanselwei.dev">hello+hansel@hanselwei.dev</a>.
+      </p>
+      <p>
+        Open-source software used by the site keeps its own licenses; see
+        <NuxtLink to="/credits">Open source software &lt;3</NuxtLink>.
       </p>
     </article>
   </main>
@@ -61,7 +79,7 @@ useHead({
     {
       name: 'description',
       content:
-        'The content of hanselwei.dev may not be reproduced without written permission; its source code is licensed under the BSD 3-Clause License.'
+        'The source code of hanselwei.dev is licensed under a Modified BSD 3-Clause License; its personal content may not be reproduced or distributed without written permission.'
     }
   ]
 })

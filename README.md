@@ -133,4 +133,4 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 - **iOS / Safari:** Share → *Add to Home Screen*
 
 ## License
-The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The website's content (writing, photographs, images and design) is not covered by it: it's all rights reserved and may not be reproduced without written permission (see `/terms`).
+The source code is licensed under a [Modified BSD 3-Clause License](LICENSE.md): the standard three conditions plus a fourth. The fourth says the site's Personal Content may not be reproduced or distributed without written permission. That covers writing, photographs and other likenesses, personal information, and personal lists and data, including `content/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. Forks must remove it. The same text is on `/terms`.
