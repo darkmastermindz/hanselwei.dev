@@ -1,7 +1,7 @@
 <template>
   <footer class="site-footer">
     <p class="site-footer__line">Designed &amp; created with &lt;3 by Hansel Wei • ©️ 2026 hanselwei.dev</p>
-    <p><NuxtLink to="/terms">Terms of Service</NuxtLink></p>
+    <p><NuxtLink to="/terms">Terms of Service</NuxtLink> • <NuxtLink to="/credits">Open source software &lt;3</NuxtLink></p>
   </footer>
 </template>
 

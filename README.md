@@ -22,6 +22,7 @@ These run before `npm run dev`, `npm test` and the builds. The files they write 
 - `build:access`: the sign-in allow-list, from `.github/CODEOWNERS` and `config.toml` → `netlify/lib/access.mjs`.
 - `build:projects`: the Projects settings in `config.toml` → `data/projects.generated.mjs`.
 - `build:background`: the topographic background settings in `config.toml` → `data/background.generated.mjs`.
+- `build:credits`: the open-source credits page (`/credits`): version, license, copyright line and GitHub link of each package in `utils/credits.mjs` `CREDITED_PACKAGES`, read from `node_modules` → `data/credits.generated.json`. Add a package there when the site starts using it.
 - `sync:contributions`: the GitHub contribution calendar for the Projects page → `data/contributions.generated.json`.
 - `sync:readme`: the GitHub profile README for the Bio page → `content/bio/github-readme.generated.md`.
 - `sync:devto`: dev.to posts (see below). Runs before `npm run build` and `npm run generate`.
