@@ -4,6 +4,7 @@
     <AppNav />
     <PullToRefresh />
     <slot />
+    <SiteFooter />
   </div>
 </template>
 
@@ -121,6 +122,8 @@ html[data-input='gamepad'] :focus {
 }
 
 .app-shell {
+  display: flex;
+  flex-direction: column; /* the footer sits at the bottom of the screen on short pages */
   min-height: 100vh;
   min-height: 100dvh;
   /* Room for the home indicator when installed as an app */
