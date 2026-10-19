@@ -43,6 +43,7 @@ onMounted(() => {
 
 .site-footer__code {
   font-family: 'Nova Mono', monospace;
+  font-size: 0.5rem; /* very small, still real text for search engines */
   letter-spacing: 0.15em;
   color: #7cfc00;
 }
