@@ -7,16 +7,11 @@
       <p>
         This website's
         <a href="https://github.com/darkmastermindz/hanselwei.dev" target="_blank" rel="noopener">source code</a>
-        is licensed under a Modified BSD 3-Clause License. The fourth condition keeps the site's personal content,
-        such as its writing and photographs, from being reproduced or distributed.
+        is licensed under the BSD 3-Clause License. Its personal content is not: it may not be reproduced or
+        distributed without written permission.
       </p>
 
-      <h2>Modified BSD 3-Clause License</h2>
-      <p>Copyright (c) 2026, Hansel Wei<br />All rights reserved.</p>
-      <p>
-        This license applies to the source code of the hanselwei.dev website (the "Software"). It grants no rights in
-        the Personal Content defined below.
-      </p>
+      <h2>Personal content</h2>
       <p>
         "Personal Content" means material of a personal nature that appears on or is included with the website,
         whether stored in separate files or within the source code, including, without limitation: written content
@@ -25,8 +20,18 @@
         hobby facts.
       </p>
       <p>
-        Redistribution and use of the Software in source and binary forms, with or without modification, are
-        permitted provided that the following conditions are met:
+        Personal Content is © Hansel Wei, all rights reserved. It may not be reproduced, distributed, publicly
+        displayed or otherwise made available, in whole or in part, by itself or as part of any redistribution or
+        derivative of the website or its source code, without specific prior written permission from the copyright
+        holder. Personal Content must be removed from any redistribution of the source code. The BSD 3-Clause License
+        below does not apply to it.
+      </p>
+
+      <h2>Source code: BSD 3-Clause License</h2>
+      <p>Copyright (c) 2026, Hansel Wei</p>
+      <p>
+        Redistribution and use in source and binary forms, with or without modification, are permitted provided that
+        the following conditions are met:
       </p>
       <ol>
         <li>
@@ -41,12 +46,6 @@
           Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
           products derived from this software without specific prior written permission.
         </li>
-        <li>
-          Personal Content may not be reproduced, distributed, publicly displayed or otherwise made available, in
-          whole or in part, by itself or as part of the Software or any redistribution or derivative of it, without
-          specific prior written permission from the copyright holder. Personal Content must be removed from any
-          redistribution of the Software.
-        </li>
       </ol>
       <p class="terms__disclaimer">
         THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
@@ -58,6 +57,7 @@
         OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
         DAMAGE.
       </p>
+
 
       <h2>Permission</h2>
       <p>
@@ -79,7 +79,7 @@ useHead({
     {
       name: 'description',
       content:
-        'The source code of hanselwei.dev is licensed under a Modified BSD 3-Clause License; its personal content may not be reproduced or distributed without written permission.'
+        'The source code of hanselwei.dev is licensed under the BSD 3-Clause License; its personal content may not be reproduced or distributed without written permission.'
     }
   ]
 })
