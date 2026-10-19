@@ -1,5 +1,5 @@
 <template>
-  <section ref="cardEl" class="about-card" @keydown="onCardKey">
+  <section id="xp" ref="cardEl" class="about-card" @keydown="onCardKey">
     <div class="about-card__tabs" role="tablist" aria-label="About Hansel" @keydown="onTabsKey">
       <button
         v-for="tab in tabs"
@@ -148,6 +148,7 @@ import { safeUrl } from '~/utils/safeUrl.js'
 import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
 import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx, wheelDy } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
+import { opensXp } from '~/utils/aboutCard.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
 // (skills), hobbies and education JSON, switched with the toggle on top.
@@ -165,10 +166,15 @@ const tabs = computed(() => [
   { id: 'edu', label: '💚 XP' }
 ])
 
-// Prerender shows Skills; each visit then opens on Skills or Hobbies at random
+// Prerender shows Skills; each visit then opens on Skills or Hobbies at random, or on XP
+// when linked as /#xp (the Bio page links there)
 const view = ref('skills')
+const route = useRoute()
 onMounted(() => {
-  if (Math.random() < 0.5) view.value = 'hobbies'
+  if (opensXp(route.hash)) {
+    view.value = 'edu'
+    cardEl.value?.scrollIntoView({ block: 'start' })
+  } else if (Math.random() < 0.5) view.value = 'hobbies'
 })
 
 const skills = [
@@ -727,6 +733,7 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 .about-card {
   max-width: 40rem;
   margin: 1.75rem auto 2.25rem;
+  scroll-margin-top: 1rem; /* /#xp lands with a little room above the card */
   padding: 0.9rem 1.1rem 1.1rem;
   border-radius: 0.9rem;
   background: #23262a;
