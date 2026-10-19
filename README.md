@@ -133,4 +133,4 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 - **iOS / Safari:** Share → *Add to Home Screen*
 
 ## License
-The source code is licensed under the [BSD 3-Clause License](LICENSE). The website's content (writing, photographs, images and design) is not covered by it: it's all rights reserved and may not be reproduced without written permission (see `/terms`).
+The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The website's content (writing, photographs, images and design) is not covered by it: it's all rights reserved and may not be reproduced without written permission (see `/terms`).
