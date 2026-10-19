@@ -46,15 +46,15 @@ const links = [
   position: sticky;
   top: 0;
   z-index: 20;
-  /* Keep clear of the notch / status bar when installed as an app */
-  padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
-    max(env(safe-area-inset-left), 0.5rem);
+  /* Keep well clear of the notch / Dynamic Island and status bar when installed as an app */
+  padding: calc(env(safe-area-inset-top) + 0.75rem) max(env(safe-area-inset-right), 0.75rem) 0.75rem
+    max(env(safe-area-inset-left), 0.75rem);
 }
 
 .app-nav__links {
   display: flex;
   flex-wrap: wrap; /* wraps onto a second line on small screens, like before */
-  gap: 0.25rem;
+  gap: 0.5rem 0.25rem; /* a little more room between the two rows on phones */
 
   a {
     flex: 0 0 auto;
