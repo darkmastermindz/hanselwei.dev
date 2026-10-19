@@ -37,6 +37,89 @@ body {
   overscroll-behavior-y: contain;
 }
 
+/* Focus ring for keyboard and controller users only (plugins/navigation.client.js sets
+   data-input from what was used last); components with their own focus look keep it */
+html[data-input='keyboard'] :focus-visible,
+html[data-input='gamepad'] :focus {
+  outline: 3px solid #7cfc00;
+  outline-offset: 3px;
+}
+
+/* Keep focused controls clear of the screen edges and the nav when they scroll into view */
+:focus {
+  scroll-margin: 5rem 1rem;
+}
+
+/* Controller focus: a sparkling gradient border instead of the outline
+   (plugins/navigation.client.js places .focus-sparkle over the focused control) */
+html[data-input='gamepad'] :focus {
+  outline: none !important; /* over the components' own focus outlines too */
+}
+
+@property --sparkle-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.focus-sparkle {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  transition: left 0.12s ease, top 0.12s ease, width 0.12s ease, height 0.12s ease;
+}
+
+.focus-sparkle[hidden] {
+  display: none;
+}
+
+/* A turning gradient that shows only in a 3px ring: the content box is masked out */
+.focus-sparkle__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 3px;
+  background: conic-gradient(from var(--sparkle-angle), #c084fc, #7cfc00, #ffd700, #41b883, #00b8ff, #c084fc);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  filter: drop-shadow(0 0 6px rgba(124, 252, 0, 0.7));
+  animation: sparkle-spin 2.4s linear infinite;
+}
+
+/* Twinkling stars on the corners */
+.focus-sparkle__star {
+  position: absolute;
+  font-size: 0.8rem;
+  line-height: 1;
+  color: #ffd700;
+  text-shadow: 0 0 6px currentColor;
+  animation: sparkle-twinkle 1.1s ease-in-out infinite;
+}
+
+.focus-sparkle__star:nth-child(2) { top: -0.45rem; left: -0.35rem; }
+.focus-sparkle__star:nth-child(3) { top: -0.45rem; right: -0.35rem; color: #fff; animation-delay: 0.28s; }
+.focus-sparkle__star:nth-child(4) { bottom: -0.45rem; right: -0.35rem; color: #7cfc00; animation-delay: 0.55s; }
+.focus-sparkle__star:nth-child(5) { bottom: -0.45rem; left: -0.35rem; color: #c084fc; animation-delay: 0.83s; }
+
+@keyframes sparkle-spin {
+  to { --sparkle-angle: 360deg; }
+}
+
+@keyframes sparkle-twinkle {
+  0%, 100% { transform: scale(0.5) rotate(0); opacity: 0.35; }
+  50% { transform: scale(1.15) rotate(90deg); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus-sparkle,
+  .focus-sparkle__ring,
+  .focus-sparkle__star {
+    animation: none;
+    transition: none;
+  }
+}
+
 .app-shell {
   min-height: 100vh;
   min-height: 100dvh;

@@ -1,6 +1,6 @@
 <template>
-  <section ref="cardEl" class="about-card">
-    <div class="about-card__tabs" role="tablist" aria-label="About Hansel">
+  <section ref="cardEl" class="about-card" @keydown="onCardKey">
+    <div class="about-card__tabs" role="tablist" aria-label="About Hansel" @keydown="onTabsKey">
       <button
         v-for="tab in tabs"
         :id="`about-tab-${tab.id}`"
@@ -45,7 +45,7 @@
       aria-live="polite"
       :title="view === 'fact' ? 'tap to switch categories' : 'Tap to switch, press and hold for plain English'"
       @click="onTap"
-      @keydown.enter.space.exact.prevent="next"
+      @keydown.enter.space.exact.prevent="next()"
       @keydown.shift.enter.prevent="toggleReadable()"
       @pointerdown="startHold"
       @pointermove="onHoldMove"
@@ -146,7 +146,7 @@
 <script setup>
 import { safeUrl } from '~/utils/safeUrl.js'
 import { languageName, translateTarget, translateUrl } from '~/utils/translate.js'
-import { swipeIntent, swipeYears } from '~/utils/swipe.js'
+import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx, wheelDy } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
@@ -427,6 +427,42 @@ const onTrackKey = event => {
     setYear(xpYear.value + step)
   } else if (event.key === 'Home') setYear(yearMin)
   else if (event.key === 'End') setYear(yearMax)
+  // PageUp / PageDown (a controller's bumpers) step a year too
+  else if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+    setYear(xpYear.value + (event.key === 'PageDown' ? 1 : -1))
+  }
+}
+
+// The wheel on the XP view moves the years: a sideways wheel (trackpad swipe, tilt wheel,
+// Shift+wheel) or the up/down wheel (down = later). It applies while the pointer is over the
+// card, or while a keyboard or controller has focus in it; at the first or last year the page
+// scrolls on as usual (utils/swipe.js)
+let wheelTravel = 0
+let wheelTimer = null
+const onWheel = event => {
+  if (view.value !== 'edu' || event.defaultPrevented || event.ctrlKey) return
+  const card = cardEl.value
+  const input = document.documentElement.dataset.input
+  const focusedHere = (input === 'keyboard' || input === 'gamepad') && card?.contains(document.activeElement)
+  if (!card?.contains(event.target) && !focusedHere) return
+  const travel = wheelDx(event) || wheelDy(event)
+  if (!travel) return
+  // Already at the end it's heading for: let the page scroll
+  if ((travel > 0 && xpYear.value >= yearMax) || (travel < 0 && xpYear.value <= yearMin)) {
+    wheelTravel = 0
+    return
+  }
+  event.preventDefault()
+  clearTimeout(wheelTimer)
+  wheelTimer = setTimeout(() => (wheelTravel = 0), 250)
+  wheelTravel += travel
+  const steps = Math.trunc(wheelTravel / WHEEL_STEP_PX)
+  if (!steps) return
+  wheelTravel -= steps * WHEEL_STEP_PX
+  setYear(xpYear.value + steps)
+  lockSocials() // the entries change height under the pointer
+  releaseSocials()
 }
 
 // Press and hold (or Shift+Enter) flips the JSON views into plain English with a
@@ -619,6 +655,8 @@ onMounted(() => {
     { threshold: [0, 0.25] }
   )
   if (cardEl.value) observer.observe(cardEl.value)
+  // On the document (capture), so it runs before the wheel's focus moves elsewhere on the page
+  document.addEventListener('wheel', onWheel, { capture: true, passive: false })
 })
 
 onBeforeUnmount(() => {
@@ -631,12 +669,35 @@ onBeforeUnmount(() => {
   document.removeEventListener('visibilitychange', onVisibility)
   cardEl.value?.removeEventListener('focusout', onFocusOut)
   observer?.disconnect()
+  document.removeEventListener('wheel', onWheel, { capture: true })
+  clearTimeout(wheelTimer)
 })
 
 // Tapping the card cycles through whatever views are available
-const next = () => {
+const next = (step = 1) => {
   const ids = tabs.value.map(tab => tab.id)
-  view.value = ids[(ids.indexOf(view.value) + 1) % ids.length]
+  view.value = ids[(ids.indexOf(view.value) + step + ids.length) % ids.length]
+}
+
+// Keyboard and controller (plugins/navigation.client.js): Left/Right move between the tabs,
+// PageUp/PageDown (the bumpers) switch tabs from anywhere on the card, and Escape takes plain
+// English back to JSON before it goes back a page
+const onTabsKey = event => {
+  const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key]
+  if (!step) return
+  event.preventDefault()
+  next(step)
+  nextTick(() => document.getElementById(`about-tab-${view.value}`)?.focus())
+}
+const onCardKey = event => {
+  if (event.defaultPrevented) return
+  if (event.key === 'PageUp' || event.key === 'PageDown') {
+    event.preventDefault()
+    next(event.key === 'PageDown' ? 1 : -1)
+  } else if (event.key === 'Escape' && readable.value) {
+    event.preventDefault()
+    revert()
+  }
 }
 
 // A hold (or a hold let go early) also ends in a click; only a quick tap switches views.
