@@ -197,7 +197,7 @@ const education = [
     school: 'Pisgah Climbing School',
     location: 'Brevard, NC',
     date: 'Passed May 2026',
-    readable: 'AMGA Single Pitch Instructor (SPI) Course with Pisgah Climbing School in Brevard, NC. The SPI certification also needs the separate SPI exam, which I haven\'t taken yet'
+    readable: 'AMGA Single Pitch Instructor (SPI) Course with Pisgah Climbing School in Brevard, NC. The SPI certification also needs the separate SPI exam, which I haven\'t taken yet.'
   },
   {
     category: 'Certification',
