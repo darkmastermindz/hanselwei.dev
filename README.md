@@ -131,3 +131,6 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 `public/manifest.webmanifest`, `public/sw.js` and the icons in `public/icons/` make the site installable:
 - **Android / Chrome:** menu → *Install app*
 - **iOS / Safari:** Share → *Add to Home Screen*
+
+## License
+The source code is licensed under the [BSD 3-Clause License](LICENSE). The website's content (writing, photographs, images and design) is not covered by it: it's all rights reserved and may not be reproduced without written permission (see `/terms`).
