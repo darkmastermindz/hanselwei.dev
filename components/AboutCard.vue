@@ -236,7 +236,7 @@ const education = [
 ]
 
 const experience = [
-  { category: 'Work', role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC and Kubernetes platform solutions; lead projects and act as an escalation point for less experienced staff' },
+  { category: 'Work', role: 'Senior Software Engineer', company: 'Wells Fargo', start: 'Sep 2025', end: 'Present', location: 'Charlotte, NC', highlight: 'Engineer, develop and maintain GitHub Actions, ARC, Workflows and Kubernetes enterprise-wide platform solutions; lead projects and act as an escalation point for less experienced staff' },
   { category: 'Work', role: 'Software Engineer 4', company: 'Apex Systems (Wells Fargo)', start: 'Jun 2025', end: 'Sep 2025', location: 'Hybrid', highlight: 'Engineered language-specific GitHub Actions support across Python, Ruby, C#, Node.js and Java; built GitHub-hosted runners on Azure VNet and customized self-hosted runners for TKGI and OpenShift' },
   { category: 'Volunteer', role: 'Voluntary work', company: 'Project H.E.R.O., Jubilee House Community', start: 'Jan 2025', end: 'May 2025', location: 'Remote', highlight: 'Founding project manager and lead maintainer of an open-source naloxone vending machine project' },
   { category: 'Work', role: 'Senior Software Engineer', company: 'Brooksource (Ally Financial)', start: 'Jun 2024', end: 'Dec 2024', location: 'Charlotte, NC, hybrid', highlight: 'GenAI and RAG for audit, compliance and risk; migrated a React app to Vite (95% faster build and runtime); AWS and Terraform infrastructure; Technology Achievement Award for a 25% cut in audit processing time' },
