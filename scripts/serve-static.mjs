@@ -27,10 +27,12 @@ const TYPES = {
   '.txt': 'text/plain; charset=utf-8'
 }
 
-// The site's CSP, minus upgrade-insecure-requests (this server is plain http on localhost)
-const csp = await readFile(join(root, '_headers'), 'utf8')
-  .then(text => /Content-Security-Policy(?:-Report-Only)?:\s*(.+)/.exec(text)?.[1].replace(/;\s*upgrade-insecure-requests/, '') ?? null)
-  .catch(() => null)
+// The site's CSP, minus upgrade-insecure-requests (this server is plain http on localhost). Read
+// for every page, so a rebuilt site is served with its own script hashes, not a stale policy.
+const readCsp = () =>
+  readFile(join(root, '_headers'), 'utf8')
+    .then(text => /Content-Security-Policy(?:-Report-Only)?:\s*(.+)/.exec(text)?.[1].replace(/;\s*upgrade-insecure-requests/, '') ?? null)
+    .catch(() => null)
 
 const isFile = path => stat(path).then(s => s.isFile(), () => false)
 
@@ -51,7 +53,8 @@ createServer(async (req, res) => {
     const status = file ? 200 : 404
     const body = await readFile(file ?? join(root, '404.html'))
     const type = TYPES[extname(file ?? '.html')] ?? 'application/octet-stream'
-    res.writeHead(status, { 'Content-Type': type, ...(csp && type.startsWith('text/html') && { 'Content-Security-Policy': csp }) })
+    const csp = type.startsWith('text/html') ? await readCsp() : null
+    res.writeHead(status, { 'Content-Type': type, ...(csp && { 'Content-Security-Policy': csp }) })
     res.end(body)
   } catch {
     res.writeHead(500).end()

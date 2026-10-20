@@ -25,14 +25,25 @@ test.beforeEach(async ({ page }) => {
       buttons,
       axes: performance.now() - t0 < 1200 ? [0, 0, 0, 0] : [0, 0, 0, -1]
     })
-    navigator.getGamepads = () => [phantom()]
+    window.__gamepadReads = 0
+    navigator.getGamepads = () => {
+      window.__gamepadReads++
+      return [phantom()]
+    }
   })
 })
 
-// The page loaded and the app running, with the phantom pad's stick already stuck at -1
+// The page loaded and the app running, with the phantom pad's stick already stuck at -1. The app
+// must really be running: a page whose scripts didn't run (a blocked script, a crash) scrolls fine
+// and would pass every test without testing anything.
 const open = async (page, path) => {
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
   await page.goto(path, { waitUntil: 'networkidle' })
   await page.waitForTimeout(1500)
+  expect(errors, 'no script errors').toEqual([])
+  expect(await page.evaluate(() => Boolean(document.querySelector('#__nuxt')?.__vue_app__)), 'the app is running').toBe(true)
+  expect(await page.evaluate(() => window.__gamepadReads), 'the site reads the controller').toBeGreaterThan(0)
 }
 
 // A one-finger swipe from (x, y) by dy pixels (negative = finger moves up = page scrolls down)
@@ -58,11 +69,13 @@ for (const path of PAGES) {
     await open(page, path)
     const { width, height } = viewport(page)
     const distance = Math.round(height * 0.4)
-    test.skip((await room(page)) < 40, 'fits on this screen: nothing to scroll')
+    const space = await room(page)
+    test.skip(space < 40, 'fits on this screen: nothing to scroll')
 
     await swipe(page, width / 2, height * 0.7, -distance)
     const down = await scrollY(page)
-    expect(down, 'a swipe up scrolls the page down').toBeGreaterThan(distance / 3)
+    // A third of the swipe at least, or to the bottom when the page is only a little taller
+    expect(down, 'a swipe up scrolls the page down').toBeGreaterThanOrEqual(Math.min(distance / 3, space - 2))
     await page.waitForTimeout(1000) // a stuck controller would pull it back by now
     expect(await scrollY(page), 'the page stays where the finger left it').toBeGreaterThanOrEqual(down)
 
@@ -91,19 +104,27 @@ for (const [what, selector] of STARTS) {
   test(`a swipe starting on ${what} scrolls the home page`, async ({ page }) => {
     await open(page, '/')
     const { height } = viewport(page)
-    test.skip((await room(page)) < 40, 'fits on this screen: nothing to scroll')
+    const space = await room(page)
+    test.skip(space < 40, 'fits on this screen: nothing to scroll')
+    // Part-way down first, so the page can go either way (the menu stays put: it's sticky)
+    await page.evaluate(y => window.scrollTo(0, y), Math.round(space / 2))
     const target = page.locator(selector).first()
     await target.evaluate(el => el.scrollIntoView({ block: 'center' }))
     await page.waitForTimeout(300)
     const box = await target.boundingBox()
     const before = await scrollY(page)
-    // From the middle of what's visible of it, up the screen (or down, when already at the bottom)
-    const top = Math.max(box.y, 0)
-    const y = Math.round((top + Math.min(box.y + box.height, height)) / 2)
-    const up = before < (await room(page)) - 20
-    await swipe(page, box.x + box.width / 2, y, up ? -Math.min(y - 10, height * 0.4) : Math.min(height - y - 10, height * 0.4))
+
+    // From the middle of what's visible of it, in whichever direction both the finger (on the
+    // screen) and the page (in its scroll range) have room to move
+    const y = Math.round((Math.max(box.y, 0) + Math.min(box.y + box.height, height)) / 2)
+    const fingerUp = before < space - 5 ? y - 10 : 0 // finger moves up = page scrolls down
+    const fingerDown = before > 5 ? height - y - 10 : 0
+    const reach = Math.min(Math.max(fingerUp, fingerDown), height * 0.4)
+    test.skip(reach < 60, `no room to swipe from ${what} on this screen`)
+    const scrollsDown = fingerUp >= fingerDown
+    await swipe(page, box.x + box.width / 2, y, scrollsDown ? -reach : reach)
     const after = await scrollY(page)
-    if (up) expect(after, `scrolled down from ${what}`).toBeGreaterThan(before)
+    if (scrollsDown) expect(after, `scrolled down from ${what}`).toBeGreaterThan(before)
     else expect(after, `scrolled up from ${what}`).toBeLessThan(before)
   })
 }
