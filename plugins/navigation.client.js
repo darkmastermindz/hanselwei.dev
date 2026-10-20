@@ -10,7 +10,7 @@
 // - A controller's focus gets a sparkling border (one overlay that follows the focus).
 // The controller sends the same keys to the focused control, so components only handle keys.
 import { FOCUSABLE, pickNext } from '~/utils/spatialNav.js'
-import { buttonsDown, pressesFor, stickScroll } from '~/utils/gamepad.js'
+import { buttonsDown, isController, padActivity, pressesFor, stickScroll } from '~/utils/gamepad.js'
 import { wheelDy } from '~/utils/swipe.js'
 
 const WHEEL_FOCUS_PX = 80 // wheel travel per focus step
@@ -202,7 +202,18 @@ export default defineNuxtPlugin(() => {
 
   let state = new Map()
   let frame = 0
-  const pads = () => [...(navigator.getGamepads?.() ?? [])].filter(Boolean)
+  const pads = () => [...(navigator.getGamepads?.() ?? [])].filter(isController)
+  // Each pad's first axes reading, and the pads someone has used (see padActivity)
+  const rests = new Map()
+  const used = new Set()
+  const inUse = pad => {
+    const key = `${pad.index}:${pad.id}`
+    if (used.has(key)) return true
+    if (!rests.has(key)) rests.set(key, [...(pad.axes ?? [])])
+    if (!padActivity(pad, rests.get(key))) return false
+    used.add(key)
+    return true
+  }
   const poll = now => {
     frame = 0
     const list = pads()
@@ -213,6 +224,7 @@ export default defineNuxtPlugin(() => {
     const held = new Set()
     const scroll = { x: 0, y: 0 }
     for (const pad of list) {
+      if (!inUse(pad)) continue
       for (const intent of buttonsDown(pad)) held.add(intent)
       const { x, y } = stickScroll(pad)
       scroll.x += x
@@ -227,7 +239,7 @@ export default defineNuxtPlugin(() => {
     followFocus() // controls can move (the About card changes size): keep the sparkle on them
     frame = requestAnimationFrame(poll)
   }
-  // Poll only while a controller is connected and the tab is visible
+  // Poll only while a (standard-mapping) controller is connected and the tab is visible
   const start = () => {
     if (!frame && !document.hidden && pads().length) frame = requestAnimationFrame(poll)
   }
