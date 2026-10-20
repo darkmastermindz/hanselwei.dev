@@ -22,7 +22,8 @@ featured = []
 hackathon = ["HackNC2019"]
 
 [background]
-# The faint topographic lines behind every page (purple-to-green, drawing in as visitors stay).
+# The faint topographic lines behind every page (purple-to-green, or the season's colours from
+# [seasons] below, drawing in as visitors stay).
 # Leave a setting out to use its default. The build fails on a value out of range.
 # More contours or smaller features mean more drawing data on big screens (about 0.3 MB at
 # these values on a 2560px-wide screen, up to about 1.6 MB at 60 contours and 80px features).
@@ -51,3 +52,350 @@ qr = "https://hanselwei.dev"  # where the QR on the coin's tails side points (ht
 # Also during the event: the home page title, and a line at the top of the footer on every page
 home_title = "Hansel Wei, Senior Software Engineer"  # up to 80 characters
 footer_code = "WKZBHNUJRETD"  # up to 40 characters
+
+[seasons]
+# Seasonal themes on every page: a few themed emoji drifting over the background, and the
+# topographic lines in the theme's two colours. Picked in the visitor's browser from today's
+# date (Eastern time), so the themes change on their own with no redeploy. Hidden for visitors
+# who prefer reduced motion or are saving data. `enabled = false` turns it all off.
+enabled = true
+particles = 12  # how many emoji at once (0–40; phones show at most 8)
+
+# A theme for every week of the year, in order from Jan 1. Each runs from its `from` day
+# (month-day) until the next one starts. emoji: up to 8; colors: the topographic lines'
+# gradient; motion: "fall" (drift down) or "rise" (float up).
+
+[[seasons.week]]
+from = "01-01"
+name = "New Year"
+emoji = ["🎆", "🥂", "🎉", "✨"]
+colors = ["#facc15", "#a855f7"]
+motion = "rise"
+
+[[seasons.week]]
+from = "01-08"
+name = "Snow days"
+emoji = ["❄️", "🌨️", "⛄"]
+colors = ["#93c5fd", "#e0f2fe"]
+
+[[seasons.week]]
+from = "01-15"
+name = "Dream big (MLK Day)"
+emoji = ["🕊️", "💜", "✨"]
+colors = ["#a78bfa", "#38bdf8"]
+motion = "rise"
+
+[[seasons.week]]
+from = "01-22"
+name = "Lunar New Year"
+emoji = ["🧧", "🏮", "🐉", "🎆"]
+colors = ["#ef4444", "#facc15"]
+
+[[seasons.week]]
+from = "01-29"
+name = "Cozy winter"
+emoji = ["☕", "🧣", "❄️"]
+colors = ["#d6a77a", "#93c5fd"]
+
+[[seasons.week]]
+from = "02-05"
+name = "Big game"
+emoji = ["🏈", "🏟️", "🎉"]
+colors = ["#16a34a", "#f59e0b"]
+
+[[seasons.week]]
+from = "02-12"
+name = "Valentine's"
+emoji = ["💘", "💝", "🌹", "💌"]
+colors = ["#f43f5e", "#f9a8d4"]
+motion = "rise"
+
+[[seasons.week]]
+from = "02-19"
+name = "Winter thaw"
+emoji = ["💧", "🌱", "❄️"]
+colors = ["#7dd3fc", "#86efac"]
+
+[[seasons.week]]
+from = "02-26"
+name = "Leap into March"
+emoji = ["🐸", "🌱", "🍃"]
+colors = ["#22c55e", "#a3e635"]
+
+[[seasons.week]]
+from = "03-05"
+name = "Kite winds"
+emoji = ["🪁", "🌬️", "🍃"]
+colors = ["#38bdf8", "#facc15"]
+motion = "rise"
+
+[[seasons.week]]
+from = "03-12"
+name = "Pi Day and St Patrick's"
+emoji = ["🥧", "☘️", "🍀", "🌈"]
+colors = ["#22c55e", "#facc15"]
+
+[[seasons.week]]
+from = "03-19"
+name = "Spring equinox"
+emoji = ["🌷", "🌸", "🐣"]
+colors = ["#f9a8d4", "#86efac"]
+
+[[seasons.week]]
+from = "03-26"
+name = "Bracket season"
+emoji = ["🏀", "🏆"]
+colors = ["#f97316", "#3b82f6"]
+
+[[seasons.week]]
+from = "04-02"
+name = "April showers"
+emoji = ["☔", "🌧️", "🐸"]
+colors = ["#60a5fa", "#a3e635"]
+
+[[seasons.week]]
+from = "04-09"
+name = "Cherry blossoms"
+emoji = ["🌸", "🌺", "🦋"]
+colors = ["#f9a8d4", "#c084fc"]
+
+[[seasons.week]]
+from = "04-16"
+name = "Earth Day"
+emoji = ["🌍", "🌱", "♻️", "🌳"]
+colors = ["#22c55e", "#0ea5e9"]
+motion = "rise"
+
+[[seasons.week]]
+from = "04-23"
+name = "Spring bunnies"
+emoji = ["🐰", "🥚", "🐣", "🌷"]
+colors = ["#fde68a", "#c4b5fd"]
+
+[[seasons.week]]
+from = "04-30"
+name = "May the 4th"
+emoji = ["⭐", "🚀", "🌌", "🪐"]
+colors = ["#facc15", "#60a5fa"]
+motion = "rise"
+
+[[seasons.week]]
+from = "05-07"
+name = "Mother's Day"
+emoji = ["💐", "🌷", "💖"]
+colors = ["#f472b6", "#fda4af"]
+
+[[seasons.week]]
+from = "05-14"
+name = "Bees and blooms"
+emoji = ["🐝", "🌼", "🌻"]
+colors = ["#facc15", "#84cc16"]
+motion = "rise"
+
+[[seasons.week]]
+from = "05-21"
+name = "Cookout"
+emoji = ["🌭", "🍔", "🍉"]
+colors = ["#ef4444", "#f59e0b"]
+
+[[seasons.week]]
+from = "05-28"
+name = "Pride begins"
+emoji = ["🏳️‍🌈", "🌈", "✨"]
+colors = ["#ec4899", "#3b82f6"]
+motion = "rise"
+
+[[seasons.week]]
+from = "06-04"
+name = "Pride"
+emoji = ["🏳️‍🌈", "💖", "🌈", "✨"]
+colors = ["#f43f5e", "#8b5cf6"]
+motion = "rise"
+
+[[seasons.week]]
+from = "06-11"
+name = "Road trip"
+emoji = ["🚗", "🗺️", "☀️"]
+colors = ["#f59e0b", "#0ea5e9"]
+
+[[seasons.week]]
+from = "06-18"
+name = "Summer solstice"
+emoji = ["☀️", "🌻", "😎"]
+colors = ["#facc15", "#fb923c"]
+
+[[seasons.week]]
+from = "06-25"
+name = "Beach days"
+emoji = ["🏖️", "🌊", "🐚", "🦀"]
+colors = ["#38bdf8", "#fde68a"]
+
+[[seasons.week]]
+from = "07-02"
+name = "Fourth of July"
+emoji = ["🎆", "🎇", "🇺🇸", "⭐"]
+colors = ["#ef4444", "#3b82f6"]
+motion = "rise"
+
+[[seasons.week]]
+from = "07-09"
+name = "Camping"
+emoji = ["⛺", "🔥", "🌲", "🌙"]
+colors = ["#16a34a", "#f97316"]
+motion = "rise"
+
+[[seasons.week]]
+from = "07-16"
+name = "Ice cream"
+emoji = ["🍦", "🍉", "🍧"]
+colors = ["#f9a8d4", "#86efac"]
+
+[[seasons.week]]
+from = "07-23"
+name = "Paddle season"
+emoji = ["🛶", "🌊", "🐢"]
+colors = ["#0ea5e9", "#14b8a6"]
+
+[[seasons.week]]
+from = "07-30"
+name = "Trail time"
+emoji = ["⛰️", "🥾", "🌲", "🦌"]
+colors = ["#65a30d", "#a16207"]
+
+[[seasons.week]]
+from = "08-06"
+name = "Perseid meteors"
+emoji = ["🌠", "✨", "🔭"]
+colors = ["#818cf8", "#fde047"]
+
+[[seasons.week]]
+from = "08-13"
+name = "Shark Week"
+emoji = ["🦈", "🌊", "🐟"]
+colors = ["#0284c7", "#64748b"]
+
+[[seasons.week]]
+from = "08-20"
+name = "Back to school"
+emoji = ["📚", "✏️", "🎒", "🍎"]
+colors = ["#ef4444", "#facc15"]
+
+[[seasons.week]]
+from = "08-27"
+name = "Late summer"
+emoji = ["🌻", "🐝", "🍑"]
+colors = ["#f59e0b", "#84cc16"]
+motion = "rise"
+
+[[seasons.week]]
+from = "09-03"
+name = "Labor Day"
+emoji = ["🛠️", "🍔", "🎉"]
+colors = ["#3b82f6", "#ef4444"]
+
+[[seasons.week]]
+from = "09-10"
+name = "Programmers' Day"
+emoji = ["💻", "⌨️", "🐛", "☕"]
+colors = ["#7cfc00", "#22d3ee"]
+
+[[seasons.week]]
+from = "09-17"
+name = "Talk Like a Pirate"
+emoji = ["🏴‍☠️", "🦜", "⚓", "💰"]
+colors = ["#a16207", "#0ea5e9"]
+
+[[seasons.week]]
+from = "09-24"
+name = "First days of fall"
+emoji = ["🍂", "🍁", "🍎"]
+colors = ["#f97316", "#b45309"]
+
+[[seasons.week]]
+from = "10-01"
+name = "Hacktoberfest"
+emoji = ["💻", "🎃", "🌱", "🐙"]
+colors = ["#a855f7", "#7cfc00"]
+
+[[seasons.week]]
+from = "10-08"
+name = "Pumpkin patch"
+emoji = ["🎃", "🍂", "🌽"]
+colors = ["#f97316", "#facc15"]
+
+[[seasons.week]]
+from = "10-15"
+name = "Spooky season"
+emoji = ["👻", "🦇", "🕸️", "🎃"]
+colors = ["#f97316", "#8b5cf6"]
+motion = "rise"
+
+[[seasons.week]]
+from = "10-22"
+name = "Spookier"
+emoji = ["🦇", "🕷️", "🕸️", "💀"]
+colors = ["#7c3aed", "#f97316"]
+
+[[seasons.week]]
+from = "10-29"
+name = "Halloween and Día de Muertos"
+emoji = ["🎃", "👻", "🦇", "🍬", "💀"]
+colors = ["#f97316", "#a855f7"]
+motion = "rise"
+
+[[seasons.week]]
+from = "11-05"
+name = "Falling leaves"
+emoji = ["🍁", "🍂", "🍃"]
+colors = ["#ea580c", "#ca8a04"]
+
+[[seasons.week]]
+from = "11-12"
+name = "Sweater weather"
+emoji = ["🧣", "☕", "🍂"]
+colors = ["#b45309", "#fb923c"]
+
+[[seasons.week]]
+from = "11-19"
+name = "Harvest"
+emoji = ["🦃", "🥧", "🌽", "🍂"]
+colors = ["#d97706", "#92400e"]
+
+[[seasons.week]]
+from = "11-26"
+name = "Thanksgiving"
+emoji = ["🦃", "🥧", "🍁"]
+colors = ["#ea580c", "#a16207"]
+
+[[seasons.week]]
+from = "12-03"
+name = "First snow"
+emoji = ["❄️", "⛄", "🌨️"]
+colors = ["#bae6fd", "#e0e7ff"]
+
+[[seasons.week]]
+from = "12-10"
+name = "Holiday lights"
+emoji = ["🎄", "🕎", "✨", "🎁"]
+colors = ["#22c55e", "#ef4444"]
+
+[[seasons.week]]
+from = "12-17"
+name = "Holidays"
+emoji = ["🎄", "🎁", "⛄", "🍪"]
+colors = ["#16a34a", "#dc2626"]
+
+[[seasons.week]]
+from = "12-24"
+name = "Holidays and New Year's Eve"
+emoji = ["🎄", "🎁", "🎉", "✨"]
+colors = ["#facc15", "#ef4444"]
+
+# Events take over from the weekly theme from `from` through `to` (dates, Eastern time).
+[[seasons.event]]
+name = "All Things Open"
+from = 2026-10-19
+to = 2026-10-21  # All Things Open 2026, Raleigh (October 19–20), plus a day of cooldown
+emoji = ["💻", "🐧", "🌰", "🎤", "⭐", "🔓"]  # 🌰 Raleigh is the City of Oaks
+colors = ["#f97316", "#22d3ee"]
+motion = "rise"

@@ -22,6 +22,7 @@ These run before `npm run dev`, `npm test` and the builds. The files they write 
 - `build:access`: the sign-in allow-list, from `.github/CODEOWNERS` and `config.toml` → `netlify/lib/access.mjs`.
 - `build:projects`: the Projects settings in `config.toml` → `data/projects.generated.mjs`.
 - `build:background`: the topographic background settings in `config.toml` → `data/background.generated.mjs`.
+- `build:seasons`: the seasonal themes in `config.toml` → `data/seasons.generated.mjs`.
 - `build:credits`: the open-source credits page (`/credits`) → `data/credits.generated.json`. It credits every package in `package.json` (plus the libraries bundled with Nuxt and its Tailwind module, `INCLUDED` in `utils/credits.mjs`) at the version in `package-lock.json`, with the license, copyright line and GitHub link from `node_modules`. The page then refreshes from the `/api/credits` Netlify function, which reads the project's `package.json` and `package-lock.json` from GitHub (`main`, so merged dependency changes show up without a deploy; it falls back to the deployed copies) and each package's details from the npm registry and jsDelivr (cached by Netlify's CDN for a day). Nothing to update by hand when dependencies change.
 - `sync:contributions`: the GitHub contribution calendar for the Projects page → `data/contributions.generated.json`.
 - `sync:readme`: the GitHub profile README for the Bio page → `content/bio/github-readme.generated.md`.
@@ -51,7 +52,7 @@ Non-fork repos show automatically. In `config.toml`, under `[projects]`:
 - `featured` and `hackathon`: tags for repos that are already shown.
 
 ## Topographic background
-Faint purple-to-green contour lines sit behind every page and draw in as visitors stay. They're built in the browser at the screen's size, in a Web Worker (`workers/topo.worker.mjs`, `utils/topo.mjs`). Tune them in `config.toml` under `[background]`; the build fails on a value out of range:
+Faint purple-to-green contour lines (in the season's colours while a seasonal theme is on, see below) sit behind every page and draw in as visitors stay. They're built in the browser at the screen's size, in a Web Worker (`workers/topo.worker.mjs`, `utils/topo.mjs`). Tune them in `config.toml` under `[background]`; the build fails on a value out of range:
 - `enabled`: `true` or `false`.
 - `data_saver`: what to do when the browser asks to save data. That's detected automatically: Data Saver or Lite mode (`navigator.connection.saveData`), the `prefers-reduced-data` media query, or a 2G or slower connection.
   - `"sparse"` (the default): a lighter pattern with half the contours, larger hills, no trails and a coarser grid, about a quarter of the size.
@@ -62,6 +63,16 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 - `index_every` (0–20): every Nth line is heavier. `0` turns them off.
 - `trails` (0–6): dashed trails that fade in at the end.
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
+
+## Seasonal themes
+Every week of the year has a theme: a few themed emoji drift down (or float up) over the background on every page, and the topographic lines take the theme's two colours. October is spooky (Hacktoberfest, pumpkins, bats, Halloween), December has the winter holidays, and so on. Dated events take over while they run, like All Things Open in Raleigh with laptops, Linux penguins and Raleigh's acorns.
+- The themes live in `config.toml` under `[seasons]`, checked by `utils/seasons.mjs`; the build fails on a bad value.
+  - `enabled`: `true` or `false`.
+  - `particles` (0–40): how many emoji at once. Phones show at most 8.
+  - `[[seasons.week]]`: one per week, in order from `from = "01-01"`. Each runs until the next one starts. Each has a `name`, up to 8 `emoji`, two `colors` (`"#rrggbb"`) and a `motion` (`"fall"`, the default, or `"rise"`).
+  - `[[seasons.event]]`: the same, with `from` and `to` dates (like `2026-10-19`). Events take over from the weekly theme for those days.
+- The theme is picked in the visitor's browser from today's date (Eastern time), so it changes on its own with no redeploy (`composables/useSeason.js`).
+- The emoji are CSS animations only (`components/SeasonalParticles.vue`), behind the page content and never in the way of a tap. They're hidden for visitors who prefer reduced motion or are saving data; the colours still change.
 
 ## Coin face (home page)
 The coin opens on the Bitmoji. Each time a flip lands heads up, the face shows the next photo, alternating between the GitHub avatar and the hanselwei.link Gravatar (`utils/coinFaces.mjs`). The pull-down reset brings the Bitmoji back. A photo that can't load is skipped, so the coin never goes blank.

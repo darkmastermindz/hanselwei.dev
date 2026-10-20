@@ -1,6 +1,7 @@
 <template>
   <div class="app-shell">
     <TopoBackground />
+    <SeasonalParticles />
     <AppNav />
     <PullToRefresh />
     <slot />
