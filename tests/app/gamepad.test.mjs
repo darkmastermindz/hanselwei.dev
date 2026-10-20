@@ -2,11 +2,12 @@
 // A to activate, B to go back, bumpers for tabs / years, right stick to scroll.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buttonsDown, pressesFor, REPEAT_DELAY_MS, REPEAT_EVERY_MS, stickScroll } from '../../utils/gamepad.js'
+import { buttonsDown, isController, padActivity, pressesFor, REPEAT_DELAY_MS, REPEAT_EVERY_MS, stickScroll } from '../../utils/gamepad.js'
 
 const pad = ({ down = [], axes = [0, 0, 0, 0] } = {}) => ({
   buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: down.includes(i), value: down.includes(i) ? 1 : 0 })),
-  axes
+  axes,
+  mapping: 'standard'
 })
 
 test('buttons map to intents on the standard layout', () => {
@@ -59,4 +60,21 @@ test('the right stick scrolls, faster the further it leans, ignoring drift', () 
   const full = stickScroll(pad({ axes: [0, 0, 0, 1] })).y
   assert.ok(half > 0 && full > half)
   assert.ok(stickScroll(pad({ axes: [0, 0, -1, 0] })).x < 0)
+})
+
+// Android lists fingerprint readers and sensor hubs as gamepads: no standard mapping, axes at ±1
+test('hardware that only looks like a gamepad is not a controller', () => {
+  assert.equal(isController(pad()), true)
+  assert.equal(isController({ id: 'uinput-fpc', mapping: '', axes: [0, 0, 0, -1], buttons: [] }), false)
+  for (const value of [null, undefined, {}, { mapping: 'xr-standard' }]) assert.equal(isController(value), false)
+})
+
+test('a controller does nothing until someone uses it', () => {
+  const rest = [0, 0, 0, -1] // a stick resting at one end
+  assert.equal(padActivity(pad({ axes: rest }), rest), false)
+  assert.equal(padActivity(pad({ axes: [0.1, 0, 0, -0.8] }), rest), false) // drift
+  assert.equal(padActivity(pad({ axes: rest, down: [0] }), rest), true) // a button
+  assert.equal(padActivity(pad({ axes: [0, 0, 0, 0] }), rest), true) // the stick moved
+  assert.equal(padActivity(pad({ axes: [0, 0.9, 0, 0] }), [0, 0, 0, 0]), true)
+  assert.equal(padActivity(null), false)
 })

@@ -11,6 +11,18 @@ const REPEATS = new Set(['up', 'down', 'left', 'right', 'prev', 'next'])
 
 const pressed = button => (typeof button === 'object' ? Boolean(button?.pressed) : button > 0.5)
 
+// Only real controllers: browsers give them the standard mapping. Phones also list other hardware
+// as gamepads (fingerprint readers, sensor hubs) with mapping "" and axes stuck at ±1, which would
+// otherwise scroll the page every frame and pin it in place.
+export const isController = pad => pad?.mapping === 'standard'
+
+// Whether someone has used a pad: a button pressed, or a stick moved well away from where it sat
+// when the page first saw it (`rest`, its first axes reading). Until then it's ignored, so a
+// stick that rests off-centre can't scroll or move focus on its own.
+export const padActivity = (pad, rest = []) =>
+  Boolean(pad?.buttons?.some(pressed)) ||
+  Boolean(pad?.axes?.some((value, i) => Math.abs(value - (rest[i] ?? 0)) > STICK_DEADZONE))
+
 // The intents held on a pad right now: D-pad, face buttons, bumpers and the left stick
 export const buttonsDown = pad => {
   const held = new Set()
