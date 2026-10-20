@@ -8,6 +8,8 @@
     :class="{ 'is-spinning': spinning, 'is-galloping': galloping, 'is-held': holding, 'is-intro': intro, [`flip-link--${effect}`]: effect }"
     :style="{ '--i': index }"
     :aria-label="label"
+    :aria-haspopup="choices.length ? 'menu' : undefined"
+    :aria-expanded="choices.length ? menuOpen : undefined"
     @pointerdown="press"
     @pointerup="endPress"
     @pointercancel="endPress"
@@ -45,6 +47,34 @@
       :style="{ left: `${p.x}px`, top: `${p.y}px`, '--dx': `${p.dx}px`, '--dy': `${p.dy}px`, '--c': p.color, '--s': p.size }"
       aria-hidden="true"
     >{{ p.glyph }}</span>
+    <!-- A pill with choices (Instagram) opens this small menu instead of its link. Teleported to
+         the body, since links can't sit inside the pill's own link -->
+    <Teleport v-if="choices.length" to="body">
+      <div
+        v-if="menuOpen"
+        ref="menu"
+        class="flip-menu"
+        :class="bg"
+        role="menu"
+        :aria-label="label"
+        :style="menuStyle"
+        @keydown.esc.stop.prevent="closeMenu(true)"
+      >
+        <a
+          v-for="choice in choices"
+          :key="choice.href"
+          :href="choice.href"
+          target="_blank"
+          rel="noopener"
+          role="menuitem"
+          class="flip-menu__item"
+          @click="closeMenu(false)"
+        >
+          <span class="flip-menu__label">{{ choice.label }}</span>
+          <span v-if="choice.note" class="flip-menu__note">{{ choice.note }}</span>
+        </a>
+      </div>
+    </Teleport>
   </a>
 </template>
 
@@ -67,7 +97,10 @@ const props = defineProps({
   href: { type: String, required: true },
   bg: { type: String, default: '' },
   index: { type: Number, default: 0 }, // staggers the intro flip wave
-  effect: { type: String, default: '' } // optional extra flair, e.g. 'unicorn'
+  effect: { type: String, default: '' }, // optional extra flair, e.g. 'unicorn'
+  // Optional { label, note, href } list: a tap opens a menu of these instead of `href`
+  // (`href` stays for new-tab clicks, the phone's long-press menu and no JavaScript)
+  choices: { type: Array, default: () => [] }
 })
 
 const COLORS = ['#7cfc00', '#ffffff', '#c084fc', '#ffd700', '#00b8ff']
@@ -183,7 +216,50 @@ const onNativeMenu = () => {
 onBeforeUnmount(() => {
   clearTimeout(holdTimer)
   clearInterval(holdInterval)
+  stopMenuListeners()
 })
+
+// The choices menu: under the pill (above it when there's no room), kept on screen. Closes on
+// a tap elsewhere, scrolling, resizing, Escape or a pick.
+const MENU_GAP = 8
+const menu = ref(null)
+const menuOpen = ref(false)
+const menuStyle = ref({})
+const placeMenu = () => {
+  const pill = root.value?.getBoundingClientRect()
+  const box = menu.value?.getBoundingClientRect()
+  if (!pill || !box) return
+  const left = Math.min(Math.max(pill.left + pill.width / 2 - box.width / 2, MENU_GAP), innerWidth - box.width - MENU_GAP)
+  const below = pill.bottom + MENU_GAP
+  const top = below + box.height <= innerHeight - MENU_GAP ? below : Math.max(pill.top - MENU_GAP - box.height, MENU_GAP)
+  menuStyle.value = { left: `${left}px`, top: `${top}px` }
+}
+const onOutside = event => {
+  if (!menu.value?.contains(event.target) && !root.value?.contains(event.target)) closeMenu(false)
+}
+const onMoved = () => closeMenu(false)
+const stopMenuListeners = () => {
+  document.removeEventListener('pointerdown', onOutside, true)
+  removeEventListener('scroll', onMoved, true)
+  removeEventListener('resize', onMoved)
+}
+const openMenu = async fromKeyboard => {
+  menuStyle.value = { visibility: 'hidden' } // measured first, then placed
+  menuOpen.value = true
+  await nextTick()
+  placeMenu()
+  await nextTick() // shown before it can take focus
+  document.addEventListener('pointerdown', onOutside, true)
+  addEventListener('scroll', onMoved, { passive: true, capture: true })
+  addEventListener('resize', onMoved, { passive: true })
+  if (fromKeyboard) menu.value?.querySelector('a')?.focus({ focusVisible: true })
+}
+const closeMenu = refocus => {
+  if (!menuOpen.value) return
+  menuOpen.value = false
+  stopMenuListeners()
+  if (refocus) root.value?.focus()
+}
 
 // Hold the navigation briefly so the tap animation is visible before the
 // link opens. Modified clicks (new tab/window shortcuts) behave normally.
@@ -195,10 +271,19 @@ const openAfterAnimation = event => {
     return
   }
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  const fromKeyboard = event.detail === 0
+  if (props.choices.length) {
+    event.preventDefault()
+    if (menuOpen.value) return closeMenu(false)
+    if (reducedMotion()) return openMenu(fromKeyboard)
+    if (fromKeyboard) burst(event)
+    setTimeout(() => openMenu(fromKeyboard), OPEN_DELAY)
+    return
+  }
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   event.preventDefault()
-  if (event.detail === 0) burst(event) // keyboard Enter: no pointerdown fired
+  if (fromKeyboard) burst(event) // keyboard Enter: no pointerdown fired
 
   setTimeout(() => {
     if (props.href.startsWith('mailto:')) {
@@ -473,7 +558,59 @@ const openAfterAnimation = event => {
   to { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.2) rotate(180deg); opacity: 0; }
 }
 
+/* The choices menu (teleported to the body, so these styles can't rely on the pill's) */
+.flip-menu {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  gap: 0.25rem;
+  min-width: 12rem;
+  padding: 0.4rem;
+  border: 1px solid #ffd700;
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  animation: menu-in 0.18s ease-out;
+}
+
+.flip-menu__item {
+  display: grid;
+  min-height: 44px; /* comfortable touch target */
+  align-content: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 0.7rem;
+  color: #fff;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(0, 0, 0, 0.25);
+    outline: none;
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px #7cfc00;
+  }
+}
+
+.flip-menu__label {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.flip-menu__note {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+@keyframes menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .flip-menu {
+    animation: none;
+  }
+
   .flip-link__inner {
     animation: none;
     transition: none;

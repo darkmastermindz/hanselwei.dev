@@ -49,6 +49,12 @@ const links = [
     back: '🤘 Rock On! Hansel',
     backs: ['🤘 Rock On! Hansel', '🧗 Keep Climbing', '📖 Follow the Story'],
     href: 'https://hansel.rocks',
+    // A tap offers both accounts: hansel.rocks is the main one, hansel.codes is code only
+    choices: [
+      { label: 'hansel.rocks', note: 'Main', href: 'https://hansel.rocks' },
+      // Switch to https://hansel.codes once that domain points at the profile
+      { label: 'hansel.codes', note: 'Code & software engineering', href: 'https://instagram.com/hansel.codes' }
+    ],
     bg: 'bg-[#c7501a]'
   },
   { label: 'DEV Community', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
