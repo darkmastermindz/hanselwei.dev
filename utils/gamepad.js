@@ -12,16 +12,24 @@ const REPEATS = new Set(['up', 'down', 'left', 'right', 'prev', 'next'])
 const pressed = button => (typeof button === 'object' ? Boolean(button?.pressed) : button > 0.5)
 
 // Only real controllers: browsers give them the standard mapping. Phones also list other hardware
-// as gamepads (fingerprint readers, sensor hubs) with mapping "" and axes stuck at ±1, which would
-// otherwise scroll the page every frame and pin it in place.
+// as gamepads (fingerprint readers, sensor hubs) with axes stuck at ±1, which would otherwise
+// scroll the page every frame and pin it in place. Chromium on Android (Chrome, Samsung Internet)
+// can still give such hardware the standard mapping, so pads also have to be woken (padActivity).
 export const isController = pad => pad?.mapping === 'standard'
 
-// Whether someone has used a pad: a button pressed, or a stick moved well away from where it sat
-// when the page first saw it (`rest`, its first axes reading). Until then it's ignored, so a
-// stick that rests off-centre can't scroll or move focus on its own.
-export const padActivity = (pad, rest = []) =>
-  Boolean(pad?.buttons?.some(pressed)) ||
-  Boolean(pad?.axes?.some((value, i) => Math.abs(value - (rest[i] ?? 0)) > STICK_DEADZONE))
+// A pad's buttons and sticks right now, to compare later readings with (padActivity)
+export const padSnapshot = pad => ({
+  axes: [...(pad?.axes ?? [])],
+  buttons: [...(pad?.buttons ?? [])].map(pressed)
+})
+
+// Whether someone has used a pad since `snapshot`: a button pressed that wasn't pressed then, or
+// (unless `sticks` is false) a stick moved well away from where it was. Until then the pad is
+// ignored, so a stick resting off-centre or a button stuck down can't scroll or move focus on its
+// own. Touch-first devices pass sticks: false, so only a button press wakes a pad there.
+export const padActivity = (pad, snapshot = {}, { sticks = true } = {}) =>
+  Boolean(pad?.buttons?.some((button, i) => pressed(button) && !snapshot.buttons?.[i])) ||
+  (sticks && Boolean(pad?.axes?.some((value, i) => Math.abs(value - (snapshot.axes?.[i] ?? 0)) > STICK_DEADZONE)))
 
 // The intents held on a pad right now: D-pad, face buttons, bumpers and the left stick
 export const buttonsDown = pad => {

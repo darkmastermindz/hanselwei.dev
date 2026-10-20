@@ -24,18 +24,24 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   background-color: #2c2f33;
-  overflow-x: hidden;
-}
-
-body {
-  overflow-x: hidden;
-}
-
-/* The in-app pull-down (components/PullToRefresh.vue) handles pulling at the top,
-   instead of the browser's own pull-to-refresh where it can be turned off */
-html,
-body {
+  /* The in-app pull-down (components/PullToRefresh.vue) handles pulling at the top, instead of
+     the browser's own pull-to-refresh where it can be turned off. On html only: it's the page's
+     scroller, and a stop on anything else can trap a swipe there */
   overscroll-behavior-y: contain;
+}
+
+/* No sideways scrolling from anything a little too wide. `clip` cuts it off without making
+   html or body a scroll container of their own: with `hidden` on both, body became one, and
+   browsers that hand a swipe to it (Samsung Internet) couldn't pass it on to the page, so
+   nothing scrolled. Browsers without `clip` fall back to `hidden` on html alone (which goes to
+   the viewport, so body still isn't a scroll container). */
+html {
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+body {
+  overflow-x: clip;
 }
 
 /* Focus ring for keyboard and controller users only (plugins/navigation.client.js sets
