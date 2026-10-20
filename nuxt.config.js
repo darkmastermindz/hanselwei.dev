@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineNuxtConfig({
   nitro: {
@@ -84,13 +85,17 @@ export default defineNuxtConfig({
    ** Global CSS
    */
   css: [
+    // Tailwind first so tachyons still wins where the two overlap, as it did under Tailwind 3
+    '~/assets/css/tailwind.css',
     'tachyons/css/tachyons.css'
   ],
+  vite: {
+    plugins: [tailwindcss()]
+  },
   /*
    ** Nuxt.js modules
    */
   modules: [
-    '@nuxtjs/tailwindcss',
     '@pinia/nuxt'
   ]
 });

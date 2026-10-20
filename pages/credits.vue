@@ -109,6 +109,8 @@ h1 {
 }
 
 .card {
+  /* daisyUI 5's .card shrinks text to 0.875rem */
+  font-size: 1rem;
   padding: 0.75rem 0.9rem;
   background: #23262a;
   border: 1px solid #3a3d42;
