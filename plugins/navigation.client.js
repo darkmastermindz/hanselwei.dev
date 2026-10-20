@@ -10,7 +10,7 @@
 // - A controller's focus gets a sparkling border (one overlay that follows the focus).
 // The controller sends the same keys to the focused control, so components only handle keys.
 import { FOCUSABLE, pickNext } from '~/utils/spatialNav.js'
-import { buttonsDown, isController, padActivity, pressesFor, stickScroll } from '~/utils/gamepad.js'
+import { buttonsDown, isController, padActivity, padSnapshot, pressesFor, stickScroll } from '~/utils/gamepad.js'
 import { wheelDy } from '~/utils/swipe.js'
 
 const WHEEL_FOCUS_PX = 80 // wheel travel per focus step
@@ -203,16 +203,34 @@ export default defineNuxtPlugin(() => {
   let state = new Map()
   let frame = 0
   const pads = () => [...(navigator.getGamepads?.() ?? [])].filter(isController)
-  // Each pad's first axes reading, and the pads someone has used (see padActivity)
-  const rests = new Map()
-  const used = new Set()
+  // A pad acts only once someone uses it (padActivity): each pad's reading when it was last put to
+  // sleep, and the pads awake since. On a touch-first device (a phone) only a button press wakes
+  // a pad, never a stick, and any touch puts every pad back to sleep: a finger on the screen
+  // always wins over whatever the phone reports as a controller.
+  const touchFirst = window.matchMedia('(pointer: coarse)').matches
+  const snapshots = new Map()
+  const awake = new Set()
+  let fingers = 0
   const inUse = pad => {
     const key = `${pad.index}:${pad.id}`
-    if (used.has(key)) return true
-    if (!rests.has(key)) rests.set(key, [...(pad.axes ?? [])])
-    if (!padActivity(pad, rests.get(key))) return false
-    used.add(key)
+    if (awake.has(key)) return true
+    if (!snapshots.has(key)) snapshots.set(key, padSnapshot(pad))
+    if (!padActivity(pad, snapshots.get(key), { sticks: !touchFirst })) return false
+    awake.add(key)
     return true
+  }
+  const sleepPads = () => {
+    awake.clear()
+    snapshots.clear() // retaken on the next poll, so a button held down now doesn't count
+    state = new Map()
+  }
+  const countFingers = event => {
+    if (!event.isTrusted) return
+    fingers = event.touches.length
+    if (fingers) sleepPads()
+  }
+  for (const type of ['touchstart', 'touchend', 'touchcancel']) {
+    addEventListener(type, countFingers, { passive: true, capture: true })
   }
   const poll = now => {
     frame = 0
@@ -224,7 +242,7 @@ export default defineNuxtPlugin(() => {
     const held = new Set()
     const scroll = { x: 0, y: 0 }
     for (const pad of list) {
-      if (!inUse(pad)) continue
+      if (fingers || !inUse(pad)) continue
       for (const intent of buttonsDown(pad)) held.add(intent)
       const { x, y } = stickScroll(pad)
       scroll.x += x

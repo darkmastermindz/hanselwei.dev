@@ -2,7 +2,7 @@
 // A to activate, B to go back, bumpers for tabs / years, right stick to scroll.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { buttonsDown, isController, padActivity, pressesFor, REPEAT_DELAY_MS, REPEAT_EVERY_MS, stickScroll } from '../../utils/gamepad.js'
+import { buttonsDown, isController, padActivity, padSnapshot, pressesFor, REPEAT_DELAY_MS, REPEAT_EVERY_MS, stickScroll } from '../../utils/gamepad.js'
 
 const pad = ({ down = [], axes = [0, 0, 0, 0] } = {}) => ({
   buttons: Array.from({ length: 17 }, (_, i) => ({ pressed: down.includes(i), value: down.includes(i) ? 1 : 0 })),
@@ -70,11 +70,24 @@ test('hardware that only looks like a gamepad is not a controller', () => {
 })
 
 test('a controller does nothing until someone uses it', () => {
-  const rest = [0, 0, 0, -1] // a stick resting at one end
-  assert.equal(padActivity(pad({ axes: rest }), rest), false)
+  const rest = padSnapshot(pad({ axes: [0, 0, 0, -1] })) // a stick resting at one end
+  assert.equal(padActivity(pad({ axes: [0, 0, 0, -1] }), rest), false)
   assert.equal(padActivity(pad({ axes: [0.1, 0, 0, -0.8] }), rest), false) // drift
-  assert.equal(padActivity(pad({ axes: rest, down: [0] }), rest), true) // a button
+  assert.equal(padActivity(pad({ axes: [0, 0, 0, -1], down: [0] }), rest), true) // a button
   assert.equal(padActivity(pad({ axes: [0, 0, 0, 0] }), rest), true) // the stick moved
-  assert.equal(padActivity(pad({ axes: [0, 0.9, 0, 0] }), [0, 0, 0, 0]), true)
+  assert.equal(padActivity(pad({ axes: [0, 0.9, 0, 0] }), padSnapshot(pad())), true)
   assert.equal(padActivity(null), false)
+})
+
+// Chromium on Android (Chrome, Samsung Internet) can give a fingerprint reader or sensor hub the
+// standard mapping, so on a phone only a fresh button press wakes a pad
+test('on a phone, sticks never wake a pad, and neither does a button stuck down', () => {
+  const phantom = { ...pad({ axes: [0, 0, 0, 0], down: [3] }), id: 'uinput-fpc' }
+  const asleep = padSnapshot(phantom)
+  const phone = { sticks: false }
+  assert.equal(padActivity({ ...phantom, axes: [0, 0, 0, -1] }, asleep, phone), false) // axis jumps to -1
+  assert.equal(padActivity({ ...phantom, axes: [1, 1, 1, 1] }, asleep, phone), false)
+  assert.equal(padActivity(phantom, asleep, phone), false) // button 3 was already down
+  assert.equal(padActivity(pad({ down: [0] }), asleep, phone), true) // a real press of A
+  assert.equal(padActivity({ ...phantom, axes: [0, 0, 0, -1] }, asleep), true) // desktops: sticks count
 })
