@@ -27,6 +27,18 @@ let start = null
 let mode = 'idle' // idle | undecided | pull | ignore
 let doneTimer = 0
 
+// The touchmove listener can cancel the scroll, so while it's attached Chrome waits on it for
+// every move. It's only attached while the page is at the top, where a pull can start, so
+// scrolling anywhere further down never waits on the page's scripts.
+let watching = false
+const watchMoves = () => {
+  const on = window.scrollY <= 0
+  if (on === watching) return
+  watching = on
+  if (on) addEventListener('touchmove', onMove, { passive: false })
+  else removeEventListener('touchmove', onMove)
+}
+
 const stop = () => {
   start = null
   mode = 'idle'
@@ -63,13 +75,15 @@ const onEnd = () => {
 }
 
 onMounted(() => {
+  watchMoves()
+  addEventListener('scroll', watchMoves, { passive: true })
   addEventListener('touchstart', onStart, { passive: true })
-  addEventListener('touchmove', onMove, { passive: false })
   addEventListener('touchend', onEnd, { passive: true })
   addEventListener('touchcancel', stop, { passive: true })
 })
 onBeforeUnmount(() => {
   removeEventListener('touchstart', onStart)
+  removeEventListener('scroll', watchMoves)
   removeEventListener('touchmove', onMove)
   removeEventListener('touchend', onEnd)
   removeEventListener('touchcancel', stop)
