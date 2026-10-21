@@ -120,3 +120,17 @@ export const HOSTILE_README = [
 
 // Long input for catastrophic-backtracking checks
 export const REDOS = 'a'.repeat(50_000) + '!'
+
+// Colours from config.toml [seasons], bound into the background's SVG gradient
+export const HOSTILE_COLORS = [
+  'red',
+  '#fff',
+  '#ffffff;}',
+  '#12345g',
+  'url(javascript:alert(1))',
+  'expression(alert(1))',
+  '#ffffff" onload="alert(1)',
+  'var(--x)',
+  ' #ffffff',
+  ''
+]
