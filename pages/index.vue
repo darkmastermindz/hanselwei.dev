@@ -31,12 +31,13 @@
 import eventSettings from '~/data/coinBubble.generated.mjs'
 import { bubbleActive } from '~/utils/coinBubble.mjs'
 
-// During an event (config.toml [coin_bubble] home_title), the home page title names Hansel
+// The home page title is Hansel's name, or during an event (config.toml [coin_bubble] home_title)
+// the event title, which names him too
 const eventTitle = ref(bubbleActive(eventSettings) ? eventSettings.homeTitle : null)
 onMounted(() => {
   if (!bubbleActive(eventSettings)) eventTitle.value = null
 })
-useHead({ title: () => (eventTitle.value ? `${eventTitle.value} · hanselwei.dev` : 'hanselwei.dev') })
+useHead({ title: () => eventTitle.value ?? 'Hansel Wei' })
 
 const { loaded, count, best, current, total, seenCount, addSpin, reveal } = useSpinStats()
 

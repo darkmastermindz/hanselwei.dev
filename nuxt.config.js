@@ -22,7 +22,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      title: 'hanselwei.dev',
+      title: 'Hansel Wei',
       meta: [
         { charset: 'utf-8' },
         // All Things Open verification string, in the head of every page (not shown in search results)
