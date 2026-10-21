@@ -110,6 +110,10 @@ Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity 
 ## Tests
 - `npm test` runs Node's built-in test runner over `tests/**/*.test.mjs`. App logic is in `tests/app/`, and injection and security checks are in `tests/security/`. Shared attack payloads live in `tests/security/payloads.mjs`.
 - Outside input (markdown, front matter, URLs, GitHub data, the profile README) renders only through `renderMarkdown` and `safeUrl`, and the security tests check that.
+- `npm run test:android` runs the browser tests in `tests/e2e/` (Playwright) on every Android phone, tablet and foldable in Playwright's device list, in portrait and landscape: 100 device profiles. Run `npm run generate` first; `scripts/serve-static.mjs` serves the built site the way Netlify does, with its Content-Security-Policy. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a Chromium you already have, or run `npx playwright install chromium`.
+  - With a finger (real touch events), every page must scroll down and back up and stay where it's left, nothing may scroll sideways, swipes that start on the coin, About card, social links and menu must scroll the home page, and a tap must still work.
+  - Every test runs with a phantom "controller" like the ones Android phones report (a fingerprint reader with the standard mapping, its stick stuck at -1 and a button held down), the cause of pages that wouldn't scroll on Android. Each test also checks the app really started, so a page whose scripts didn't run can't pass.
+  - The **Android touch** workflow runs it on pull requests that change the front end, split across four runners.
 
 ## Blog (`/blog`): Posts and the Curiosity Feed
 One collection: every post is a Markdown file in `content/blog/` and lives at `/blog/<slug>`.
