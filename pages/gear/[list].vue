@@ -90,7 +90,7 @@ if (!hasInventory(id)) {
 }
 
 const { inventory, live } = useInventory(id)
-useHead({ title: () => `${inventory.value.title} · hanselwei.dev` })
+useHead({ title: () => `${inventory.value.title} · Hansel Wei` })
 
 const search = ref('')
 const activeTag = ref(null)

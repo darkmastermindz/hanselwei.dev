@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-useHead({ title: 'Gear · hanselwei.dev' })
+useHead({ title: 'Gear · Hansel Wei' })
 const { lists, live } = useInventoryLists()
 </script>
 

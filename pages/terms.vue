@@ -74,7 +74,7 @@
 
 <script setup>
 useHead({
-  title: 'Terms of Service · hanselwei.dev',
+  title: 'Terms of Service · Hansel Wei',
   meta: [
     {
       name: 'description',

@@ -59,7 +59,7 @@ const groups = computed(() =>
 )
 
 useHead({
-  title: 'Open source software · hanselwei.dev',
+  title: 'Open source software · Hansel Wei',
   meta: [{ name: 'description', content: 'The open-source software hanselwei.dev is built with, and their licenses.' }]
 })
 </script>

@@ -85,7 +85,7 @@ import { storeToRefs } from 'pinia'
 import { useProjectsStore } from '~/stores/projects'
 import { tagLabel } from '~/utils/projects.mjs'
 
-useHead({ title: 'Projects · hanselwei.dev' })
+useHead({ title: 'Projects · Hansel Wei' })
 
 const CHIPS = [
   { id: 'all', label: 'All' },
