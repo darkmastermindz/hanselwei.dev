@@ -101,3 +101,7 @@ data/seasons.generated.mjs
 data/credits.generated.json
 data/contributions.generated.json
 content/bio/github-readme.generated.md
+
+# Playwright (tests/e2e)
+test-results/
+playwright-report/
