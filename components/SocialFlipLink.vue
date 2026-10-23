@@ -64,7 +64,7 @@
           v-for="choice in choices"
           :key="choice.href"
           :href="choice.href"
-          target="_blank"
+          :target="sameTab ? undefined : '_blank'"
           rel="noopener"
           role="menuitem"
           class="flip-menu__item"
@@ -88,6 +88,8 @@
 const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
 const HOLD_AFTER = 350 // ms of pressing before it counts as a hold
 const HOLD_BURST_EVERY = 300 // ms between sparkle bursts while held
+
+import { isAppleMobile } from '~/utils/appleMobile.js'
 
 const props = defineProps({
   label: { type: String, required: true },
@@ -127,7 +129,13 @@ const shuffleBack = () => {
   const options = props.backs.filter(text => text !== backText.value)
   if (options.length) backText.value = options[Math.floor(Math.random() * options.length)]
 }
+// iPhone and iPad: the sites here have apps, and when iOS hands a link opened in a new tab to
+// the app (Mastodon via hansel.run, Instagram, Messenger...) the tab is left behind blank. So
+// there the links open in this tab: the app takes over and Safari stays here, or the page loads
+// here and Back returns. Set once mounted, so the prerendered page is the same everywhere.
+const sameTab = ref(false)
 onMounted(() => {
+  sameTab.value = isAppleMobile(navigator)
   shuffleBack()
   setTimeout(() => (intro.value = false), 1600 + props.index * 120 + 1200)
 })
@@ -280,13 +288,18 @@ const openAfterAnimation = event => {
     setTimeout(() => openMenu(fromKeyboard), OPEN_DELAY)
     return
   }
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  if (reducedMotion()) {
+    if (!sameTab.value) return
+    event.preventDefault()
+    window.location.href = props.href
+    return
+  }
 
   event.preventDefault()
   if (fromKeyboard) burst(event) // keyboard Enter: no pointerdown fired
 
   setTimeout(() => {
-    if (props.href.startsWith('mailto:')) {
+    if (sameTab.value || props.href.startsWith('mailto:')) {
       window.location.href = props.href
       return
     }
