@@ -1,7 +1,7 @@
 <template>
   <a
     ref="root"
-    :href="href"
+    :href="linkHref"
     target="_blank"
     rel="noopener"
     class="flip-link"
@@ -63,8 +63,8 @@
         <a
           v-for="choice in choices"
           :key="choice.href"
-          :href="choice.href"
-          :target="sameTab ? undefined : '_blank'"
+          :href="viaOut ? outPath(choice.id) : choice.href"
+          target="_blank"
           rel="noopener"
           role="menuitem"
           class="flip-menu__item"
@@ -89,9 +89,12 @@ const OPEN_DELAY = 650 // ms: long enough for the spin and sparkle burst to play
 const HOLD_AFTER = 350 // ms of pressing before it counts as a hold
 const HOLD_BURST_EVERY = 300 // ms between sparkle bursts while held
 
-import { isAppleMobile } from '~/utils/appleMobile.js'
+import { handsOffToApps } from '~/utils/mobileDevice.js'
+import { outPath } from '~/utils/outbound.js'
 
 const props = defineProps({
+  // The link's id in utils/outbound.js, for the hand-off page on phones and tablets
+  id: { type: String, default: '' },
   label: { type: String, required: true },
   back: { type: String, required: true },
   // Optional alternatives for the back face; one is picked at random on every flip
@@ -100,7 +103,7 @@ const props = defineProps({
   bg: { type: String, default: '' },
   index: { type: Number, default: 0 }, // staggers the intro flip wave
   effect: { type: String, default: '' }, // optional extra flair, e.g. 'unicorn'
-  // Optional { label, note, href } list: a tap opens a menu of these instead of `href`
+  // Optional { id, label, note, href } list: a tap opens a menu of these instead of `href`
   // (`href` stays for new-tab clicks, the phone's long-press menu and no JavaScript)
   choices: { type: Array, default: () => [] }
 })
@@ -129,13 +132,14 @@ const shuffleBack = () => {
   const options = props.backs.filter(text => text !== backText.value)
   if (options.length) backText.value = options[Math.floor(Math.random() * options.length)]
 }
-// iPhone and iPad: the sites here have apps, and when iOS hands a link opened in a new tab to
-// the app (Mastodon via hansel.run, Instagram, Messenger...) the tab is left behind blank. So
-// there the links open in this tab: the app takes over and Safari stays here, or the page loads
-// here and Back returns. Set once mounted, so the prerendered page is the same everywhere.
-const sameTab = ref(false)
+// Phones and tablets hand links to installed apps, and the new tab a link opened is then left
+// behind blank. There the links go through the site's hand-off page (pages/out/[id].vue), which
+// closes that tab once the app has taken over. Set once mounted, so the prerendered page (and
+// what crawlers see) keeps the real addresses.
+const viaOut = ref(false)
+const linkHref = computed(() => (viaOut.value && props.id ? outPath(props.id) : props.href))
 onMounted(() => {
-  sameTab.value = isAppleMobile(navigator)
+  viaOut.value = handsOffToApps(navigator)
   shuffleBack()
   setTimeout(() => (intro.value = false), 1600 + props.index * 120 + 1200)
 })
@@ -288,27 +292,22 @@ const openAfterAnimation = event => {
     setTimeout(() => openMenu(fromKeyboard), OPEN_DELAY)
     return
   }
-  if (reducedMotion()) {
-    if (!sameTab.value) return
-    event.preventDefault()
-    window.location.href = props.href
-    return
-  }
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   event.preventDefault()
   if (fromKeyboard) burst(event) // keyboard Enter: no pointerdown fired
 
   setTimeout(() => {
-    if (sameTab.value || props.href.startsWith('mailto:')) {
+    if (props.href.startsWith('mailto:')) {
       window.location.href = props.href
       return
     }
     // Popup blockers may refuse a delayed window.open; fall back to this tab.
     // ('noopener' as a feature would make window.open always return null, so
     // the opener link is cut by hand instead.)
-    const opened = window.open(props.href, '_blank')
+    const opened = window.open(linkHref.value, '_blank')
     if (opened) opened.opener = null
-    else window.location.href = props.href
+    else window.location.href = linkHref.value
   }, OPEN_DELAY)
 }
 </script>

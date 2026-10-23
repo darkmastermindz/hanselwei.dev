@@ -3,3 +3,7 @@
 export const isAppleMobile = ({ userAgent, platform, maxTouchPoints } = {}) =>
   /iPhone|iPad|iPod/.test(typeof userAgent === 'string' ? userAgent : '') ||
   (platform === 'MacIntel' && Number(maxTouchPoints) > 1)
+
+// Phones and tablets, where the system hands links to installed apps (Mastodon, Instagram...)
+export const handsOffToApps = (nav = {}) =>
+  isAppleMobile(nav) || /Android/.test(typeof nav.userAgent === 'string' ? nav.userAgent : '')
