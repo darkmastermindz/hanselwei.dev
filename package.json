@@ -48,7 +48,7 @@
     "autoprefixer": "^10.6.1",
     "postcss": "^8.5.28",
     "sass": "^1.104.0",
-    "smol-toml": "^1.9.0",
+    "smol-toml": "^1.9.1",
     "uqr": "0.1.3"
   }
 }
