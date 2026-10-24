@@ -9,6 +9,8 @@
 // - Open flat: a near-square touch screen (Android foldables), or iPhone Duo's inner screen
 //   held sideways. iPhone Duo is the only iPhone whose page is 500px or more both ways.
 // - Anything else: null, the usual layout.
+// It also names iPhone Duo's screens (data-device="iphone-duo" inside, "iphone-duo-cover" on the
+// front), for the touches made just for it (components/DuoLaptopLid.vue, components/FoldPong.vue).
 //
 // The script in the page head (nuxt.config.js) runs foldMode before the first paint and again on
 // every resize and fold, and sets <html data-fold="tabletop|book|flat"> and the --fold-*
@@ -24,7 +26,11 @@ export const FLAT_QUERY =
 export function foldMode({ segments, posture, flat, iphone, width, height }) {
   const CREASE = 16 // px kept clear on both sides of a known fold (seamless folds report none)
   const GUESSED_CREASE = 32 // where the fold is only guessed (the middle)
-  const device = iphone && Math.min(width, height) >= 500 ? 'iphone-duo' : null
+  // iPhone Duo's inner screen is the only iPhone page 500px or more both ways; its front (outer)
+  // screen is 382px wide upright in Safari, a width no other iPhone has (they're 320-440 in steps
+  // of 375, 390, 393, 402, 414, 428, 430, 440)
+  const narrow = Math.min(width, height)
+  const device = !iphone ? null : narrow >= 500 ? 'iphone-duo' : narrow >= 378 && narrow <= 386 && height > width ? 'iphone-duo-cover' : null
   if (segments && segments.length === 2) {
     const [a, b] = segments
     if (b.y > a.y) return { mode: 'tabletop', device, vars: { 'fold-top-end': a.y + a.height, 'fold-bottom-start': b.y, crease: CREASE } }

@@ -38,7 +38,11 @@ test("iPhone Duo's inner screen held sideways is open flat; upright, or the oute
   const upright = foldMode({ ...base, iphone: true, width: 626, height: 800 })
   assert.equal(upright.mode, null)
   assert.equal(upright.device, 'iphone-duo')
-  assert.deepEqual(foldMode({ ...base, iphone: true, width: 382, height: 580 }), { mode: null, device: null, vars: {} })
+  assert.deepEqual(foldMode({ ...base, iphone: true, width: 382, height: 580 }), { mode: null, device: 'iphone-duo-cover', vars: {} })
+  // The front screen sideways isn't told apart (Safari's bars change its height): the usual layout
+  assert.equal(foldMode({ ...base, iphone: true, width: 580, height: 382 }).device, null)
+  // Another phone's 382px-wide browser isn't an iPhone Duo
+  assert.equal(foldMode({ ...base, iphone: false, width: 382, height: 580 }).device, null)
 })
 
 test('no other iPhone is taken for iPhone Duo, upright or sideways', () => {
