@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
 
 export default defineNuxtConfig({
   nitro: {
@@ -68,6 +69,9 @@ export default defineNuxtConfig({
           href: 'https://use.typekit.net/rej0haw.css'
         }
       ],
+      // Foldables: picks the layout for how the screen is folded before the page paints, and
+      // again on every fold (utils/foldMode.mjs; allowed by hash like Nuxt's own inline scripts)
+      script: [{ innerHTML: `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})` }],
       noscript: [
         {
           children:
