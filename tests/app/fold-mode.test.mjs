@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { foldMode, watchFold, FLAT_QUERY } from '../../utils/foldMode.mjs'
-import { chapterOf, neighbours, turnDirection } from '../../utils/pageTurn.mjs'
+import { chapterOf, neighbours, turnDirection, turnHintDue, TURN_HINT_TIMES } from '../../utils/pageTurn.mjs'
 
 const base = { segments: null, posture: undefined, flat: false, iphone: false }
 
@@ -94,4 +94,9 @@ test('the corner links turn to the next and previous chapter', () => {
   assert.deepEqual(neighbours('/blog/hello-world'), { prev: { to: '/projects', label: 'Projects' }, next: { to: '/gear', label: 'Gear Lists' } })
   assert.equal(neighbours('/bio').next, null)
   assert.deepEqual(neighbours('/credits').prev, { to: '/bio', label: 'Bio' })
+})
+
+test('the page-turn hint shows the first few times, then not again', () => {
+  for (let n = 0; n < TURN_HINT_TIMES; n++) assert.equal(turnHintDue(n), true, String(n))
+  for (const n of [TURN_HINT_TIMES, TURN_HINT_TIMES + 1, 99, -1, NaN, Infinity]) assert.equal(turnHintDue(n), false, String(n))
 })

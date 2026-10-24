@@ -248,6 +248,31 @@ test.describe('turning the page in book', () => {
     await expect(page).toHaveURL(/\/$/)
   })
 
+  test('folding into book shows a hint the first few times, until a page is turned', async ({ page }, testInfo) => {
+    await open(page, '/')
+    const hint = page.locator('.book-pager__hint')
+    await expect(hint).toBeHidden()
+    const cdp = await fold(page, testInfo, 'vertical')
+    await expect(hint).toBeVisible()
+    await expect(hint).toContainText('Pages turn like a book')
+    expect((await hint.boundingBox()).x, 'on the right page').toBeGreaterThanOrEqual((await foldOf(page)).rightStart)
+    await expect(page.locator('.book-pager__corner--next')).toHaveClass(/is-hinting/)
+    // Turning a page puts it away
+    await page.locator('.book-pager__corner--next').click()
+    await expect(page).toHaveURL(/\/projects$/)
+    await expect(hint).toBeHidden()
+    // Shown on the next two folds, then not again
+    for (const expected of [true, true, false]) {
+      await unfold(page, testInfo, cdp)
+      await fold(page, testInfo, 'vertical')
+      if (expected) await expect(hint).toBeVisible()
+      else {
+        await page.waitForTimeout(500)
+        await expect(hint).toBeHidden()
+      }
+    }
+  })
+
   test('the menu turns pages too, and pages change as usual when not folded', async ({ page }, testInfo) => {
     await open(page, '/')
     const cdp = await fold(page, testInfo, 'vertical')

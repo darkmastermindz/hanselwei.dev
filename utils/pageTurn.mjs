@@ -36,3 +36,8 @@ export const neighbours = path => {
     next: i < CHAPTERS.length - 1 ? CHAPTERS[i + 1] : null
   }
 }
+
+// The page-turn hint (components/BookPager.vue): the first few times the phone is folded into book
+export const TURN_HINT_KEY = 'pageTurnHintShown'
+export const TURN_HINT_TIMES = 3
+export const turnHintDue = timesShown => Number.isFinite(timesShown) && timesShown >= 0 && timesShown < TURN_HINT_TIMES
