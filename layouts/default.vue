@@ -5,6 +5,7 @@
     <PullToRefresh />
     <slot />
     <SiteFooter />
+    <BookPager />
   </div>
 </template>
 
@@ -150,46 +151,166 @@ html[data-input='gamepad'] :focus {
   }
 }
 
-/* Foldables (see README "Foldables"). Folded part-way, the browser reports the screen as two
-   segments with the fold between them (the Viewport Segments API, Chromium 138+): a physical
-   hinge (a gap) or a seamless crease (no gap at all). Nothing important sits on it: everything
-   keeps --crease clear of both sides. These are only set while folded, so the layouts that use
-   them (here, components/AppNav.vue, pages/index.vue) apply only then. Without the API (Safari,
-   Firefox) or unfolded, nothing changes.
-   - Stacked segments, a crease across the middle ("tabletop", the top half tilted back like a
-     laptop): --fold-top-end is where the top segment ends, --fold-bottom-start where the bottom
-     one starts.
-   - Side by side, a crease down the middle ("book"): --fold-left-end and --fold-right-start. */
-@media (vertical-viewport-segments: 2) {
-  :root {
-    --fold-top-end: env(viewport-segment-bottom 0 0);
-    --fold-bottom-start: env(viewport-segment-top 0 1);
-    --crease: 1rem;
-    --fold-nav-h: calc(env(safe-area-inset-top, 0px) + 4rem); /* the nav, kept to one row */
+/* Foldables (README "Foldables"). The page head script (utils/foldMode.mjs) sets
+   <html data-fold="tabletop|book|flat"> for how the screen is folded, and where the fold is:
+   --fold-top-end and --fold-bottom-start (a crease across), or --fold-left-end and
+   --fold-right-start (a crease down the middle), with --crease kept clear on both sides. Nothing
+   important sits on the fold. Without data-fold (closed, any other phone, tablet or computer)
+   nothing here applies. */
+:root[data-fold] {
+  --fold-paper: #1d232a; /* the page colour, for the parts that cover what scrolls under them */
+}
+
+/* Tabletop (a crease across, the top half tilted back like a laptop): reading on the top half,
+   the menu on the bottom half like a keyboard (components/AppNav.vue). Pages scroll above it. */
+:root[data-fold='tabletop'] {
+  --fold-nav-h: calc(env(safe-area-inset-bottom, 0px) + 4rem); /* the home page's one-row menu */
+  --fold-below: calc(100dvh - var(--fold-top-end) + var(--crease)); /* the fold and bottom half */
+  scroll-padding-bottom: var(--fold-below);
+}
+
+@media (max-width: 639px) {
+  :root[data-fold='tabletop'] {
+    --fold-nav-h: calc(env(safe-area-inset-bottom, 0px) + 6.5rem); /* two rows on a narrow phone */
   }
 }
 
-@media (horizontal-viewport-segments: 2) {
-  :root {
-    --fold-left-end: env(viewport-segment-right 0 0);
-    --fold-right-start: env(viewport-segment-left 1 0);
-    --crease: 1rem;
-    --fold-nav-h: calc(env(safe-area-inset-top, 0px) + 7.5rem); /* two rows on the home page */
-  }
+:root[data-fold='tabletop'] .app-shell {
+  padding-bottom: var(--fold-below);
+}
 
-  /* Book: the menu has the left page (components/AppNav.vue); reading and the footer go on the
-     right page */
-  .page,
-  .site-footer {
-    width: auto;
-    max-width: none;
-    margin-left: calc(var(--fold-right-start) + var(--crease));
-  }
+:root[data-fold='tabletop'] .app-shell:has(.app-nav--home) {
+  padding-bottom: var(--fold-nav-h);
+}
 
-  .page {
-    margin-right: 0;
-    padding-left: 0;
-  }
+/* Book (a crease down the middle): the menu has the left page (components/AppNav.vue); reading
+   and the footer go on the right page */
+:root[data-fold='book'] {
+  --fold-nav-h: calc(env(safe-area-inset-top, 0px) + 7.5rem); /* the home page's two-row menu */
+}
+
+:root[data-fold='book'] .page,
+:root[data-fold='book'] .site-footer {
+  width: auto;
+  max-width: none;
+  margin-left: calc(var(--fold-right-start) + var(--crease));
+  margin-right: max(env(safe-area-inset-right), 0px);
+}
+
+:root[data-fold='book'] .page {
+  padding-left: 0;
+}
+
+/* Turning the page (plugins/pageTurn.client.js): in book, going to another page turns the right
+   page over onto the left, like a book, and going back turns the left one back. The two pages
+   are named only while turning, so nothing else changes. */
+:root[data-page-turn] .home__hero,
+:root[data-page-turn] .app-nav:not(.app-nav--home) {
+  view-transition-name: book-left;
+}
+
+:root[data-page-turn] .home__deck,
+:root[data-page-turn] .page {
+  view-transition-name: book-right;
+}
+
+:root[data-page-turn]::view-transition-old(root),
+:root[data-page-turn]::view-transition-new(root),
+:root[data-page-turn]::view-transition-group(book-left),
+:root[data-page-turn]::view-transition-group(book-right) {
+  animation: none;
+}
+
+:root[data-page-turn]::view-transition-image-pair(book-left),
+:root[data-page-turn]::view-transition-image-pair(book-right) {
+  perspective: 1800px;
+}
+
+:root[data-page-turn]::view-transition-image-pair(book-left) {
+  perspective-origin: right center; /* the spine */
+}
+
+:root[data-page-turn]::view-transition-image-pair(book-right) {
+  perspective-origin: left center;
+}
+
+:root[data-page-turn]::view-transition-old(book-left),
+:root[data-page-turn]::view-transition-new(book-left),
+:root[data-page-turn]::view-transition-old(book-right),
+:root[data-page-turn]::view-transition-new(book-right) {
+  background-color: var(--fold-paper); /* paper, not see-through */
+  backface-visibility: hidden;
+  animation-name: none; /* still, unless turning (below), not the browser's cross-fade */
+  animation-duration: 0.8s;
+  animation-fill-mode: both;
+}
+
+:root[data-page-turn]::view-transition-old(book-left),
+:root[data-page-turn]::view-transition-new(book-left) {
+  transform-origin: right center;
+}
+
+:root[data-page-turn]::view-transition-old(book-right),
+:root[data-page-turn]::view-transition-new(book-right) {
+  transform-origin: left center;
+}
+
+/* Forward: the right page lifts off the spine and turns over (first half); its back lands as the
+   new left page (second half). The new right page is underneath all along; the old left page is
+   there until the turning page covers it. */
+:root[data-page-turn='forward']::view-transition-old(book-right) {
+  z-index: 1;
+  animation-name: page-lift-right;
+  animation-timing-function: ease-in;
+}
+
+:root[data-page-turn='forward']::view-transition-new(book-left) {
+  z-index: 1;
+  animation-name: page-land-left;
+  animation-timing-function: ease-out;
+}
+
+:root[data-page-turn='forward']::view-transition-old(book-left),
+:root[data-page-turn='back']::view-transition-old(book-right) {
+  animation-name: page-covered;
+}
+
+/* Back: the same, the other way */
+:root[data-page-turn='back']::view-transition-old(book-left) {
+  z-index: 1;
+  animation-name: page-lift-left;
+  animation-timing-function: ease-in;
+}
+
+:root[data-page-turn='back']::view-transition-new(book-right) {
+  z-index: 1;
+  animation-name: page-land-right;
+  animation-timing-function: ease-out;
+}
+
+@keyframes page-lift-right {
+  0% { transform: rotateY(0); filter: brightness(1); }
+  50%, 100% { transform: rotateY(-90deg); filter: brightness(0.55); }
+}
+
+@keyframes page-land-left {
+  0%, 50% { transform: rotateY(90deg); filter: brightness(0.55); }
+  100% { transform: rotateY(0); filter: brightness(1); }
+}
+
+@keyframes page-lift-left {
+  0% { transform: rotateY(0); filter: brightness(1); }
+  50%, 100% { transform: rotateY(90deg); filter: brightness(0.55); }
+}
+
+@keyframes page-land-right {
+  0%, 50% { transform: rotateY(-90deg); filter: brightness(0.55); }
+  100% { transform: rotateY(0); filter: brightness(1); }
+}
+
+@keyframes page-covered {
+  0%, 49.9% { opacity: 1; }
+  50%, 100% { opacity: 0; }
 }
 
 .page-title {

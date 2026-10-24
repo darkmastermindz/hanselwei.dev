@@ -86,111 +86,131 @@ const onRelease = (spins, heldMs) => {
   text-align: center;
 }
 
-/* Foldables (README "Foldables"; the --fold-* variables are in layouts/default.vue). Unfolded
-   flat, a near-square screen gets two columns. Folded part-way, the hero and the deck each get
-   one half and nothing sits on the fold. Plain media queries, so the page re-flows the moment
-   the phone is folded or unfolded. */
+/* Foldables (<html data-fold>, utils/foldMode.mjs; the --fold-* variables, layouts/default.vue).
+   Open flat on a near-square screen, two columns. Folded part-way, the hero and the deck each
+   get one half and nothing sits on the fold. The page re-flows the moment it's folded. */
 
-/* Flat, unfolded: a near-square touch screen between phone and tablet sizes (no phone, tablet or
-   desktop window matches: tests/e2e/foldable.spec.mjs). Works in every browser. */
-@media (min-width: 600px) and (max-width: 1100px) and (min-aspect-ratio: 4/5) and (max-aspect-ratio: 5/4) and (pointer: coarse) and (hover: none) {
-  .home {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
-    align-items: center;
-    column-gap: 1.5rem;
-    min-height: calc(100vh - 5rem);
-    padding: 0 1rem;
+/* Open flat: an unfolded Android foldable, or iPhone Duo's inner screen held sideways. Two
+   columns (an even number, as Apple's iPhone Duo guidelines suggest), clear of the camera. */
+:root[data-fold='flat'] .home {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  align-items: center;
+  column-gap: 1.5rem;
+  min-height: calc(100vh - 5rem);
+  padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+}
+
+/* The hero stays beside the card and links as they scroll, centred on the screen below the menu */
+:root[data-fold='flat'] .home__hero {
+  position: sticky;
+  top: 4rem;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: calc(100dvh - 5rem);
+}
+
+/* Open flat or in book, the coin fits short screens too (iPhone Duo sideways is 600px tall) */
+:root[data-fold='flat'] .home__hero :deep(.token),
+:root[data-fold='book'] .home__hero :deep(.token) {
+  --size: clamp(120px, 34vh, 230px);
+}
+
+/* Tabletop (a crease across, the top half tilted back like a laptop): the top half is the
+   screen (coin and name), the bottom half the keyboard (the card, links and, along the bottom,
+   the menu: components/AppNav.vue). The hero stays put and covers the fold; the deck scrolls
+   under it, so nothing ever scrolls onto the fold. */
+:root[data-fold='tabletop'] .home {
+  --fold-hero-h: calc(var(--fold-top-end) - var(--crease) - env(safe-area-inset-top, 0px));
+  display: block;
+  min-height: 0;
+  padding: 0;
+}
+
+:root[data-fold='tabletop'] .home__hero {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 15; /* over the deck, under the menu and pull-to-refresh */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(var(--fold-bottom-start) + var(--crease));
+  /* The hero itself is in the top half; the rest covers the fold */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: calc(var(--fold-bottom-start) - var(--fold-top-end) + 2 * var(--crease));
+  overflow: hidden;
+  background: var(--fold-paper);
+}
+
+:root[data-fold='tabletop'] .home__coin {
+  padding: 0 0 0.5rem;
+}
+
+/* The coin shrinks to fit the top half */
+:root[data-fold='tabletop'] .home__hero :deep(.token) {
+  --size: clamp(80px, calc(var(--fold-hero-h) * 0.5), 200px);
+}
+
+:root[data-fold='tabletop'] .home__intro .title {
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+/* Wide enough: coin beside the name, like a laptop screen */
+@media (min-width: 640px) {
+  :root[data-fold='tabletop'] .home__hero {
+    flex-direction: row;
+    gap: 2rem;
+  }
+
+  :root[data-fold='tabletop'] .home__hero :deep(.token) {
+    --size: clamp(80px, calc(var(--fold-hero-h) * 0.7), 240px);
+  }
+
+  :root[data-fold='tabletop'] .home__coin {
+    padding: 0;
   }
 }
 
-/* Tabletop (a crease across the middle, the top half tilted back like a laptop): the top half is
-   the display (coin, name), the bottom half the controls (the card, links). The menu is one row
-   (components/AppNav.vue), so the hero is sized to end just above the fold. */
-@media (vertical-viewport-segments: 2) {
-  .home {
-    --fold-hero-h: calc(var(--fold-top-end) - var(--fold-nav-h) - var(--crease));
-    display: block;
-    min-height: 0;
-    padding: 0;
-  }
-
-  .home__hero {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: var(--fold-hero-h);
-    overflow: hidden;
-  }
-
-  .home__coin {
-    padding: 0 0 0.5rem;
-  }
-
-  /* The coin shrinks to fit the top half */
-  .home__hero :deep(.token) {
-    --size: clamp(80px, calc(var(--fold-hero-h) * 0.5), 200px);
-  }
-
-  .home__intro .title {
-    font-size: 2rem;
-    line-height: 1.2;
-  }
-
-  /* Wide enough: coin beside the name, like a laptop screen */
-  @media (min-width: 640px) {
-    .home__hero {
-      flex-direction: row;
-      gap: 2rem;
-    }
-
-    .home__hero :deep(.token) {
-      --size: clamp(80px, calc(var(--fold-hero-h) * 0.7), 240px);
-    }
-
-    .home__coin {
-      padding: 0;
-    }
-  }
-
-  /* The deck starts just below the fold */
-  .home__deck {
-    margin-top: calc(var(--fold-bottom-start) - var(--fold-top-end) + 2 * var(--crease));
-  }
+/* The deck starts just below the fold */
+:root[data-fold='tabletop'] .home__deck {
+  margin-top: calc(var(--fold-bottom-start) + var(--crease));
 }
 
 /* Book (a crease down the middle): the hero on the left page, the deck on the right */
-@media (horizontal-viewport-segments: 2) {
-  .home {
-    display: grid;
-    grid-template-columns: calc(var(--fold-left-end) - var(--crease)) minmax(0, 1fr);
-    column-gap: calc(var(--fold-right-start) - var(--fold-left-end) + 2 * var(--crease));
-    align-items: start;
-    min-height: 0;
-    padding: 0;
-  }
+:root[data-fold='book'] .home {
+  display: grid;
+  grid-template-columns: calc(var(--fold-left-end) - var(--crease)) minmax(0, 1fr);
+  column-gap: calc(var(--fold-right-start) - var(--fold-left-end) + 2 * var(--crease));
+  align-items: start;
+  min-height: 0;
+  padding: 0;
+}
 
-  /* Stays in view on the left page while the right page scrolls */
-  .home__hero {
-    position: sticky;
-    top: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    height: 100vh;
-    height: 100dvh;
-    padding-top: var(--fold-nav-h); /* below the menu (components/AppNav.vue) */
-  }
+/* Stays in view on the left page while the right page scrolls */
+:root[data-fold='book'] .home__hero {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: var(--fold-nav-h); /* below the menu (components/AppNav.vue) */
+}
 
-  .home__deck {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 1rem 1rem 0 0; /* room for the card's shadow */
-  }
+:root[data-fold='book'] .home__deck {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 1rem max(1rem, env(safe-area-inset-right)) 0 0; /* room for the card's shadow */
 }
 
 /* Phones say "tap"; a mouse says "click" (the same rule as the About card hint) */

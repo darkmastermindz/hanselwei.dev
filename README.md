@@ -110,24 +110,31 @@ Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity 
 ## Tests
 - `npm test` runs Node's built-in test runner over `tests/**/*.test.mjs`. App logic is in `tests/app/`, and injection and security checks are in `tests/security/`. Shared attack payloads live in `tests/security/payloads.mjs`.
 - Outside input (markdown, front matter, URLs, GitHub data, the profile README) renders only through `renderMarkdown` and `safeUrl`, and the security tests check that.
-- `npm run test:android` runs the browser tests in `tests/e2e/` (Playwright) on every Android phone, tablet and foldable in Playwright's device list, in portrait and landscape: 100 device profiles. Run `npm run generate` first; `scripts/serve-static.mjs` serves the built site the way Netlify does, with its Content-Security-Policy. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a Chromium you already have, or run `npx playwright install chromium`.
+- `npm run test:android` runs the browser tests in `tests/e2e/` (Playwright) on every Android phone, tablet and foldable in Playwright's device list, in portrait and landscape, plus iPhone Duo: 103 device profiles. Run `npm run generate` first; `scripts/serve-static.mjs` serves the built site the way Netlify does, with its Content-Security-Policy. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a Chromium you already have, or run `npx playwright install chromium`.
   - With a finger (real touch events), every page must scroll down and back up and stay where it's left, nothing may scroll sideways, swipes that start on the coin, About card, social links and menu must scroll the home page, and a tap must still work.
   - Every test runs with a phantom "controller" like the ones Android phones report (a fingerprint reader with the standard mapping, its stick stuck at -1 and a button held down), the cause of pages that wouldn't scroll on Android. Each test also checks the app really started, so a page whose scripts didn't run can't pass.
   - The **Android touch** workflow runs it on pull requests that change the front end, split across four runners.
 
-## Foldables
+## Foldables and iPhone Duo
 
-Folding the phone changes the layout, live, with no reload (plain CSS media queries). Nothing you read or tap sits on the fold: everything keeps at least 1rem clear of it, even on seamless folds.
+Folding the phone changes the layout, live, with no reload, and nothing you read or tap sits on the fold (everything keeps at least 1rem clear of it, even on seamless folds).
 
-| Fold | What you see | Safari / Firefox |
-|---|---|---|
-| Closed, or any phone, tablet or computer | The usual layout, unchanged | yes |
-| Tabletop (a crease across, top half tilted back like a laptop) | Top half: the coin and name, with the menu as one row. Bottom half: the About card, links and buttons. Other pages: the menu fills the top half, the page reads in the bottom half | no |
-| Book (a crease down the middle) | Left page: the coin and name, with the menu. Right page: the card, links and buttons. Other pages: the menu runs down the left page, the page reads on the right | no |
-| Open flat (a near-square screen) | Two columns: the coin and name beside the card and links | yes |
+| Fold | Home | Other pages | Where it works |
+|---|---|---|---|
+| Closed, or any other phone, tablet or computer | The usual layout, unchanged | Unchanged | everywhere |
+| Tabletop (a crease across, the top half tilted back like a laptop) | Top half: the coin and name. Bottom half: the About card and links, which scroll under the coin, and the menu along the bottom | Reading on the top half; the menu on the bottom half, like a keyboard | Chrome / Samsung Internet; Safari with its preview flags (below) |
+| Book (a crease down the middle) | Left page: the menu, coin and name. Right page: the card, links and buttons | The menu down the left page, reading on the right. Pages turn like a book (below) | Chrome / Samsung Internet; Safari with its preview flags |
+| Open flat | Two columns: the coin and name beside the card and links | Unchanged | Android foldables, and iPhone Duo's inner screen held sideways (Safari, no flags needed) |
 
-- Folded part-way, Chrome and Samsung Internet (Chromium 138+) report the screen as two segments with the fold between them (the Viewport Segments API: `vertical-viewport-segments` / `horizontal-viewport-segments` and `env(viewport-segment-*)`). The fold positions are set as `--fold-*` variables in `layouts/default.vue`; `components/AppNav.vue` and `pages/index.vue` use them. Safari and Firefox don't have the API, so there only the open-flat layout applies.
-- `tests/e2e/foldable.spec.mjs` folds a Galaxy Z Fold 7 and Flip 7 through DevTools (with and without a hinge gap) and checks each layout, that nothing visible is on the fold (at the top and scrolled), and that folding and unfolding re-flows without a reload. It also checks that no other device gets a foldable layout.
+- **Detecting the fold.** A small script in the page head (`utils/foldMode.mjs`, allowed by the CSP by hash) sets `<html data-fold="tabletop|book|flat">` and the `--fold-*` variables before the page paints, and again on every resize and fold. `layouts/default.vue`, `components/AppNav.vue` and `pages/index.vue` lay out from those.
+  - Chrome and Samsung Internet (138+) report where the fold is: two viewport segments (the Viewport Segments API).
+  - **iPhone Duo in Safari.** Safari 27.1 has the same APIs only as a developer preview: Settings → Apps → Safari → Advanced → Feature Flags → *Viewport Segments API* and *Device Posture API*. With segments on, it works as in Chrome. With only the posture flag, Safari says "folded" but not where, so the fold is taken as the middle of the screen (iPhone Duo's hinge is central), with a wider margin. Without the flags, Safari can't tell the page the phone is half-folded.
+  - iPhone Duo is recognised by its size, since it's the only iPhone whose page is 500px or more both ways (`data-device="iphone-duo"`). Its inner screen held sideways gets the two-column layout. Upright, and on the outer screen, the usual layout fits, as Apple's [iPhone Duo guidelines](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo) suggest: let the layout grow rather than redesign it, keep content clear of the fold, use an even number of columns, and keep the menu at the side in book like the system's own controls.
+- **Turning the page** (book only): going to another page turns the right page over onto the left, like Apple Books, and going back turns it back (`plugins/pageTurn.client.js`, the View Transitions API; animations in `layouts/default.vue`). The menu's sections are the chapters, in order (`utils/pageTurn.mjs`), and the corners of the right page turn to the previous and next one (`components/BookPager.vue`). With reduced motion, pages change as usual.
+- **Tests.**
+  - `tests/e2e/foldable.spec.mjs` folds a Galaxy Z Fold 7 and Flip 7 through DevTools (with and without a hinge gap). It checks each layout, that nothing visible is on the fold at the top, scrolled and at the bottom, and that pages turn both ways.
+  - The iPhone Duo profiles (`playwright.config.mjs`, Safari's user agent and page sizes) check the open-flat layout and the posture-only fold, and that no other device gets a foldable layout.
+  - `tests/app/fold-mode.test.mjs` covers the detection rules and the page order.
 
 ## Blog (`/blog`): Posts and the Curiosity Feed
 One collection: every post is a Markdown file in `content/blog/` and lives at `/blog/<slug>`.

@@ -93,76 +93,85 @@ const links = [
   }
 }
 
-/* Foldables, folded part-way (the --fold-* variables, layouts/default.vue; README "Foldables").
+/* Foldables (<html data-fold>, utils/foldMode.mjs; the --fold-* variables, layouts/default.vue).
    Nothing in the menu ever sits on the fold. */
 
-/* Tabletop (a crease across the middle): on the home page, one row along the top, so the page
-   knows exactly where its top half starts (pages/index.vue) */
-@media (vertical-viewport-segments: 2) {
-  .app-nav--home {
-    display: flex;
-    align-items: center;
-    height: var(--fold-nav-h);
-    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
-    padding-bottom: 0.25rem;
+/* Tabletop (a crease across): the menu goes on the bottom half, like a laptop's keyboard, and
+   reading on the top half. Home: one row along the bottom (the card and links have the rest of
+   the bottom half, pages/index.vue). Other pages: the menu covers the fold and the bottom half,
+   so the page reads on the top half and scrolls up past it, never onto the fold. */
+:root[data-fold='tabletop'] .app-nav {
+  position: fixed;
+  top: auto;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 0.25rem;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.25rem);
 
-    .app-nav__links {
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-  }
-
-  /* Other pages: the menu fills the top half and the fold, so the page itself reads in the bottom
-     half (it scrolls up under the menu, never onto the fold) */
-  .app-nav:not(.app-nav--home) {
-    display: flex;
-    align-items: center;
+  .app-nav__links {
     justify-content: center;
-    height: calc(var(--fold-bottom-start) + var(--crease));
-    padding-bottom: calc(var(--fold-bottom-start) - var(--fold-top-end) + 2 * var(--crease));
-
-    .app-nav__links {
-      justify-content: center;
-      gap: 0.5rem;
-    }
   }
 }
 
-/* Book (a crease down the middle): the menu keeps to the left page. On the home page it's one
-   row above the coin; on other pages a column down the left page, beside the reading */
-@media (horizontal-viewport-segments: 2) {
-  .app-nav {
-    position: fixed;
-    left: 0;
-    width: calc(var(--fold-left-end) - var(--crease));
+:root[data-fold='tabletop'] .app-nav--home {
+  height: var(--fold-nav-h);
+}
+
+/* Wide enough for one row (narrower, two centred rows: --fold-nav-h, layouts/default.vue) */
+@media (min-width: 640px) {
+  :root[data-fold='tabletop'] .app-nav--home .app-nav__links {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
+}
 
-  /* Half a screen is too narrow for one row: two centred rows (--fold-nav-h is taller in book) */
-  .app-nav--home {
-    display: flex;
-    align-items: center;
-    height: var(--fold-nav-h);
-    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
-    padding-bottom: 0.25rem;
+:root[data-fold='tabletop'] .app-nav:not(.app-nav--home) {
+  top: calc(var(--fold-top-end) - var(--crease));
+  padding-top: calc(var(--fold-bottom-start) - var(--fold-top-end) + 2 * var(--crease));
 
-    .app-nav__links {
-      justify-content: center;
-      gap: 0.25rem 0.5rem;
-    }
+  .app-nav__links {
+    gap: 0.5rem;
   }
+}
 
-  .app-nav:not(.app-nav--home) {
-    bottom: 0;
-    display: flex;
-    align-items: center;
+/* Book (a crease down the middle): the menu keeps to the left page, at the side like iPhone
+   Duo's own controls. Home: two rows above the coin. Other pages: a column down the left page,
+   beside the reading on the right. */
+:root[data-fold='book'] .app-nav {
+  position: fixed;
+  left: 0;
+  width: calc(var(--fold-left-end) - var(--crease));
+}
+
+:root[data-fold='book'] .app-nav--home {
+  display: flex;
+  align-items: center;
+  height: var(--fold-nav-h);
+  padding-top: calc(env(safe-area-inset-top) + 0.25rem);
+  padding-bottom: 0.25rem;
+
+  .app-nav__links {
     justify-content: center;
+    gap: 0.25rem 0.5rem;
+  }
+}
 
-    .app-nav__links {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 0.75rem;
-    }
+:root[data-fold='book'] .app-nav:not(.app-nav--home) {
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .app-nav__links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
   }
 }
 
