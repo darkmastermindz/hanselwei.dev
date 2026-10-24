@@ -322,7 +322,7 @@ test.describe('iPhone Duo', () => {
     test.skip(testInfo.project.name !== 'iPhone Duo Cover', 'the outer screen')
     await open(page, '/')
     await foldPostureOnly(page)
-    expect(await foldOf(page)).toMatchObject({ mode: null, device: null })
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: 'iphone-duo-cover' })
   })
 
   test('open, upright, and the outer screen: the usual layout', async ({ page }, testInfo) => {
