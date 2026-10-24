@@ -14,7 +14,7 @@
 import { outboundFor } from '~/utils/outbound.js'
 
 definePageMeta({ layout: false })
-useHead({ title: 'Opening… · hanselwei.dev', meta: [{ name: 'robots', content: 'noindex' }] })
+useHead({ title: 'Opening… · Hansel Wei', meta: [{ name: 'robots', content: 'noindex' }] })
 
 const route = useRoute()
 const link = ref(null)
