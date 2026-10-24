@@ -112,8 +112,13 @@ test('the callback logs only the outcome and the email domain, never the token',
   assert.equal(logged[0].includes('gho_secret'), false)
 })
 
-test('/api/me answers 401 signed out, 403 for a non-owner, 200 for the owner, and only GET', async () => {
-  assert.equal((await me(req('/api/me'))).status, 401)
+test('/api/me answers 204 with no session, 401 for a bad one, 403 for a non-owner, 200 for the owner, and only GET', async () => {
+  // No session cookie at all: nothing to show, but not an error (it's asked on every page load)
+  const none = await me(req('/api/me'))
+  assert.equal(none.status, 204)
+  assert.equal(await none.text(), '')
+  assert.equal(none.headers.get('cache-control'), 'private, no-store')
+  for (const cookie of ['hw_session=', 'other=1']) assert.equal((await me(req('/api/me', { cookie }))).status, 204, cookie)
   assert.equal((await me(req('/api/me', { cookie: 'hw_session=forged.value' }))).status, 401)
   assert.equal((await me(req('/api/me', { cookie: `hw_session=${createSession({ email: 'x@example.com' }, SECRET)}` }))).status, 403)
   const ok = await me(req('/api/me', { cookie: ownerSession() }))
