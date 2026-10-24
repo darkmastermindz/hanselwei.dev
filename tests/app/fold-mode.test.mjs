@@ -80,6 +80,12 @@ test('an unfolded Android foldable (the flat query) is open flat; anything else 
   assert.equal(foldMode({ ...base, posture: 'continuous', width: 412, height: 915 }).mode, null)
 })
 
+test('more than two segments (a tri-fold part-way open) get the usual layout, not a fold guessed in the middle', () => {
+  const thirds = [0, 1, 2].map(i => ({ x: i * 400, y: 0, width: 400, height: 900 }))
+  assert.deepEqual(foldMode({ ...base, segments: thirds, posture: 'folded', width: 1200, height: 900 }), { mode: null, device: null, vars: {} })
+  assert.deepEqual(foldMode({ ...base, segments: thirds, flat: true, width: 1200, height: 900 }), { mode: null, device: null, vars: {} })
+})
+
 test('the head script works as a string (no outside references)', () => {
   const script = `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})`
   const attrs = {}

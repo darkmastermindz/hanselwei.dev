@@ -1,16 +1,20 @@
 <template>
   <!-- Only on a foldable in book (<html data-fold="book">): turn to the previous or next chapter
        from the corners of the right page, like a book (utils/pageTurn.mjs) -->
-  <nav class="book-pager" aria-label="Turn the page">
-    <NuxtLink v-if="pages.prev" :to="pages.prev.to" class="book-pager__corner book-pager__corner--prev">
-      ‹ {{ pages.prev.label }}
+  <!-- Screen readers hear "Previous chapter: Projects" in the "Chapters" landmark, not the
+       arrows (they're only drawn) -->
+  <nav class="book-pager" aria-label="Chapters">
+    <NuxtLink v-if="pages.prev" :to="pages.prev.to" rel="prev" :aria-label="`Previous chapter: ${pages.prev.label}`" class="book-pager__corner book-pager__corner--prev">
+      <span aria-hidden="true">‹</span> {{ pages.prev.label }}
     </NuxtLink>
     <NuxtLink
       v-if="pages.next"
       :to="pages.next.to"
+      rel="next"
+      :aria-label="`Next chapter: ${pages.next.label}`"
       :class="['book-pager__corner book-pager__corner--next', { 'is-hinting': hinting }]"
     >
-      {{ pages.next.label }} ›
+      {{ pages.next.label }} <span aria-hidden="true">›</span>
     </NuxtLink>
     <!-- The first few times the phone is folded like a book: the corner lifts a little and a note
          says the pages turn (utils/pageTurn.mjs turnHintDue) -->

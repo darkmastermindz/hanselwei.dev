@@ -6,6 +6,7 @@
 // Safari's preview flag report on a real foldable), or the device posture alone (what Safari's
 // posture flag reports on iPhone Duo, with no segments). Both apply live, without a reload.
 import { expect, test } from '@playwright/test'
+import AxeBuilder from '@axe-core/playwright'
 
 const FOLD = 'Galaxy Z Fold 7' // book when folded (a crease down the middle)
 const FOLD_WIDE = 'Galaxy Z Fold 7 landscape' // tabletop when folded (a crease across)
@@ -38,6 +39,10 @@ const fold = async (page, testInfo, orientation, mask = 0) => {
   const length = orientation === 'horizontal' ? viewport.height : viewport.width
   await cdp.send('Emulation.setDeviceMetricsOverride', metrics(testInfo, { displayFeature: { orientation, offset: Math.round(length / 2 - mask / 2), maskLength: mask } }))
   await page.waitForTimeout(400)
+  // Headless Chromium sometimes holds the first view transition after a DevTools metrics change
+  // for 4s (a bare startViewTransition too; never without the override): take that one here,
+  // not in a page turn
+  await page.evaluate(() => document.startViewTransition?.(() => {}).finished)
   return cdp
 }
 
@@ -150,15 +155,83 @@ test.describe('folded part-way', () => {
   test('book home: coin, name and menu on the left page, card and links on the right', async ({ page }, testInfo) => {
     test.skip(testInfo.project.name !== FOLD, 'folds the other way')
     await open(page, '/')
+    // Seamless, and with a hinge (34px, like Surface Duo in Chrome's device mode)
+    for (const mask of [0, 34]) {
+      await fold(page, testInfo, 'vertical', mask)
+      // Chromium fires nothing when only the hinge changes (same size, same number of segments),
+      // so a fresh page reads it
+      await page.reload({ waitUntil: 'networkidle' })
+      await page.waitForTimeout(400)
+      const f = await foldOf(page)
+      expect(f.mode).toBe('book')
+      expect(f.rightStart - f.leftEnd, 'the hinge is kept clear').toBe(mask)
+      expect((await box(page, '.home__hero')).right).toBeLessThanOrEqual(f.leftEnd)
+      expect((await box(page, '.app-nav')).right, 'the menu keeps to the left page').toBeLessThanOrEqual(f.leftEnd)
+      expect((await box(page, '.home__deck')).left).toBeGreaterThanOrEqual(f.rightStart)
+      expect(await onFold(page), `nothing on the fold (hinge ${mask}px)`).toEqual([])
+      await scrollBy(page, 400)
+      expect(await onFold(page), `nothing on the fold, scrolled (hinge ${mask}px)`).toEqual([])
+      await page.evaluate(() => scrollTo(0, 0))
+    }
+  })
+
+  test('turning a folded Fold sideways goes from book to tabletop, with the fold where it now is', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== FOLD, 'one device is enough')
+    const { width, height } = testInfo.project.use.viewport
+    for (const path of ['/', '/bio']) {
+      await open(page, path)
+      const cdp = await fold(page, testInfo, 'vertical')
+      expect((await foldOf(page)).mode).toBe('book')
+      // Sideways: the screen is wider than tall and the crease now runs across
+      await cdp.send('Emulation.setDeviceMetricsOverride', metrics(testInfo, { width: height, height: width, displayFeature: { orientation: 'horizontal', offset: Math.round(width / 2), maskLength: 0 } }))
+      await page.waitForTimeout(400)
+      const f = await foldOf(page)
+      expect(f).toMatchObject({ mode: 'tabletop', topEnd: Math.round(width / 2), bottomStart: Math.round(width / 2) })
+      expect(Number.isNaN(f.leftEnd), 'no book variables left behind').toBe(true)
+      expect(await onFold(page), `${path}: nothing on the fold`).toEqual([])
+      // And back upright
+      await fold(page, testInfo, 'vertical')
+      expect((await foldOf(page)).mode).toBe('book')
+      expect(await onFold(page), `${path}: nothing on the fold, upright again`).toEqual([])
+    }
+  })
+
+  test('a resize that changes nothing leaves <html> alone (Android fires them as the toolbars hide)', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== FOLD, 'one device is enough')
+    await open(page, '/bio')
     await fold(page, testInfo, 'vertical')
-    const f = await foldOf(page)
-    expect(f.mode).toBe('book')
-    expect((await box(page, '.home__hero')).right).toBeLessThanOrEqual(f.leftEnd)
-    expect((await box(page, '.app-nav')).right, 'the menu keeps to the left page').toBeLessThanOrEqual(f.leftEnd)
-    expect((await box(page, '.home__deck')).left).toBeGreaterThanOrEqual(f.rightStart)
-    expect(await onFold(page)).toEqual([])
-    await scrollBy(page, 400)
-    expect(await onFold(page), 'nothing on the fold, scrolled').toEqual([])
+    const changes = await page.evaluate(async () => {
+      let n = 0
+      const watch = new MutationObserver(records => (n += records.length))
+      watch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-fold', 'data-device', 'style'] })
+      for (let i = 0; i < 20; i++) dispatchEvent(new Event('resize'))
+      await new Promise(resolve => setTimeout(resolve, 50))
+      watch.disconnect()
+      return n
+    })
+    expect(changes).toBe(0)
+  })
+
+  test('tabletop home: keyboard focus never lands under the hero or the menu', async ({ page }, testInfo) => {
+    test.skip(![FOLD_WIDE, FLIP].includes(testInfo.project.name), 'tabletop')
+    await open(page, '/')
+    await fold(page, testInfo, 'horizontal')
+    const hidden = []
+    for (let i = 0; i < 25; i++) {
+      await page.keyboard.press('Tab')
+      await page.waitForTimeout(100)
+      const h = await page.evaluate(() => {
+        const el = document.activeElement
+        if (!el || el === document.body) return null
+        const r = el.getBoundingClientRect()
+        const x = Math.min(Math.max(r.left + r.width / 2, 0), innerWidth - 1)
+        const y = Math.min(Math.max(r.top + r.height / 2, 0), innerHeight - 1)
+        const top = document.elementFromPoint(x, y)
+        return top && (el.contains(top) || top.contains(el)) ? null : `${el.textContent.trim().slice(0, 30)} under ${top?.className}`
+      })
+      if (h) hidden.push(h)
+    }
+    expect(hidden).toEqual([])
   })
 
   for (const path of ['/bio', '/gear/outdoor', '/blog']) {
@@ -222,7 +295,10 @@ test.describe('turning the page in book', () => {
       window.__watching = true
     })
   const turned = async page => {
-    await page.waitForTimeout(1500)
+    // Until a turn has been seen and is over, or 6s: headless Chromium can hold a turn for 4s
+    // (see fold), past a fixed wait
+    await page.waitForFunction(() => window.__turns.size && !document.documentElement.dataset.pageTurn, null, { timeout: 6000 }).catch(() => {})
+    await page.waitForTimeout(300)
     const seen = await page.evaluate(() => [...window.__turns].sort())
     await page.evaluate(() => window.__turns.clear())
     return seen
@@ -286,6 +362,81 @@ test.describe('turning the page in book', () => {
     await expect(page).toHaveURL(/\/blog$/)
     expect(await turned(page), 'no page turn').toEqual([])
     expect(await page.evaluate(() => document.documentElement.dataset.pageTurn ?? null)).toBe(null)
+  })
+
+  // Where the page is scrolled on every frame of a turn (the browser draws none while it waits
+  // for the new page, so whatever is on screen in the first frame is what turns)
+  const watchScroll = page =>
+    page.evaluate(() => {
+      window.__scrolls = []
+      const tick = () => {
+        const root = document.documentElement
+        if ('pageTurned' in root.dataset) window.__scrolls.push(Math.round(scrollY))
+        requestAnimationFrame(tick)
+      }
+      tick()
+    })
+  const scrollsDuringTurn = page => page.evaluate(() => [...new Set(window.__scrolls.splice(0))])
+  // A turn has started and is over (polled: headless Chromium can hold a turn for 4s, see fold)
+  const turnOver = page =>
+    expect.poll(() => page.evaluate(() => window.__scrolls.length > 0 && !document.documentElement.dataset.pageTurn), { timeout: 8000 }).toBe(true)
+
+  test('a long page scrolled down: the new page turns in where it will stay, back and forward keep their place', async ({ page }, testInfo) => {
+    await open(page, '/terms')
+    await fold(page, testInfo, 'vertical')
+    await page.evaluate(() => scrollTo(0, 900))
+    await page.waitForTimeout(300)
+    await watchScroll(page)
+    await page.locator('.book-pager__corner--prev').click()
+    await turnOver(page)
+    await expect(page).toHaveURL(/\/bio$/)
+    expect(await scrollsDuringTurn(page), 'the new page turns in at the top, no jump').toEqual([0])
+    // The leaving right page is seen from the middle of the screen as it was read, not the middle
+    // of the whole page
+    const middle = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--turn-old-middle'))
+    expect(parseFloat(middle)).toBeCloseTo(testInfo.project.use.viewport.height / 2 + 900, -2)
+
+    await page.goBack()
+    await turnOver(page)
+    await expect(page).toHaveURL(/\/terms$/)
+    expect(await scrollsDuringTurn(page), 'back turns in at the place it was left, no jump').toEqual([900])
+    expect(await page.evaluate(() => scrollY)).toBe(900)
+    expect(await page.evaluate(() => ({ ...document.documentElement.dataset })), 'done turning').not.toHaveProperty('pageTurned')
+  })
+
+  test('going somewhere else mid-turn ends on the last page, with nothing left turning', async ({ page }, testInfo) => {
+    const warnings = []
+    page.on('console', message => /view-transition|InvalidState/i.test(message.text()) && warnings.push(message.text()))
+    page.on('pageerror', error => warnings.push(error.message))
+    await open(page, '/')
+    await fold(page, testInfo, 'vertical')
+    for (const delay of [0, 50, 300]) {
+      const here = await page.evaluate(() => location.pathname)
+      const [first, last] = ['/projects', '/bio', '/gear', '/blog', '/'].filter(p => p !== here)
+      await page.evaluate(
+        async ([first, last, delay]) => {
+          const router = document.querySelector('#__nuxt').__vue_app__.config.globalProperties.$router
+          router.push(first)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          router.push(last)
+        },
+        [first, last, delay]
+      )
+      // Polled: headless Chromium can hold a turn for 4s (see fold)
+      await expect.poll(() => page.evaluate(() => location.pathname), { message: `${delay}ms apart`, timeout: 8000 }).toBe(last)
+      await expect
+        .poll(() => page.evaluate(() => ({ turn: document.documentElement.dataset.pageTurn ?? null, pages: document.querySelectorAll('.page, .home').length })), { timeout: 8000 })
+        .toEqual({ turn: null, pages: 1 })
+    }
+    expect(warnings).toEqual([])
+  })
+
+  test('the corner links are named for screen readers by the chapter they turn to', async ({ page }, testInfo) => {
+    await open(page, '/blog')
+    await fold(page, testInfo, 'vertical')
+    const pager = page.getByRole('navigation', { name: 'Chapters' })
+    await expect(pager.getByRole('link', { name: 'Previous chapter: Projects', exact: true })).toBeVisible()
+    await expect(pager.getByRole('link', { name: 'Next chapter: Gear Lists', exact: true })).toBeVisible()
   })
 })
 
@@ -399,6 +550,36 @@ test('unfolded flat, a Fold is two columns: hero beside the card', async ({ page
   const hero = await box(page, '.home__hero')
   const card = await box(page, '.about-card')
   expect(card.left).toBeGreaterThanOrEqual(hero.right - 1)
+})
+
+// Folded, the menu moves to the bottom (tabletop) or the side (book) and the hero is fixed: still
+// no accessibility problems (the same rules as tests/e2e/a11y.spec.mjs)
+test('folded: no accessibility violations on home and Bio, in tabletop and in book', async ({ page }, testInfo) => {
+  test.skip(![FOLD, FOLD_WIDE].includes(testInfo.project.name), 'the Fold, both ways')
+  const orientation = testInfo.project.name === FOLD ? 'vertical' : 'horizontal'
+  for (const path of ['/', '/bio']) {
+    await open(page, path)
+    await fold(page, testInfo, orientation)
+    expect((await foldOf(page)).mode).toBe(orientation === 'vertical' ? 'book' : 'tabletop')
+    // The fold's own hint (book) fades in and out: check once it's gone
+    await expect(page.locator('.book-pager__hint')).toBeHidden({ timeout: 8000 })
+    const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).disableRules(['label-content-name-mismatch']).analyze()
+    const found = violations.flatMap(v => v.nodes.map(n => `${v.id}: ${n.target.join(' ')} — ${(n.failureSummary ?? '').replace(/\s+/g, ' ').slice(0, 200)}`))
+    expect(found, `${path}, folded`).toEqual([])
+  }
+})
+
+// Desktop Chrome: a window dragged near-square is not an unfolded foldable (the flat layout wants
+// a touch screen and no mouse: utils/foldMode.mjs FLAT_QUERY)
+test('a near-square desktop window is not a foldable', async ({ browser }, testInfo) => {
+  test.skip(testInfo.project.name !== FOLD, 'one run is enough')
+  const context = await browser.newContext({ baseURL: testInfo.project.use.baseURL, viewport: { width: 900, height: 900 }, isMobile: false, hasTouch: false })
+  const page = await context.newPage()
+  await page.route(/^https?:\/\/(?!localhost[:/])/, route => route.abort())
+  await page.goto('/', { waitUntil: 'networkidle' })
+  await page.waitForTimeout(500)
+  expect(await page.evaluate(() => document.documentElement.dataset.fold ?? null)).toBe(null)
+  await context.close()
 })
 
 // The foldable layouts are only for foldables: no other phone or tablet gets one, unfolded

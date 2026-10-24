@@ -183,6 +183,13 @@ html[data-input='gamepad'] :focus {
   padding-bottom: var(--fold-nav-h);
 }
 
+/* Home: the card and links scroll between the hero (fixed over the top half and the fold) and
+   the menu, so that's where keyboard focus scrolls them to, not under the hero */
+:root[data-fold='tabletop']:has(.app-nav--home) {
+  scroll-padding-top: calc(var(--fold-bottom-start) + var(--crease));
+  scroll-padding-bottom: var(--fold-nav-h);
+}
+
 /* Book (a crease down the middle): the menu has the left page (components/AppNav.vue); reading
    and the footer go on the right page */
 :root[data-fold='book'] {
@@ -214,15 +221,25 @@ html[data-input='gamepad'] :focus {
   view-transition-name: book-right;
 }
 
+/* The right page that arrives has a name of its own (set once the old one has been captured), so
+   each turns from where it is on screen: a long page scrolled down turns the part being read,
+   not its top, and the snapshots don't share one page-sized box */
+:root[data-page-turned] .home__deck,
+:root[data-page-turned] .page {
+  view-transition-name: book-right-new;
+}
+
 :root[data-page-turn]::view-transition-old(root),
 :root[data-page-turn]::view-transition-new(root),
 :root[data-page-turn]::view-transition-group(book-left),
-:root[data-page-turn]::view-transition-group(book-right) {
+:root[data-page-turn]::view-transition-group(book-right),
+:root[data-page-turn]::view-transition-group(book-right-new) {
   animation: none;
 }
 
 :root[data-page-turn]::view-transition-image-pair(book-left),
-:root[data-page-turn]::view-transition-image-pair(book-right) {
+:root[data-page-turn]::view-transition-image-pair(book-right),
+:root[data-page-turn]::view-transition-image-pair(book-right-new) {
   perspective: 1800px;
 }
 
@@ -230,14 +247,20 @@ html[data-input='gamepad'] :focus {
   perspective-origin: right center; /* the spine */
 }
 
+/* Seen from the middle of the screen (--turn-*-middle, plugins/pageTurn.client.js), not the
+   middle of a page that may be many screens long */
 :root[data-page-turn]::view-transition-image-pair(book-right) {
-  perspective-origin: left center;
+  perspective-origin: left var(--turn-old-middle, center);
+}
+
+:root[data-page-turn]::view-transition-image-pair(book-right-new) {
+  perspective-origin: left var(--turn-new-middle, center);
 }
 
 :root[data-page-turn]::view-transition-old(book-left),
 :root[data-page-turn]::view-transition-new(book-left),
 :root[data-page-turn]::view-transition-old(book-right),
-:root[data-page-turn]::view-transition-new(book-right) {
+:root[data-page-turn]::view-transition-new(book-right-new) {
   background-color: var(--fold-paper); /* paper, not see-through */
   mix-blend-mode: normal; /* not the cross-fade's plus-lighter, where a browser sets it outside the fade */
   backface-visibility: hidden;
@@ -252,13 +275,17 @@ html[data-input='gamepad'] :focus {
 }
 
 :root[data-page-turn]::view-transition-old(book-right),
-:root[data-page-turn]::view-transition-new(book-right) {
+:root[data-page-turn]::view-transition-new(book-right-new) {
   transform-origin: left center;
 }
 
 /* Forward: the right page lifts off the spine and turns over (first half); its back lands as the
    new left page (second half). The new right page is underneath all along; the old left page is
    there until the turning page covers it. */
+:root[data-page-turn='forward']::view-transition-group(book-right) {
+  z-index: 1; /* over the new right page (its group comes later, so would be on top) */
+}
+
 :root[data-page-turn='forward']::view-transition-old(book-right) {
   z-index: 1;
   animation-name: page-lift-right;
@@ -283,7 +310,7 @@ html[data-input='gamepad'] :focus {
   animation-timing-function: ease-in;
 }
 
-:root[data-page-turn='back']::view-transition-new(book-right) {
+:root[data-page-turn='back']::view-transition-new(book-right-new) {
   z-index: 1;
   animation-name: page-land-right;
   animation-timing-function: ease-out;
