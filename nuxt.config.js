@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
+import { OUTBOUND } from './utils/outbound.js'
 
 export default defineNuxtConfig({
   nitro: {
@@ -12,7 +13,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', '/rss.xml', '/feed.xml'],
+      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }

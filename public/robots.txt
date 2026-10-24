@@ -1,6 +1,8 @@
 User-agent: *
 # Contact card (unlocked on the home page by spinning the token)
 Disallow: /connect
+# Social link hand-off for phones (pages/out/[id].vue)
+Disallow: /out
 # Live JSON APIs (Netlify functions)
 Disallow: /api/
 
