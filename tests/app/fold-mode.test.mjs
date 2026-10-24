@@ -48,6 +48,27 @@ test('no other iPhone is taken for iPhone Duo, upright or sideways', () => {
   }
 })
 
+test("folded on an iPhone that isn't on iPhone Duo's inner screen: the outer screen, no fold", () => {
+  assert.deepEqual(foldMode({ ...base, iphone: true, apple: true, posture: 'folded', width: 382, height: 580 }), { mode: null, device: null, vars: {} })
+  assert.deepEqual(foldMode({ ...base, iphone: true, apple: true, posture: 'folded', width: 580, height: 382 }), { mode: null, device: null, vars: {} })
+  // Android with only the posture: the middle, as before
+  assert.equal(foldMode({ ...base, posture: 'folded', width: 412, height: 915 }).mode, 'tabletop')
+})
+
+test("Apple devices never get the Android near-square layout: iPads (which say they're Macs) and iPhone Duo upright", () => {
+  // iPad windows in Split View or Stage Manager can be near-square and touch-only
+  for (const [w, h] of [[820, 820], [744, 900], [1000, 900], [678, 820]]) {
+    assert.deepEqual(foldMode({ ...base, apple: true, flat: true, width: w, height: h }), { mode: null, device: null, vars: {} })
+    assert.deepEqual(foldMode({ ...base, apple: true, width: h, height: w }), { mode: null, device: null, vars: {} })
+  }
+  // iPhone Duo upright with Safari's bars showing is just inside 4/5: still the usual layout
+  const upright = foldMode({ ...base, iphone: true, apple: true, flat: true, width: 626, height: 760 })
+  assert.equal(upright.mode, null)
+  assert.equal(upright.device, 'iphone-duo')
+  // Sideways it's still two columns
+  assert.equal(foldMode({ ...base, iphone: true, apple: true, flat: true, width: 951, height: 600 }).mode, 'flat')
+})
+
 test('an unfolded Android foldable (the flat query) is open flat; anything else is unchanged', () => {
   assert.equal(foldMode({ ...base, flat: true, width: 984, height: 1016 }).mode, 'flat')
   assert.deepEqual(foldMode({ ...base, width: 1280, height: 800 }), { mode: null, device: null, vars: {} })
@@ -71,6 +92,90 @@ test('the head script works as a string (no outside references)', () => {
   assert.equal(attrs['data-fold'], 'book')
   assert.equal(style['--fold-left-end'], '492px')
   assert.equal(style['--crease'], '16px')
+})
+
+// A fake iPhone Duo page for the head script: innerWidth/innerHeight are what's visible, as on iOS,
+// and clientWidth/clientHeight the page's own size
+const duoPage = ({ ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 27_1 like Mac OS X)', posture } = {}) => {
+  const attrs = {}
+  const style = {}
+  const listeners = {}
+  const queries = []
+  let writes = 0
+  const root = {
+    clientWidth: 951,
+    clientHeight: 600,
+    setAttribute: (k, v) => ((attrs[k] = v), writes++),
+    removeAttribute: k => delete attrs[k],
+    style: { setProperty: (k, v) => (style[k] = v), removeProperty: k => delete style[k] }
+  }
+  const env = {
+    document: { documentElement: root },
+    window: {},
+    navigator: { userAgent: ua, ...(posture && { devicePosture: { type: posture, addEventListener() {} } }) },
+    matchMedia: q => {
+      const m = { query: q, matches: false, addEventListener: (e, f) => (m.change = f) }
+      queries.push(m)
+      return m
+    },
+    addEventListener: (e, f) => (listeners[e] = f),
+    innerWidth: 951,
+    innerHeight: 600
+  }
+  const script = `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})`
+  const run = new Function(...Object.keys(env), `${script}; return { set: (k, v) => { eval(k + ' = ' + JSON.stringify(v)) } }`)
+  const scope = run(...Object.values(env))
+  return { attrs, style, listeners, queries, root, scope, writes: () => writes }
+}
+
+test("iPhone Duo sideways keeps its two columns when zoomed in or typing (iOS's innerWidth/innerHeight shrink)", () => {
+  const page = duoPage()
+  assert.equal(page.attrs['data-fold'], 'flat')
+  // Pinch zoom or the keyboard: only what's visible shrinks, the page doesn't
+  page.scope.set('innerWidth', 420)
+  page.scope.set('innerHeight', 260)
+  page.listeners.resize()
+  assert.equal(page.attrs['data-fold'], 'flat')
+  assert.equal(page.attrs['data-device'], 'iphone-duo')
+})
+
+test("a guessed fold doesn't move as Safari's toolbar slides away, and the page isn't restyled for nothing", () => {
+  const page = duoPage({ posture: 'folded' })
+  page.root.clientWidth = 626
+  page.root.clientHeight = 760
+  page.listeners.resize()
+  assert.equal(page.attrs['data-fold'], 'tabletop')
+  assert.equal(page.style['--fold-top-end'], '380px')
+  const writes = page.writes()
+  for (const h of [780, 800, 820]) {
+    page.scope.set('innerHeight', h)
+    page.listeners.resize()
+  }
+  assert.equal(page.style['--fold-top-end'], '380px')
+  assert.equal(page.writes(), writes, 'no restyle when nothing changed')
+})
+
+test('the head script re-checks on turning the phone and on coming back from the back-forward cache', () => {
+  const page = duoPage()
+  assert.ok(page.queries.some(m => m.query === '(orientation: portrait)' && m.change), 'listens for the orientation')
+  assert.equal(typeof page.listeners.pageshow, 'function')
+  // Turned upright: the usual layout
+  page.root.clientWidth = 626
+  page.root.clientHeight = 800
+  page.queries.find(m => m.query === '(orientation: portrait)').change()
+  assert.equal(page.attrs['data-fold'], undefined)
+  assert.equal(page.attrs['data-device'], 'iphone-duo')
+})
+
+test("an iPad (Safari's Mac user agent) never gets iPhone Duo or a foldable layout, even when the near-square query matches", () => {
+  const ipad = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.1 Safari/605.1.15'
+  const page = duoPage({ ua: ipad })
+  page.root.clientWidth = 900
+  page.root.clientHeight = 900
+  page.queries.forEach(m => (m.matches = true))
+  page.listeners.resize()
+  assert.equal(page.attrs['data-fold'], undefined)
+  assert.equal(page.attrs['data-device'], undefined)
 })
 
 test('the site as a book: chapters in the menu order, pages outside it at the end', () => {

@@ -297,6 +297,32 @@ test.describe('iPhone Duo', () => {
     const hero = await box(page, '.home__hero')
     const card = await box(page, '.about-card')
     expect(card.left).toBeGreaterThanOrEqual(hero.right - 1)
+    // Two even columns, the gap between them on the hinge (the middle), kept clear
+    const middle = testInfo.project.use.viewport.width / 2
+    expect(hero.right, 'the hero ends before the hinge').toBeLessThanOrEqual(middle - 16)
+    expect((await box(page, '.home__deck')).left, 'the deck starts after it').toBeGreaterThanOrEqual(middle + 16)
+    expect(hero.right - hero.left).toBeCloseTo((await box(page, '.home__deck')).width, 0)
+  })
+
+  // iOS's innerWidth/innerHeight are what's visible: they shrink when zoomed in or typing. The
+  // layout follows the page's size, so iPhone Duo sideways keeps its two columns.
+  test('open, held sideways: zoomed in, still two columns', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== DUO_WIDE, 'the inner screen sideways')
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'innerWidth', { get: () => 420, configurable: true })
+      Object.defineProperty(window, 'innerHeight', { get: () => 260, configurable: true })
+    })
+    await open(page, '/')
+    await page.evaluate(() => dispatchEvent(new Event('resize')))
+    expect(await foldOf(page)).toMatchObject({ mode: 'flat', device: 'iphone-duo' })
+  })
+
+  // Half-folded, Safari moves to the outer screen; with the posture flag on it still says folded
+  test('the outer screen says folded: no fold on it, the usual layout', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'iPhone Duo Cover', 'the outer screen')
+    await open(page, '/')
+    await foldPostureOnly(page)
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: null })
   })
 
   test('open, upright, and the outer screen: the usual layout', async ({ page }, testInfo) => {
