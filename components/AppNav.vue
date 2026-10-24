@@ -1,5 +1,5 @@
 <template>
-  <nav class="app-nav bg-neutral text-neutral-content" aria-label="Main">
+  <nav :class="['app-nav bg-neutral text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
     <div class="app-nav__links">
       <NuxtLink
         v-for="link in links"
@@ -90,6 +90,79 @@ const links = [
 
   .is-current {
     background-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Foldables, folded part-way (the --fold-* variables, layouts/default.vue; README "Foldables").
+   Nothing in the menu ever sits on the fold. */
+
+/* Tabletop (a crease across the middle): on the home page, one row along the top, so the page
+   knows exactly where its top half starts (pages/index.vue) */
+@media (vertical-viewport-segments: 2) {
+  .app-nav--home {
+    display: flex;
+    align-items: center;
+    height: var(--fold-nav-h);
+    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
+    padding-bottom: 0.25rem;
+
+    .app-nav__links {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+  }
+
+  /* Other pages: the menu fills the top half and the fold, so the page itself reads in the bottom
+     half (it scrolls up under the menu, never onto the fold) */
+  .app-nav:not(.app-nav--home) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: calc(var(--fold-bottom-start) + var(--crease));
+    padding-bottom: calc(var(--fold-bottom-start) - var(--fold-top-end) + 2 * var(--crease));
+
+    .app-nav__links {
+      justify-content: center;
+      gap: 0.5rem;
+    }
+  }
+}
+
+/* Book (a crease down the middle): the menu keeps to the left page. On the home page it's one
+   row above the coin; on other pages a column down the left page, beside the reading */
+@media (horizontal-viewport-segments: 2) {
+  .app-nav {
+    position: fixed;
+    left: 0;
+    width: calc(var(--fold-left-end) - var(--crease));
+  }
+
+  /* Half a screen is too narrow for one row: two centred rows (--fold-nav-h is taller in book) */
+  .app-nav--home {
+    display: flex;
+    align-items: center;
+    height: var(--fold-nav-h);
+    padding-top: calc(env(safe-area-inset-top) + 0.25rem);
+    padding-bottom: 0.25rem;
+
+    .app-nav__links {
+      justify-content: center;
+      gap: 0.25rem 0.5rem;
+    }
+  }
+
+  .app-nav:not(.app-nav--home) {
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .app-nav__links {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.75rem;
+    }
   }
 }
 

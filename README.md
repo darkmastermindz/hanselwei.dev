@@ -115,6 +115,20 @@ Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity 
   - Every test runs with a phantom "controller" like the ones Android phones report (a fingerprint reader with the standard mapping, its stick stuck at -1 and a button held down), the cause of pages that wouldn't scroll on Android. Each test also checks the app really started, so a page whose scripts didn't run can't pass.
   - The **Android touch** workflow runs it on pull requests that change the front end, split across four runners.
 
+## Foldables
+
+Folding the phone changes the layout, live, with no reload (plain CSS media queries). Nothing you read or tap sits on the fold: everything keeps at least 1rem clear of it, even on seamless folds.
+
+| Fold | What you see | Safari / Firefox |
+|---|---|---|
+| Closed, or any phone, tablet or computer | The usual layout, unchanged | yes |
+| Tabletop (a crease across, top half tilted back like a laptop) | Top half: the coin and name, with the menu as one row. Bottom half: the About card, links and buttons. Other pages: the menu fills the top half, the page reads in the bottom half | no |
+| Book (a crease down the middle) | Left page: the coin and name, with the menu. Right page: the card, links and buttons. Other pages: the menu runs down the left page, the page reads on the right | no |
+| Open flat (a near-square screen) | Two columns: the coin and name beside the card and links | yes |
+
+- Folded part-way, Chrome and Samsung Internet (Chromium 138+) report the screen as two segments with the fold between them (the Viewport Segments API: `vertical-viewport-segments` / `horizontal-viewport-segments` and `env(viewport-segment-*)`). The fold positions are set as `--fold-*` variables in `layouts/default.vue`; `components/AppNav.vue` and `pages/index.vue` use them. Safari and Firefox don't have the API, so there only the open-flat layout applies.
+- `tests/e2e/foldable.spec.mjs` folds a Galaxy Z Fold 7 and Flip 7 through DevTools (with and without a hinge gap) and checks each layout, that nothing visible is on the fold (at the top and scrolled), and that folding and unfolding re-flows without a reload. It also checks that no other device gets a foldable layout.
+
 ## Blog (`/blog`): Posts and the Curiosity Feed
 One collection: every post is a Markdown file in `content/blog/` and lives at `/blog/<slug>`.
 A `series` label decides where it's listed:

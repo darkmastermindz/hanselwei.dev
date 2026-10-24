@@ -479,6 +479,20 @@ const release = () => {
   background: #3a3a3c;
 }
 
+/* A foldable in tabletop (a crease across the middle, pages/index.vue): the coin sits just above
+   the fold, so the bubble rises over its lower half instead of hanging down onto the fold */
+@media (vertical-viewport-segments: 2) {
+  .token__bubble {
+    top: auto;
+    bottom: 0.5rem;
+    transform-origin: bottom center;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
 .token__typing {
   display: inline-flex;
   gap: 0.25rem;

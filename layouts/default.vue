@@ -150,6 +150,48 @@ html[data-input='gamepad'] :focus {
   }
 }
 
+/* Foldables (see README "Foldables"). Folded part-way, the browser reports the screen as two
+   segments with the fold between them (the Viewport Segments API, Chromium 138+): a physical
+   hinge (a gap) or a seamless crease (no gap at all). Nothing important sits on it: everything
+   keeps --crease clear of both sides. These are only set while folded, so the layouts that use
+   them (here, components/AppNav.vue, pages/index.vue) apply only then. Without the API (Safari,
+   Firefox) or unfolded, nothing changes.
+   - Stacked segments, a crease across the middle ("tabletop", the top half tilted back like a
+     laptop): --fold-top-end is where the top segment ends, --fold-bottom-start where the bottom
+     one starts.
+   - Side by side, a crease down the middle ("book"): --fold-left-end and --fold-right-start. */
+@media (vertical-viewport-segments: 2) {
+  :root {
+    --fold-top-end: env(viewport-segment-bottom 0 0);
+    --fold-bottom-start: env(viewport-segment-top 0 1);
+    --crease: 1rem;
+    --fold-nav-h: calc(env(safe-area-inset-top, 0px) + 4rem); /* the nav, kept to one row */
+  }
+}
+
+@media (horizontal-viewport-segments: 2) {
+  :root {
+    --fold-left-end: env(viewport-segment-right 0 0);
+    --fold-right-start: env(viewport-segment-left 1 0);
+    --crease: 1rem;
+    --fold-nav-h: calc(env(safe-area-inset-top, 0px) + 7.5rem); /* two rows on the home page */
+  }
+
+  /* Book: the menu has the left page (components/AppNav.vue); reading and the footer go on the
+     right page */
+  .page,
+  .site-footer {
+    width: auto;
+    max-width: none;
+    margin-left: calc(var(--fold-right-start) + var(--crease));
+  }
+
+  .page {
+    margin-right: 0;
+    padding-left: 0;
+  }
+}
+
 .page-title {
   color: #eee;
   font-weight: 300;
