@@ -125,6 +125,8 @@ useHead({
 
 .terms a {
   color: #fbbf24;
+  text-decoration: underline; /* links in running text need more than colour */
+  text-underline-offset: 2px;
 }
 
 .back {

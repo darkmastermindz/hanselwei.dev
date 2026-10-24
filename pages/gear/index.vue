@@ -31,6 +31,7 @@ const { lists, live } = useInventoryLists()
 }
 .intro a {
   color: #41b883;
+  text-decoration: underline; /* links in running text need more than colour */
 }
 .lists {
   display: grid;
@@ -43,7 +44,7 @@ const { lists, live } = useInventoryLists()
   align-items: flex-start;
   padding: 1.25rem;
   border-radius: 0.75rem;
-  background: #41b883;
+  background: #277a55; /* deep enough for the white text (5.3:1, WCAG AA) */
   color: #fff;
   text-decoration: none;
   box-shadow: 5px 5px #1d5c3f;
@@ -62,8 +63,7 @@ const { lists, live } = useInventoryLists()
 }
 .count {
   display: block;
-  font-size: 0.85rem;
-  opacity: 0.85;
+  font-size: 0.85rem; /* not dimmed: dimmed it fell below WCAG AA on the green */
 }
 .desc {
   display: block;

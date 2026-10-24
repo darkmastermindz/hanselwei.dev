@@ -160,8 +160,9 @@ const grouped = computed(() => {
   padding-bottom: 0.25rem;
 }
 
+/* A deeper green than the site's #41b883 so the white text reads (5.3:1, WCAG AA) */
 .category {
-  background: #41b883;
+  background: #277a55;
   color: #fff;
   padding: 1rem;
   margin-bottom: 1.25rem;
@@ -203,8 +204,7 @@ const grouped = computed(() => {
 }
 
 .qty {
-  font-weight: 400;
-  opacity: 0.85;
+  font-weight: 400; /* set apart by weight, not dimming: dimmed it fell below WCAG AA */
 }
 
 .brand {

@@ -60,6 +60,9 @@ useHead({
 
     a {
       color: #fbbf24;
+      /* Links in running text need more than colour to stand out (WCAG 1.4.1) */
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
   }
 }

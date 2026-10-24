@@ -88,8 +88,10 @@ const links = [
     transform: none;
   }
 
+  /* The current page: a darker pill, so every link colour keeps WCAG AA contrast on it (a
+     lighter one dropped purple and green below 4.5:1) */
   .is-current {
-    background-color: rgba(255, 255, 255, 0.08);
+    background-color: rgba(0, 0, 0, 0.25);
   }
 }
 
