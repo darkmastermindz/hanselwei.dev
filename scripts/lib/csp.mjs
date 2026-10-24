@@ -9,13 +9,14 @@ const sha256 = text => `'sha256-${createHash('sha256').update(text, 'utf8').dige
 const decodeAttr = value =>
   value.replace(/&(quot|#39|apos|lt|gt|amp);/g, (_, e) => ({ quot: '"', '#39': "'", apos: "'", lt: '<', gt: '>', amp: '&' })[e])
 
-// Executable inline <script> bodies (JSON data blocks don't run, so they need no hash)
+// Executable inline <script> bodies and import maps (script-src covers both; JSON data blocks
+// don't run, so they need no hash)
 export const inlineScriptHashes = html => {
   const hashes = new Set()
   for (const [, attrs, body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi)) {
     if (/\ssrc\s*=/i.test(attrs)) continue
     const type = attrs.match(/\stype\s*=\s*["']?([^"'\s>]+)/i)?.[1]?.toLowerCase()
-    if (type && !['module', 'text/javascript', 'application/javascript'].includes(type)) continue
+    if (type && !['module', 'importmap', 'text/javascript', 'application/javascript'].includes(type)) continue
     hashes.add(sha256(body))
   }
   return hashes

@@ -52,6 +52,15 @@ test('only executable inline scripts and handlers are hashed', () => {
   assert.deepEqual([...handlerHashes(html)], ["'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM='"])
 })
 
+// Nuxt 4 loads the app through an inline import map ("#entry" -> the entry chunk). Browsers
+// apply script-src to import maps too: without its hash the map is blocked and no script runs.
+test('inline import maps are hashed', () => {
+  const map = '{"imports":{"#entry":"/_nuxt/Dlgq0opj.js"}}'
+  const hashes = inlineScriptHashes(`<script type="importmap">${map}</script><script type="application/json">{}</script>`)
+  assert.deepEqual([...hashes], [...inlineScriptHashes(`<script>${map}</script>`)])
+  assert.equal(inlineScriptHashes(`<script type="ImportMap">${map}</script>`).size, 1)
+})
+
 test('sign-in and session responses are never cached', () => {
   assert.equal(headersFor('/api/me')['Cache-Control'], 'private, no-store')
   assert.equal(headersFor('/api/auth/*')['Cache-Control'], 'private, no-store')

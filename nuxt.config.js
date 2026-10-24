@@ -86,6 +86,13 @@ export default defineNuxtConfig({
   css: [
     'tachyons/css/tachyons.css'
   ],
+  // Nuxt 4's CSS minifier (Lightning CSS) stops at old Internet Explorer hacks such as tachyons'
+  // `*zoom: 1`; with error recovery it drops them instead (no modern browser reads them anyway)
+  vite: {
+    css: {
+      lightningcss: { errorRecovery: true }
+    }
+  },
   /*
    ** Nuxt.js modules
    */
