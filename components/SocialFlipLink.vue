@@ -598,8 +598,7 @@ const openAfterAnimation = event => {
 }
 
 .flip-menu__note {
-  font-size: 0.75rem;
-  opacity: 0.85;
+  font-size: 0.75rem; /* full white: 4.6:1 on the Instagram orange (AA); 85% was 3.7:1 */
 }
 
 @keyframes menu-in {

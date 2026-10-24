@@ -75,7 +75,7 @@
           v-else-if="view === 'hobbies'"
           data-content
           :key="`hobbies-${readable}`"
-          :class="['json--hobbies motion-safe:animate-pulse', readable ? 'prose-line' : 'json']"
+          :class="['json--hobbies soft-pulse', readable ? 'prose-line' : 'json']"
         >
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
@@ -115,7 +115,7 @@
                 <strong>{{ entry.label }}</strong> · {{ entry.text }}
               </li>
             </ul>
-            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+            <p v-else key="edu-json" class="json json--edu json--xp soft-pulse">{{ yearJson }}</p>
           </Transition>
         </div>
       </Transition>
@@ -505,7 +505,7 @@ const poof = origin => {
   const y = origin ? origin.y - box.top : box.height / 2
 
   // Same look as the text being replaced, minus its looping animation
-  fallingClass.value = content.className.replace(/json-bounce|motion-safe:animate-pulse/g, '')
+  fallingClass.value = content.className.replace(/json-bounce|soft-pulse/g, '')
   falling.value = content.innerText.split(/\s+/).filter(Boolean).map(text => ({
     id: fxId++,
     text,
@@ -802,7 +802,8 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   margin-bottom: 0.4rem;
   font-size: 0.7rem;
   text-align: right;
-  color: #777;
+  /* #999: 5.3:1 on the card, WCAG AA for small text (#777 was 3.4:1) */
+  color: #999;
 }
 
 .about-card__translate {
@@ -993,6 +994,20 @@ cite {
 
 .json--hobbies {
   color: #d8b4fe;
+}
+
+/* A gentle breathing pulse on the Hobbies and XP text. It only dims to 75%, which stays above
+   WCAG AA (5.5:1 at its faintest); Tailwind's animate-pulse dims to 50% (3.3:1) */
+@media (prefers-reduced-motion: no-preference) {
+  .soft-pulse {
+    animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes soft-pulse {
+  50% {
+    opacity: 0.75;
+  }
 }
 
 .json--edu {
