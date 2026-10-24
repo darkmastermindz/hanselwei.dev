@@ -239,6 +239,7 @@ html[data-input='gamepad'] :focus {
 :root[data-page-turn]::view-transition-old(book-right),
 :root[data-page-turn]::view-transition-new(book-right) {
   background-color: var(--fold-paper); /* paper, not see-through */
+  mix-blend-mode: normal; /* not the cross-fade's plus-lighter, where a browser sets it outside the fade */
   backface-visibility: hidden;
   animation-name: none; /* still, unless turning (below), not the browser's cross-fade */
   animation-duration: 0.8s;

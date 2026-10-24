@@ -98,7 +98,18 @@ const onRelease = (spins, heldMs) => {
   align-items: center;
   column-gap: 1.5rem;
   min-height: calc(100vh - 5rem);
+  min-height: calc(100dvh - 5rem); /* iOS: 100vh is taller than the page while Safari's bars show */
   padding: 0 max(1rem, env(safe-area-inset-right)) 0 max(1rem, env(safe-area-inset-left));
+}
+
+/* iPhone Duo open flat still has its hinge down the middle: two even columns with the gap between
+   them on it, kept clear as Apple suggests. The same margin both sides (whichever side the camera
+   or Safari's bars are on) keeps that gap in the middle. */
+:root[data-fold='flat'][data-device='iphone-duo'] .home {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 4rem;
+  padding-right: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));
+  padding-left: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right));
 }
 
 /* The hero stays beside the card and links as they scroll, centred on the screen below the menu */
@@ -109,6 +120,7 @@ const onRelease = (spins, heldMs) => {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  min-height: calc(100vh - 5rem);
   min-height: calc(100dvh - 5rem);
 }
 
@@ -202,6 +214,7 @@ const onRelease = (spins, heldMs) => {
   height: 100vh;
   height: 100dvh;
   padding-top: var(--fold-nav-h); /* below the menu (components/AppNav.vue) */
+  padding-left: env(safe-area-inset-left); /* iPhone Duo sideways: clear of the camera */
 }
 
 :root[data-fold='book'] .home__deck {

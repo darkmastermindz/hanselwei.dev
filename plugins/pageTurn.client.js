@@ -32,6 +32,9 @@ export default defineNuxtPlugin(nuxtApp => {
         resolve()
         return pageShown
       })
+      // A turn that's skipped (tapped again mid-turn, or Safari skipping it while the tab is
+      // hidden) rejects `ready`; the page still changes, so it's not an error worth logging
+      transition.ready.catch(() => {})
       transition.finished.finally(() => {
         if (turn === turns) delete root.dataset.pageTurn
       })
