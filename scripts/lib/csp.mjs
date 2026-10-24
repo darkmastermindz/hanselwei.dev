@@ -33,14 +33,26 @@ export const handlerHashes = html => {
 
 export const FONT_STYLES = ['https://fonts.googleapis.com', 'https://use.typekit.net', 'https://p.typekit.net']
 export const FONT_FILES = ['https://fonts.gstatic.com', 'https://use.typekit.net']
+// Simple Analytics (added to every page by the site's Netlify settings): its script, and the
+// queue it reports page views to
+export const ANALYTICS_SCRIPTS = ['https://scripts.simpleanalyticscdn.com']
+export const ANALYTICS_CONNECT = ['https://queue.simpleanalyticscdn.com']
 // The projects page lists repos from the GitHub API
-export const CONNECT = ['https://api.github.com']
+export const CONNECT = ['https://api.github.com', ...ANALYTICS_CONNECT]
 
-export const buildCsp = ({ scripts = [], handlers = [] } = {}) => {
+// `reportOnly`: the policy deploy previews only report on (scripts/build-csp.mjs). Browsers ignore
+// upgrade-insecure-requests there and warn about it on every page, so it's left out.
+export const buildCsp = ({ scripts = [], handlers = [], reportOnly = false } = {}) => {
   const handlerList = [...handlers].sort()
   return [
     "default-src 'self'",
-    ['script-src', "'self'", ...[...scripts].sort(), ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])].join(' '),
+    [
+      'script-src',
+      "'self'",
+      ...ANALYTICS_SCRIPTS,
+      ...[...scripts].sort(),
+      ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])
+    ].join(' '),
     // Vue and the components set inline styles; styles can't run code
     ['style-src', "'self'", "'unsafe-inline'", ...FONT_STYLES].join(' '),
     ['font-src', "'self'", 'data:', ...FONT_FILES].join(' '),
@@ -54,6 +66,6 @@ export const buildCsp = ({ scripts = [], handlers = [] } = {}) => {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    'upgrade-insecure-requests'
+    ...(reportOnly ? [] : ['upgrade-insecure-requests'])
   ].join('; ')
 }

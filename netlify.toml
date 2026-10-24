@@ -26,6 +26,15 @@
   to = "/gear/camera"
   status = 301
 
+# The home page coin's photos (utils/coinFaces.mjs) go through Netlify's Image CDN, resized and
+# sent as WebP/AVIF. Only these two images can be fetched through it, so it isn't an open proxy
+# (tests/security/headers.test.mjs).
+[images]
+  remote_images = [
+    'https://avatars\.githubusercontent\.com/u/6164335\?.*',
+    'https://1\.gravatar\.com/avatar/821b2e292cc6a6668358a74625d89a477f395929456bf9f30db01c059de56fd2\?.*'
+  ]
+
 # Contact card: only linked after the human check on the home page,
 # and disallowed for crawlers in public/robots.txt
 [[redirects]]

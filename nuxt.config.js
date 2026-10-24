@@ -80,6 +80,12 @@ export default defineNuxtConfig({
       ]
     }
   },
+  runtimeConfig: {
+    public: {
+      // Netlify builds send the coin photos through Netlify's Image CDN (utils/coinFaces.mjs)
+      imageCdn: process.env.NETLIFY === 'true'
+    }
+  },
   /*
    ** Global CSS
    */

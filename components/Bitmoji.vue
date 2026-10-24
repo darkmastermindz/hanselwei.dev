@@ -20,7 +20,7 @@
           <img
             v-for="(photo, i) in COIN_FACES"
             :key="photo.id"
-            :src="photo.src"
+            v-bind="photoSources(photo.src, imageCdn)"
             class="token__photo"
             :class="{ 'is-shown': face === i }"
             alt=""
@@ -80,10 +80,12 @@
 // with the number of spins in that hold and how long it was held (ms).
 // Only real (trusted) input counts.
 import bubbleSettings from '~/data/coinBubble.generated.mjs'
-import { COIN_FACES, nextFace } from '~/utils/coinFaces.mjs'
+import { COIN_FACES, nextFace, photoSources } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
 
 const emit = defineEmits(['spin', 'release'])
+// Photos through Netlify's Image CDN on Netlify builds (utils/coinFaces.mjs)
+const imageCdn = useRuntimeConfig().public.imageCdn
 
 const MAX_SPEED = 24 // degrees per frame
 const angle = ref(0)
