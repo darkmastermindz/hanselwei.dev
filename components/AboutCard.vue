@@ -962,7 +962,7 @@ cite {
 .xp-timeline__label {
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #cbd5e1; /* readable even while the tab fades in (#94a3b8 dipped under 4.5:1) */
 }
 
 .json--skills {

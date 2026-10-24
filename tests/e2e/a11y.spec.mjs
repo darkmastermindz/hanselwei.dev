@@ -21,6 +21,16 @@ const open = async (page, path) => {
   expect(await page.evaluate(() => Boolean(document.querySelector('#__nuxt')?.__vue_app__)), 'the app is running').toBe(true)
 }
 
+// The tab's content fades in: check once nothing is part-way through a transition (endless
+// animations, like the coin's shine, don't count)
+const settled = async page => {
+  await page.waitForTimeout(150) // the fade starts a frame or two after the tap
+  await page.waitForFunction(() =>
+    document.getAnimations().every(a => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity)
+  )
+  await page.waitForTimeout(100)
+}
+
 // Every violation, one line per element, so a failure says exactly what to fix
 const check = async (page, what) => {
   // label-content-name-mismatch is one of axe's experimental rules (Lighthouse doesn't run it).
@@ -44,7 +54,7 @@ test('the About card has none on any tab, in plain English, or on XP', async ({ 
   await open(page, '/')
   for (const tab of await page.locator('[role="tab"]').all()) {
     await tab.click()
-    await page.waitForTimeout(300)
+    await settled(page)
     await check(page, `the ${(await tab.textContent()).trim()} tab`)
   }
   // Plain English: alt-click the card (the desktop shortcut for press-and-hold)

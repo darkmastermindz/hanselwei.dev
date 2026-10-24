@@ -315,7 +315,7 @@ const reset = () => {
 }
 
 .stars {
-  color: orangered;
+  color: #c2410c; /* orange dark enough to read on the light card (orangered was 2.96:1) */
 }
 
 .homepage {
