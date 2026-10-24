@@ -322,7 +322,7 @@ test.describe('iPhone Duo', () => {
     test.skip(testInfo.project.name !== 'iPhone Duo Cover', 'the outer screen')
     await open(page, '/')
     await foldPostureOnly(page)
-    expect(await foldOf(page)).toMatchObject({ mode: null, device: null })
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: 'iphone-duo-cover' })
   })
 
   test('open, upright, and the outer screen: the usual layout', async ({ page }, testInfo) => {
@@ -330,7 +330,50 @@ test.describe('iPhone Duo', () => {
     await open(page, '/')
     const f = await foldOf(page)
     expect(f.mode).toBe(null)
-    expect(f.device).toBe(testInfo.project.name === DUO ? 'iphone-duo' : null)
+    expect(f.device).toBe(testInfo.project.name === DUO ? 'iphone-duo' : 'iphone-duo-cover')
+  })
+
+  test('the front screen: a laptop shuts its lid to show the QR code to the site', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'iPhone Duo Cover', 'the front screen')
+    await open(page, '/')
+    expect((await foldOf(page)).device).toBe('iphone-duo-cover')
+    const lid = page.locator('.duo-lid')
+    await expect(lid).toBeVisible()
+    await expect(lid.locator('.duo-lid__qr path')).toHaveAttribute('d', /^M0 0h7v1h-7z/) // a QR code's corner finder
+    await expect(lid.locator('figcaption a')).toHaveAttribute('href', 'https://hanselwei.dev')
+    await expect(page.locator('.duo-badge')).toBeVisible()
+    await expect(page.locator('.fold-pong__play'), 'the game is for the inner screen').toBeHidden()
+    // Once the animation is over the lid lies facing you, square on, so the code can be scanned
+    await page.waitForTimeout(4200)
+    const qr = await lid.locator('.duo-lid__qr').boundingBox()
+    expect(Math.abs(qr.width - qr.height), 'not squashed by the tilt').toBeLessThan(2)
+  })
+
+  test('the inner screen: Fold Pong, with the fold as the net', async ({ page }, testInfo) => {
+    test.skip(![DUO, DUO_WIDE].includes(testInfo.project.name), 'the inner screen')
+    await open(page, '/')
+    await expect(page.locator('.duo-badge')).toBeVisible()
+    await expect(page.locator('.duo-lid')).toBeHidden()
+    const play = page.locator('.fold-pong__play')
+    await play.click()
+    const court = page.getByRole('dialog', { name: 'Fold Pong' })
+    await expect(court).toBeVisible()
+    await expect(court.locator('canvas')).toBeVisible()
+    await expect(court.locator('.fold-pong__score')).toHaveText('You 0 – 0 Computer')
+    await expect(page.getByRole('button', { name: 'Close' })).toBeFocused()
+    // Left alone, the game plays on and someone scores
+    await expect(court.locator('.fold-pong__score')).not.toHaveText('You 0 – 0 Computer', { timeout: 20_000 })
+    // A finger on the court moves your paddle (nothing breaks, the page doesn't scroll)
+    const box = await court.locator('canvas').boundingBox()
+    await page.mouse.move(box.width * 0.1, box.height * 0.2)
+    await page.mouse.down()
+    await page.mouse.move(box.width * 0.1, box.height * 0.8, { steps: 5 })
+    await page.mouse.up()
+    expect(await page.evaluate(() => scrollY)).toBe(0)
+    // Escape closes it and puts you back on the button
+    await page.keyboard.press('Escape')
+    await expect(court).toBeHidden()
+    await expect(play).toBeFocused()
   })
 
   // Safari's Device Posture flag says "folded" but not where: the fold is taken as the middle
@@ -365,4 +408,8 @@ test('no other device gets a foldable layout', async ({ page }, testInfo) => {
   if (f.mode) expect(testInfo.project.name, `only foldables get the ${f.mode} layout`).toMatch(/Fold|Flip|Duo/)
   expect(['tabletop', 'book'], 'nothing is folded').not.toContain(f.mode)
   if (f.device) expect(testInfo.project.name).toMatch(/^iPhone Duo/)
+  // iPhone Duo's own touches stay hidden everywhere else
+  if (!f.device) {
+    for (const extra of ['.duo-lid', '.duo-badge', '.fold-pong__play']) await expect(page.locator(extra), extra).toBeHidden()
+  }
 })

@@ -3,6 +3,7 @@
     <!-- Two plain groups (no change to the usual layout) that foldables split across the fold:
          the hero and, below it, the deck (see the "Foldables" styles) -->
     <div class="home__hero">
+      <DuoLaptopLid />
       <div class="home__coin flex justify-center pt-6 pb-4">
         <Bitmoji @spin="addSpin" @release="onRelease" />
       </div>
@@ -15,10 +16,13 @@
           </template>
           <template v-else><span class="hint__touch">tap</span><span class="hint__mouse">click</span> the coin · discover a new fact</template>
         </p>
+        <!-- iPhone Duo only (<html data-device>, utils/foldMode.mjs): a little celebration -->
+        <p class="duo-badge">✨ Hello, iPhone Duo</p>
         <h1 class="title text-4xl md:text-5xl lg:text-6xl">
           <strong>Hansel Wei</strong>
         </h1>
         <ContactCardButton :unlocked="humanVerified" />
+        <FoldPong />
       </div>
     </div>
 
@@ -224,6 +228,42 @@ const onRelease = (spins, heldMs) => {
   min-height: 100vh;
   min-height: 100dvh;
   padding: 1rem max(1rem, env(safe-area-inset-right)) 0 0; /* room for the card's shadow */
+}
+
+/* iPhone Duo's own badge: a rainbow edge that slowly turns, like Apple's own launch colours */
+.duo-badge {
+  display: none;
+}
+
+:root[data-device^='iphone-duo']:not([data-fold='tabletop'], [data-fold='book']) .duo-badge {
+  --duo-angle: 0deg;
+  display: inline-block;
+  margin: 0 auto 0.6rem;
+  padding: 0.25rem 0.8rem;
+  border: 2px solid transparent;
+  border-radius: 9999px;
+  background:
+    linear-gradient(#23262a, #23262a) padding-box,
+    conic-gradient(from var(--duo-angle), #c084fc, #7cfc00, #ffd700, #00b8ff, #c084fc) border-box;
+  color: #eee;
+  font-size: 0.8rem;
+  animation: duo-badge-turn 6s linear infinite;
+}
+
+@property --duo-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes duo-badge-turn {
+  to { --duo-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-device^='iphone-duo'] .duo-badge {
+    animation: none;
+  }
 }
 
 /* Phones say "tap"; a mouse says "click" (the same rule as the About card hint) */
