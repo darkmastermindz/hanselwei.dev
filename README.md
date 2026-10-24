@@ -64,7 +64,7 @@ Faint purple-to-green contour lines sit behind every page and draw in as visitor
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## Coin face (home page)
-The coin opens on the Bitmoji. Each time a flip lands heads up, the face shows the next photo, alternating between the GitHub avatar and the hanselwei.link Gravatar (`utils/coinFaces.mjs`). The pull-down reset brings the Bitmoji back. A photo that can't load is skipped, so the coin never goes blank.
+The coin opens on the Bitmoji. Each time a flip lands heads up, the face shows the next photo, alternating between the GitHub avatar and the hanselwei.link Gravatar (`utils/coinFaces.mjs`). The pull-down reset brings the Bitmoji back. A photo that can't load is skipped, so the coin never goes blank. On Netlify the photos go through its Image CDN (`netlify.toml` `[images]`, which allows only these two images): resized to the coin and sent as WebP or AVIF.
 
 ## Coin bubble (home page)
 When a press-and-hold on the coin lands it heads up (the profile picture), a blue iMessage-style speech bubble pops up under it: "typing…" for a moment, then the message. It fades after 8 seconds, but not while it's hovered or focused. After that, the coin's tails side shows an engraved QR code instead of "HW". It's for events. Set it in `config.toml` `[coin_bubble]` each year:
