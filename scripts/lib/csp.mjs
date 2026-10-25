@@ -1,6 +1,6 @@
 // Content-Security-Policy for the generated site (tested in tests/security/headers.test.mjs).
 // Scripts may only come from this site; the few inline scripts Nuxt writes into the
-// prerendered pages (and the font links' onload) are allowed by hash, so an injected
+// prerendered pages (and scripts/first-paint.mjs's loader) are allowed by hash, so an injected
 // <script> or on*= handler still can't run.
 import { createHash } from 'node:crypto'
 
@@ -22,7 +22,7 @@ export const inlineScriptHashes = html => {
   return hashes
 }
 
-// Inline event handler attributes (on*="...") the build itself wrote
+// Inline event handler attributes (on*="...") the build itself wrote (none at the moment)
 export const handlerHashes = html => {
   const hashes = new Set()
   for (const tag of html.match(/<[a-z][^>]*>/gi) ?? []) {

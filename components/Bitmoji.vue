@@ -15,10 +15,13 @@
     >
       <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
         <span class="token__face token__face--front" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
-          <img src="~/assets/hanselbitmoji.svg" alt="" draggable="false" />
-          <!-- Each heads landing shows the next photo (utils/coinFaces.mjs); they load up front so a switch never flashes -->
+          <!-- The first thing anyone sees (the page's largest paint), so it loads first (preloaded below) -->
+          <img :src="bitmojiUrl" alt="" draggable="false" fetchpriority="high" />
+          <!-- Each heads landing shows the next photo (utils/coinFaces.mjs). They load once the page
+               has (a hold takes longer than that), so a switch never flashes and they don't hold up
+               the Bitmoji. -->
           <img
-            v-for="(photo, i) in COIN_FACES"
+            v-for="(photo, i) in photosReady ? COIN_FACES : []"
             :key="photo.id"
             v-bind="photoSources(photo.src, imageCdn)"
             class="token__photo"
@@ -79,6 +82,7 @@
 // Emits `spin` for every full turn (a quick tap counts as one) and `release`
 // with the number of spins in that hold and how long it was held (ms).
 // Only real (trusted) input counts.
+import bitmojiUrl from '~/assets/hanselbitmoji.svg?url'
 import bubbleSettings from '~/data/coinBubble.generated.mjs'
 import { COIN_FACES, nextFace, photoSources } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
@@ -86,6 +90,8 @@ import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
 const emit = defineEmits(['spin', 'release'])
 // Photos through Netlify's Image CDN on Netlify builds (utils/coinFaces.mjs)
 const imageCdn = useRuntimeConfig().public.imageCdn
+useHead({ link: [{ rel: 'preload', as: 'image', href: bitmojiUrl, fetchpriority: 'high' }] })
+const photosReady = ref(false)
 
 const MAX_SPEED = 24 // degrees per frame
 const angle = ref(0)
@@ -120,6 +126,9 @@ let popId = 0
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   setTimeout(() => (intro.value = false), 1600)
+  const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
+  if (document.readyState === 'complete') loadPhotos()
+  else addEventListener('load', loadPhotos, { once: true })
 })
 
 onBeforeUnmount(() => {
@@ -188,6 +197,7 @@ const press = event => {
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   intro.value = false
+  photosReady.value = true // held before the page finished loading
   hideBubble()
   pressStartAngle = angle.value
   pressStartTime = performance.now()
