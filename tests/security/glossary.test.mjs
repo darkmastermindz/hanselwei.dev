@@ -25,7 +25,7 @@ test('marking terms adds only an abbr and a hidden span, and keeps the rest byte
   assert.equal(
     out,
     '<p>I won at an <abbr class="term" data-term="mlh" tabindex="0" aria-describedby="x-mlh-1">MLH</abbr><span id="x-mlh-1" hidden>' +
-      glossary.mlh.short.replace(/'/g, "'") +
+      glossary.mlh.short +
       '</span> event &amp; worked at <strong><abbr class="term" data-term="tiaa" tabindex="0" aria-describedby="x-tiaa-2">TIAA</abbr><span id="x-tiaa-2" hidden>' +
       glossary.tiaa.short +
       '</span></strong>.</p><p>More MLH.</p>'
