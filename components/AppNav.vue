@@ -179,7 +179,8 @@ const links = [
 
 /* Sign in appears in line with the other buttons with a little shimmer */
 .reveal-enter-active {
-  animation: reveal-in 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+  /* The pop is SwiftUI's .bouncy spring (it overshoots on its own); the glow fades on its own curve */
+  animation: reveal-in var(--spring-bouncy-duration) var(--spring-bouncy), reveal-glow 0.7s ease;
 }
 
 .reveal-leave-active {
@@ -191,18 +192,23 @@ const links = [
 }
 
 @keyframes reveal-in {
-  0% {
+  from {
     opacity: 0;
     transform: scale(0.6) rotate(-8deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes reveal-glow {
+  0% {
     filter: drop-shadow(0 0 0 #fbbf24);
   }
   60% {
-    opacity: 1;
-    transform: scale(1.12) rotate(2deg);
     filter: drop-shadow(0 0 10px #fbbf24);
   }
   100% {
-    transform: none;
     filter: none;
   }
 }

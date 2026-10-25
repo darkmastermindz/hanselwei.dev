@@ -76,7 +76,9 @@ export default defineNuxtConfig({
    ** Global CSS
    */
   css: [
-    'tachyons/css/tachyons.css'
+    'tachyons/css/tachyons.css',
+    // SwiftUI's spring presets as CSS easings (utils/spring.mjs)
+    '~/assets/css/springs.css'
   ],
   // Nuxt 4's CSS minifier (Lightning CSS) stops at old Internet Explorer hacks such as tachyons'
   // `*zoom: 1`; with error recovery it drops them instead (no modern browser reads them anyway)

@@ -52,7 +52,7 @@ onMounted(() => {
 
 .contact-card__button--unlocked {
   background: #00b489;
-  animation: unlock 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+  animation: unlock var(--spring-bouncy-duration) var(--spring-bouncy);
 }
 
 .contact-card__button--locked {

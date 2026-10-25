@@ -86,6 +86,7 @@ import bitmojiUrl from '~/assets/hanselbitmoji.svg?url'
 import bubbleSettings from '~/data/coinBubble.generated.mjs'
 import { COIN_FACES, nextFace, photoSources } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
+import { springEasing } from '~/utils/spring.mjs'
 
 const emit = defineEmits(['spin', 'release'])
 // Photos through Netlify's Image CDN on Netlify builds (utils/coinFaces.mjs)
@@ -107,7 +108,7 @@ const dropFace = i => {
 const resetAt = useState('token:resetAt', () => 0)
 watch(resetAt, () => {
   face.value = -1
-  transition.value = 'transform 0.5s ease'
+  transition.value = 'transform var(--spring-smooth-duration) var(--spring-smooth)'
   angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
 })
 const pressed = ref(false)
@@ -118,6 +119,7 @@ const pops = ref([])
 let speed = 0
 let frame = null
 let reducedMotion = false
+let springs = false // browsers without CSS linear() get the old fixed curve
 let pressStartAngle = 0
 let spinsThisHold = 0
 let pressStartTime = 0
@@ -125,6 +127,7 @@ let popId = 0
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
   setTimeout(() => (intro.value = false), 1600)
   const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
   if (document.readyState === 'complete') loadPhotos()
@@ -228,10 +231,18 @@ const release = () => {
     return
   }
 
-  // Coast to the next face, taking longer the faster it was spinning
+  // Coast to the next face, taking longer the faster it was spinning. Like a SwiftUI spring
+  // after a fling, it starts at the speed the coin was turning (degrees per frame at 60fps, as
+  // whole distances per second) instead of jolting to a fixed curve, and settles with a little wobble.
   const target = Math.ceil((angle.value + speed * 6) / 180) * 180
   const coastSeconds = 0.5 + speed / 30
-  transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+  const velocity = (speed * 60) / Math.max(target - angle.value, 1)
+  if (springs) {
+    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0.2, velocity })
+    transition.value = `transform ${seconds}s ${easing}`
+  } else {
+    transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+  }
   angle.value = target
   if (landsHeads(target)) {
     advanceFace() // swapped mid-spin, so it never pops on a still coin
@@ -537,7 +548,7 @@ const release = () => {
 }
 
 .bubble-enter-active {
-  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+  transition: opacity 0.25s ease, transform var(--spring-bouncy-duration) var(--spring-bouncy);
 }
 
 .bubble-leave-active {
