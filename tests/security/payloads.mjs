@@ -150,3 +150,25 @@ export const GEAR_TEXT = [
   '{{ constructor.constructor("alert(1)")() }}',
   'x'.repeat(10_000)
 ]
+
+// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a known XP entry id counts
+export const KUDOS_BODIES = [
+  '',
+  'null',
+  '[]',
+  '"education-ytt200"',
+  '{"id":null}',
+  '{"id":1}',
+  '{"id":["education-ytt200"]}',
+  '{"id":{"toString":"education-ytt200"}}',
+  '{"id":"__proto__"}',
+  '{"__proto__":{"id":"education-ytt200"}}',
+  '{"id":"constructor"}',
+  '{"id":"education-ytt200 "}',
+  '{"id":"EDUCATION-YTT200"}',
+  '{"id":"../counts"}',
+  '{"id":"counts"}',
+  '{"id":"seen/2026-10-25/x"}',
+  '{"id":"<img src=x onerror=alert(1)>"}',
+  '{id:"education-ytt200"}'
+]

@@ -30,6 +30,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.6",
     "@pinia/nuxt": "^1.0.3",
     "daisyui": "^3.9.4",
     "marked": "^14.1.4",
