@@ -149,7 +149,8 @@ watch(() => route.path, stopHint)
 
 .hint-enter-active,
 .hint-leave-active {
-  transition: opacity 0.4s ease, transform 0.4s ease;
+  /* The slide is SwiftUI's plain .spring (no overshoot) */
+  transition: opacity 0.4s ease, transform var(--spring-spring-duration) var(--spring-spring);
 }
 
 .hint-enter-from,

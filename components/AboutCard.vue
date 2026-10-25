@@ -823,7 +823,8 @@ cite {
   background: linear-gradient(135deg, #c084fc, #41b883);
   box-shadow: 0 0 0 2px #c084fc66;
   transform: translate(-50%, -50%);
-  transition: left 0.2s ease;
+  /* SwiftUI's .snappy spring: a quick slide to the picked year with a hint of overshoot */
+  transition: left var(--spring-snappy-duration) var(--spring-snappy);
   pointer-events: none;
 }
 
