@@ -72,3 +72,34 @@ test('the Instagram menu has none when open', async ({ page }) => {
   await expect(page.locator('.flip-menu')).toBeVisible({ timeout: 3000 })
   await check(page, 'the open Instagram menu')
 })
+
+// Kudos on the plain-English XP list (netlify/functions/kudos.mjs, stood in for here): the
+// buttons have no violations, and a tap counts without flipping the card back to JSON. The
+// service worker is off so the stand-in sees the requests.
+test.describe('XP kudos', () => {
+  test.use({ serviceWorkers: 'block' })
+
+  test('the kudos buttons have none, and a tap counts without leaving plain English', async ({ page }) => {
+    const sent = []
+    await page.route('**/api/kudos', async route => {
+      const request = route.request()
+      if (request.method() === 'POST') sent.push(request.postDataJSON().id)
+      const body = request.method() === 'POST' ? { id: sent.at(-1), count: 1, counted: true } : { counts: {} }
+      await route.fulfill({ status: 200, contentType: 'application/json; charset=utf-8', body: JSON.stringify(body) })
+    })
+    await open(page, '/#xp')
+    await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
+    await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
+    const button = page.locator('.edu-list .kudos').first()
+    await expect(button).toBeVisible({ timeout: 5000 })
+    await check(page, 'the XP list with kudos')
+
+    await button.click()
+    await expect(button).toHaveClass(/kudos--given/)
+    await expect(button).toContainText('1')
+    expect(sent).toHaveLength(1)
+    await expect(page.locator('.edu-list')).toBeVisible()
+    await settled(page)
+    await check(page, 'the XP list after a kudos')
+  })
+})
