@@ -56,32 +56,13 @@ export default defineNuxtConfig({
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'alternate', type: 'application/rss+xml', title: 'Blog · hanselwei.dev', href: '/rss.xml' },
         { rel: 'alternate', type: 'application/rss+xml', title: 'Curiosity Feed · hanselwei.dev', href: '/feed.xml' },
-        {
-          rel: 'preload',
-          as: 'style',
-          onload: "this.onload=null;this.rel='stylesheet'",
-          href: 'https://fonts.googleapis.com/css?family=Nova+Mono&display=swap'
-        },
-        {
-          rel: 'preload',
-          as: 'style',
-          onload: "this.onload=null;this.rel='stylesheet'",
-          href: 'https://use.typekit.net/rej0haw.css'
-        }
+        // Fonts load once the page has painted, in their fallbacks first (scripts/first-paint.mjs)
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Nova+Mono&display=swap' },
+        { rel: 'stylesheet', href: 'https://use.typekit.net/rej0haw.css' }
       ],
       // Foldables: picks the layout for how the screen is folded before the page paints, and
       // again on every fold (utils/foldMode.mjs; allowed by hash like Nuxt's own inline scripts)
-      script: [{ innerHTML: `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})` }],
-      noscript: [
-        {
-          children:
-            '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nova+Mono&display=swap">'
-        },
-        {
-          children:
-            '<link rel="stylesheet" href="https://use.typekit.net/rej0haw.css">'
-        }
-      ]
+      script: [{ innerHTML: `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})` }]
     }
   },
   runtimeConfig: {
@@ -101,6 +82,15 @@ export default defineNuxtConfig({
   vite: {
     css: {
       lightningcss: { errorRecovery: true }
+    }
+  },
+  hooks: {
+    // Nuxt prefetches a page's images at the lowest priority; the home page's Bitmoji is preloaded
+    // at the highest instead (components/Bitmoji.vue), and both at once would fetch it twice
+    'build:manifest': manifest => {
+      for (const entry of Object.values(manifest)) {
+        if (entry.resourceType === 'image') entry.prefetch = false
+      }
     }
   },
   /*
