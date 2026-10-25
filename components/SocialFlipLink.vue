@@ -337,8 +337,7 @@ const openAfterAnimation = event => {
   position: relative;
   display: grid;
   transform-style: preserve-3d;
-  /* SwiftUI's .bouncy spring: a CSS transition, so a flip cut short turns back from where it is */
-  transition: transform var(--spring-bouncy-duration) var(--spring-bouncy);
+  transition: transform 0.55s cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 
 /* One-time flip wave when the page loads, staggered per button */
