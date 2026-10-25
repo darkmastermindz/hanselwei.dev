@@ -77,7 +77,7 @@
           :key="`hobbies-${readable}`"
           :class="['json--hobbies soft-pulse', readable ? 'prose-line' : 'json']"
         >
-          <template v-if="readable">My hobbies include {{ sentence(hobbies.map(hobbyPhrase)) }}. 🧗🏻‍♂️</template>
+          <template v-if="readable">My hobbies include {{ sentence(hobbyPhrases) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
         </p>
         <div v-else key="edu" data-content class="xp-timeline">
@@ -191,8 +191,9 @@ const hobbies = [
   'Paddleboarding', 'Yoga', 'Running', 'Stargazing', 'Community Building', 'Maker', 'Stained Glass'
 ]
 // How a hobby reads in the plain-English sentence, where its label alone would be awkward
-const hobbyWords = { Maker: 'making things', 'Stained Glass': 'crafting stained glass' }
-const hobbyPhrase = hobby => hobbyWords[hobby] ?? hobby.toLowerCase()
+// (stained glass is folded into the makerspace phrase, so it's left out on its own)
+const hobbyWords = { Maker: 'makerspace things (3D printing, crafting, stained glass)', 'Stained Glass': null }
+const hobbyPhrases = hobbies.map(hobby => (hobby in hobbyWords ? hobbyWords[hobby] : hobby.toLowerCase())).filter(Boolean)
 
 // XP: certifications and education, then work history (newest first). `readable` and
 // `highlight` are the plain-English text; the JSON view uses the fields only.
