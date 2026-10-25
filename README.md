@@ -113,8 +113,8 @@ Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity 
 - `npm run test:android` runs the browser tests in `tests/e2e/` (Playwright) on every Android phone, tablet and foldable in Playwright's device list, in portrait and landscape, plus iPhone Duo: 103 device profiles. Run `npm run generate` first; `scripts/serve-static.mjs` serves the built site the way Netlify does, with its Content-Security-Policy. Set `PLAYWRIGHT_CHROMIUM_PATH` to use a Chromium you already have, or run `npx playwright install chromium`.
   - With a finger (real touch events), every page must scroll down and back up and stay where it's left, nothing may scroll sideways, swipes that start on the coin, About card, social links and menu must scroll the home page, and a tap must still work.
   - Every test runs with a phantom "controller" like the ones Android phones report (a fingerprint reader with the standard mapping, its stick stuck at -1 and a button held down), the cause of pages that wouldn't scroll on Android. Each test also checks the app really started, so a page whose scripts didn't run can't pass.
-  - The **Android touch** workflow runs it on pull requests that change the front end, split across four runners.
-- `tests/e2e/a11y.spec.mjs` runs axe-core (WCAG 2.1 A and AA) on every page and on the home page's card states and Instagram menu, on a phone and a tablet. It runs with `npm run test:android`, so CI covers it too.
+  - The **Browser tests** workflow runs them on pull requests that change the front end. It builds the site once, then runs each category on its own runners at the same time: Accessibility (6), Touch (6) and Foldables (2). A red check names its category. To run one category locally, name its spec, for example `npx playwright test tests/e2e/a11y.spec.mjs`.
+- `tests/e2e/a11y.spec.mjs` runs axe-core (WCAG 2.1 A and AA) on every page and on the home page's card states and Instagram menu, on a phone and a tablet. It runs with `npm run test:android`, and as the Accessibility check in CI.
 
 ## Foldables and iPhone Duo
 
