@@ -33,7 +33,7 @@
   "dependencies": {
     "@netlify/blobs": "^11.1.6",
     "@pinia/nuxt": "^1.0.3",
-    "daisyui": "^3.9.4",
+    "daisyui": "^5.7.50",
     "marked": "^14.1.4",
     "nuxt": "^4.6.2",
     "pinia": "^4.0.3",
