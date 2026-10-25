@@ -1112,7 +1112,7 @@ cite {
 }
 
 .poof-enter-active {
-  transition: opacity 0.5s ease 0.2s, filter 0.5s ease 0.2s, transform var(--spring-bouncy-duration) var(--spring-bouncy) 0.2s;
+  transition: opacity 0.5s ease 0.2s, filter 0.5s ease 0.2s, transform 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) 0.2s;
 }
 
 .poof-enter-from {
