@@ -19,6 +19,10 @@
         <a :href="post.canonical" target="_blank" rel="noopener">dev.to</a>.
       </p>
       <div class="prose prose-invert prose-purple max-w-none" v-html="post.html" />
+      <p v-if="kudos.available.value" class="kudos-line">
+        Enjoyed this post?
+        <KudosButton :id="`post-${slug}`" :name="post.title" />
+      </p>
     </article>
   </main>
 </template>
@@ -43,6 +47,10 @@ useHead({
   ],
   link: post.value.canonical ? [{ rel: 'canonical', href: post.value.canonical }] : []
 })
+
+// Kudos for the post (components/KudosButton.vue), live while it's open
+const kudos = useKudos()
+kudos.watchActive(() => true)
 
 const formatDate = iso =>
   new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
@@ -69,6 +77,11 @@ const formatDate = iso =>
     max-width: 100%;
     height: auto;
   }
+}
+
+.kudos-line {
+  margin-top: 2rem;
+  color: #cbd5e1;
 }
 
 .back,

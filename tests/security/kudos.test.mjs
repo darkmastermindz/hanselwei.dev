@@ -3,9 +3,9 @@
 // and kudos sent at the same moment are all counted
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { handleKudos } from '../../netlify/functions/kudos.mjs'
+import { cachedPostExists, handleKudos } from '../../netlify/functions/kudos.mjs'
 import { XP_IDS } from '../../data/xp.mjs'
-import { KUDOS_BODIES, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
+import { KUDOS_BODIES, KUDOS_POST_IDS, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
 
 // An in-memory stand-in for a Netlify Blobs store, with its conditional writes
 const memoryStore = () => {
@@ -64,8 +64,9 @@ test('kudos sent at the same moment are all counted', async () => {
 
 test('hostile bodies and unknown ids are refused and never stored', async () => {
   const store = memoryStore()
+  const postExists = async () => assert.fail('a hostile id should never be looked up')
   for (const body of [...KUDOS_BODIES, ...XSS_HTML.map(id => JSON.stringify({ id })), ...PROTOTYPE_KEYS.map(id => JSON.stringify({ id }))]) {
-    const res = await handleKudos(post(body), { store, ip: '1.1.1.1' })
+    const res = await handleKudos(post(body), { store, ip: '1.1.1.1', postExists })
     assert.ok([400, 404].includes(res.status), `${body.slice(0, 50)} -> ${res.status}`)
     assert.equal(res.headers.get('content-type'), 'application/json; charset=utf-8')
     await res.json()
@@ -91,4 +92,44 @@ test('stored counts are cleaned: unknown keys, prototype keys and non-counts are
   const { counts } = await (await handleKudos(get(), { store })).json()
   assert.deepEqual(counts, { [ID]: 2 })
   assert.equal({}.polluted, undefined)
+})
+
+test('a post gets kudos once the site is found to have it; a made-up one never does', async () => {
+  const store = memoryStore()
+  const asked = []
+  const postExists = async slug => (asked.push(slug), slug === 'hello-world')
+  const send = id => handleKudos(post(JSON.stringify({ id })), { store, ip: '1.1.1.1', postExists })
+  assert.deepEqual(await (await send('post-hello-world')).json(), { id: 'post-hello-world', count: 1, counted: true })
+  assert.equal((await send('post-not-a-post')).status, 404)
+  assert.deepEqual(asked, ['hello-world', 'not-a-post'])
+  assert.deepEqual(await (await handleKudos(get(), { store })).json(), { counts: { 'post-hello-world': 1 } })
+  // Nothing for the made-up post: no count, no marker
+  assert.equal([...store.blobs.keys()].filter(k => k.startsWith('seen/')).length, 1)
+})
+
+test('hostile post ids are refused before the site is asked about them', async () => {
+  const store = memoryStore()
+  const postExists = async slug => assert.fail(`looked up ${JSON.stringify(slug)}`)
+  for (const id of KUDOS_POST_IDS) {
+    const res = await handleKudos(post(JSON.stringify({ id })), { store, ip: '1.1.1.1', postExists })
+    assert.equal(res.status, 404, JSON.stringify(id).slice(0, 60))
+  }
+  assert.equal(store.blobs.size, 0)
+})
+
+test('whether a post exists is asked once, then kept for ten minutes', async () => {
+  let calls = 0
+  const check = async slug => (calls++, slug === 'kept-post')
+  const t = Date.UTC(2026, 9, 25)
+  assert.equal(await cachedPostExists('kept-post', 'https://x.example', t, check), true)
+  assert.equal(await cachedPostExists('kept-post', 'https://x.example', t + 60_000, check), true)
+  assert.equal(calls, 1)
+  assert.equal(await cachedPostExists('kept-post', 'https://x.example', t + 11 * 60_000, check), true)
+  assert.equal(calls, 2)
+})
+
+test('stored post counts keep only plain slugs', async () => {
+  const store = memoryStore()
+  store.blobs.set('counts', { etag: '"x"', text: JSON.stringify({ 'post-hello-world': 3, 'post-../counts': 5, 'post-Hello': 2, 'post-': 1, 'post-x': 0 }) })
+  assert.deepEqual((await (await handleKudos(get(), { store })).json()).counts, { 'post-hello-world': 3 })
 })
