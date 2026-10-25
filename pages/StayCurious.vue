@@ -19,7 +19,7 @@
 
 <style lang="scss" scoped>
 .notes {
-  background: #41b883;
+  background: #277a55; /* deep enough for the white text (WCAG AA) */
   color: #fff;
   padding: 1.25rem;
   box-shadow: 5px 5px #1d5c3f;

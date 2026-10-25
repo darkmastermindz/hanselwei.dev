@@ -75,7 +75,7 @@
           v-else-if="view === 'hobbies'"
           data-content
           :key="`hobbies-${readable}`"
-          :class="['json--hobbies motion-safe:animate-pulse', readable ? 'prose-line' : 'json']"
+          :class="['json--hobbies soft-pulse', readable ? 'prose-line' : 'json']"
         >
           <template v-if="readable">My hobbies include {{ sentence(hobbies.map(h => h.toLowerCase())) }}. 🧗🏻‍♂️</template>
           <template v-else>{ "My hobbies include" : [ {{ quoted([...hobbies, '🧗🏻‍♂️']) }} ] }</template>
@@ -115,7 +115,7 @@
                 <strong>{{ entry.label }}</strong> · {{ entry.text }}
               </li>
             </ul>
-            <p v-else key="edu-json" class="json json--edu json--xp motion-safe:animate-pulse">{{ yearJson }}</p>
+            <p v-else key="edu-json" class="json json--edu json--xp soft-pulse">{{ yearJson }}</p>
           </Transition>
         </div>
       </Transition>
@@ -247,56 +247,63 @@ const experience = [
   { category: 'Work', role: 'Full Stack Developer, Robotics Platform', company: 'TIAA (Brooksource)', start: 'Jul 2019', end: 'Jan 2020', location: 'Charlotte, NC', highlight: 'Automation Anywhere RPA bots and process intelligence systems; LSTM text classification model; cognitive services platform for text, voice and object detection' },
   { category: 'Work', role: 'Computer Scientist (Research and Development)', company: 'National Gypsum Company', start: 'May 2019', end: 'Jul 2019', location: 'Charlotte, NC', highlight: 'Azure Machine Learning deployment for material science; migrated ensemble ML from Python to C#/.NET; UX research and an analytics dashboard' },
   { category: 'Work', role: 'Computer Science Intern (Research and Development)', company: 'National Gypsum Company', start: 'Jan 2019', end: 'May 2019', location: 'Charlotte Metro', highlight: 'Partnered with Microsoft engineers on Azure AI data modeling and data science pipelines for real-time and batch processing; prototyped Azure ML environments; built a Power BI visualization and a data analytics dashboard proof of concept' },
-  { category: 'Work', role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won HackNC 2018 (a Major League Hacking event); gave over a dozen workshops at hackathons and campus events' },
+  { category: 'Work', role: 'College of Computing and Informatics Tutor', company: 'UNC Charlotte', start: 'Jan 2017', end: 'May 2019', location: 'Charlotte, NC', highlight: 'One-on-one tutoring for 10+ undergrad and grad CS students in Java, C, data structures, machine learning, AWS and networking; won HackNC 2018 (Major League Hacking\'s 2019 season); gave over a dozen workshops at hackathons and campus events' },
   { category: 'Volunteer', role: 'Guest speaker, GenCyber camp', company: 'Winthrop University, Richard W. Riley College of Education', start: '2017', end: '2017', location: 'Rock Hill, SC', highlight: 'Demonstrated open wireless network insecurity and how to ethically hack a network for teachers and students, as a student and computer science peer tutor at UNC Charlotte' },
   { category: 'Work', role: 'Associate', company: 'Carowinds', start: 'Apr 2016', end: 'Oct 2016', location: 'Charlotte Metro', highlight: 'Cashier supervisor responsible for handling money; supervised a team and improved customer satisfaction and accountability' },
   { category: 'Work', role: 'Computer Repair Technician / Network Designer (self-employed)', start: 'Jul 2014', end: 'Jul 2017', highlight: 'Remote support by phone, email and TeamViewer; on-site hardware upgrades and FRU repairs; network, server and security design for small businesses' }
 ]
 
-// Achievements: milestones on the XP timeline (the medal)
+// Achievements: milestones on the XP timeline (the medal). `date` is when it happened; MLH
+// hackathons also carry their Major League Hacking season, which runs from late summer to early
+// summer and is named for the year it ends (fall 2018 events are the 2019 season)
 const achievements = [
   {
     category: 'Achievement',
     event: 'MLH: hackathonCLT MMXIX',
+    season: 'MLH 2019 season',
     place: 'Submitted',
     date: '2019',
     location: 'Charlotte, NC',
-    readable: 'Submitted a project to hackathonCLT MMXIX (MLH) in Charlotte, NC (March 2019).'
+    readable: 'Submitted a project to hackathonCLT MMXIX (MLH 2019 season) in Charlotte, NC (March 2019).'
   },
   {
     category: 'Achievement',
     event: 'MLH: HackDuke 2018: Code for Good',
+    season: 'MLH 2019 season',
     place: 'Submitted',
     date: '2018',
     location: 'Durham, NC',
-    readable: 'Submitted a project to HackDuke 2018: Code for Good (MLH) in Durham, NC (October 2018).'
+    readable: 'Submitted a project to HackDuke 2018: Code for Good (MLH 2019 season) in Durham, NC (October 2018).'
   },
   {
     category: 'Achievement',
     event: 'MLH: HackNC 2018',
+    season: 'MLH 2019 season',
     place: 'Winner',
     project: 'Human Trafficking Textual and Emoji Analysis',
     description: 'Feature generation and emoji text analysis, for machine learning, to help prevent human trafficking.',
     date: '2018',
     location: 'Chapel Hill, NC',
-    readable: 'Winner at HackNC 2018 (MLH) in Chapel Hill, NC (October 2018) with Human Trafficking Textual and Emoji Analysis: feature generation and emoji text analysis to help prevent human trafficking.'
+    readable: 'Winner at HackNC 2018 (MLH 2019 season) in Chapel Hill, NC (October 2018) with Human Trafficking Textual and Emoji Analysis: feature generation and emoji text analysis to help prevent human trafficking.'
   },
   {
     category: 'Achievement',
     event: 'MLH: HackDuke 2017: Code for Good',
+    season: 'MLH 2018 season',
     place: 'Submitted',
     date: '2017',
     location: 'Durham, NC',
-    readable: 'Submitted a project to HackDuke 2017: Code for Good (MLH) in Durham, NC (October 2017).'
+    readable: 'Submitted a project to HackDuke 2017: Code for Good (MLH 2018 season) in Durham, NC (October 2017).'
   },
   {
     category: 'Achievement',
     event: 'MLH: RamHacks 2017',
+    season: 'MLH 2018 season',
     place: 'Submitted',
     project: 'ramhacksfall2017',
     date: '2017',
     location: 'Richmond, VA',
-    readable: 'Submitted ramhacksfall2017 to RamHacks 2017 (MLH) in Richmond, VA (September 2017).'
+    readable: 'Submitted ramhacksfall2017 to RamHacks 2017 (MLH 2018 season) in Richmond, VA (September 2017).'
   },
   {
     category: 'Achievement',
@@ -505,7 +512,7 @@ const poof = origin => {
   const y = origin ? origin.y - box.top : box.height / 2
 
   // Same look as the text being replaced, minus its looping animation
-  fallingClass.value = content.className.replace(/json-bounce|motion-safe:animate-pulse/g, '')
+  fallingClass.value = content.className.replace(/json-bounce|soft-pulse/g, '')
   falling.value = content.innerText.split(/\s+/).filter(Boolean).map(text => ({
     id: fxId++,
     text,
@@ -802,7 +809,8 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   margin-bottom: 0.4rem;
   font-size: 0.7rem;
   text-align: right;
-  color: #777;
+  /* #999: 5.3:1 on the card, WCAG AA for small text (#777 was 3.4:1) */
+  color: #999;
 }
 
 .about-card__translate {
@@ -961,7 +969,7 @@ cite {
 .xp-timeline__label {
   margin-top: 0.25rem;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #cbd5e1; /* readable even while the tab fades in (#94a3b8 dipped under 4.5:1) */
 }
 
 .json--skills {
@@ -993,6 +1001,20 @@ cite {
 
 .json--hobbies {
   color: #d8b4fe;
+}
+
+/* A gentle breathing pulse on the Hobbies and XP text. It only dims to 75%, which stays above
+   WCAG AA (5.5:1 at its faintest); Tailwind's animate-pulse dims to 50% (3.3:1) */
+@media (prefers-reduced-motion: no-preference) {
+  .soft-pulse {
+    animation: soft-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes soft-pulse {
+  50% {
+    opacity: 0.75;
+  }
 }
 
 .json--edu {

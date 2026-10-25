@@ -136,4 +136,10 @@ onBeforeUnmount(() => {
     transform: translate(-50%, 0.5rem);
   }
 }
+
+/* A foldable in book (a crease down the middle, <html data-fold>): centred on the right page,
+   not on the fold */
+:root[data-fold='book'] .ptr {
+  left: calc((var(--fold-right-start) + 100vw) / 2);
+}
 </style>

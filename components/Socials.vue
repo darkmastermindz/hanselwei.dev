@@ -10,7 +10,7 @@
   >
     <SocialFlipLink
       v-for="(link, i) in links"
-      :key="link.label"
+      :key="link.id ?? link.label"
       v-bind="link"
       :index="i"
       :style="layout ? { order: layout.order[i] } : null"
@@ -21,6 +21,8 @@
 </template>
 
 <script setup>
+import { OUTBOUND } from '~/utils/outbound.js'
+
 // Paused while a press on the About card switches its text, since the links move
 // (useSocialsLock). While paused, a tap on a link only brings them back; the next one opens it.
 const { locked, unlockSocials } = useSocialsLock()
@@ -40,34 +42,36 @@ const onPausedClick = event => {
   pausedPress = false
 }
 
+// Addresses live in utils/outbound.js (phones and tablets open them through /out)
 const links = [
-  { label: 'GitHub', back: '🦄 @darkmastermindz', href: 'https://github.com/darkmastermindz', bg: 'bg-[#24292f]', effect: 'unicorn' },
-  { label: 'Mastodon', back: '🐘 Toot at me', href: 'https://hansel.run/mastodon', bg: 'bg-[#563acc]' },
-  { label: 'Messenger', back: '💬 Say hi!', href: 'https://m.me/hanselwei', bg: 'bg-blue-600' },
+  { id: 'github', back: '🦄 @darkmastermindz', bg: 'bg-[#24292f]', effect: 'unicorn' },
+  { id: 'mastodon', back: '🐘 Toot at me', bg: 'bg-[#563acc]' },
+  { id: 'messenger', back: '💬 Say hi!', bg: 'bg-blue-600' },
   {
-    label: 'Instagram',
+    id: 'instagram',
     back: '🤘 Rock On! Hansel',
     backs: ['🤘 Rock On! Hansel', '🧗 Keep Climbing', '📖 Follow the Story'],
-    href: 'https://hansel.rocks',
     // A tap offers both accounts: hansel.rocks is the main one, hansel.codes is code only
     choices: [
-      { label: 'hansel.rocks', note: 'Main', href: 'https://hansel.rocks' },
-      // Switch to https://hansel.codes once that domain points at the profile
-      { label: 'hansel.codes', note: 'Code & software engineering', href: 'https://instagram.com/hansel.codes' }
+      { id: 'instagram', label: 'hansel.rocks', note: 'Main' },
+      { id: 'instagram-codes', label: 'hansel.codes', note: 'Code & software engineering' }
     ],
     bg: 'bg-[#c7501a]'
   },
-  { label: 'DEV Community', back: '✍️ @hansel', href: 'https://dev.to/hansel', bg: 'bg-black' },
-  { label: 'LinkedIn', back: '💼 Let’s connect', href: 'https://linkedin.com/in/hanselwei', bg: 'bg-[#0a66c2]' },
+  { id: 'devto', back: '✍️ @hansel', bg: 'bg-black' },
+  { id: 'linkedin', back: '💼 Let’s connect', bg: 'bg-[#0a66c2]' },
   {
-    label: 'Strava',
+    id: 'strava',
     back: '🏃 Run with me',
     backs: ['🏃 Run with me', '🗺️ Side quest with me', '🛶 Paddle with me', '🧗 Rock climb with me'],
-    href: 'https://www.strava.com/athletes/129101734',
     bg: 'bg-[#c73e00]'
   },
   { label: 'Send Email', back: '✉️ Drop me a line', href: 'mailto:hello+hansel@hanselwei.dev', bg: 'bg-[#008856]' }
-]
+].map(link => {
+  const to = link.id && OUTBOUND[link.id]
+  const choices = link.choices?.map(choice => ({ ...choice, href: OUTBOUND[choice.id].href }))
+  return to ? { ...link, label: to.label, href: to.href, ...(choices && { choices }) } : link
+})
 
 // Arrange the pills from their real widths: where three rows fit (tablet/desktop) the
 // links keep their order over three evenly filled rows; on phones they form a lens,
