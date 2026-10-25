@@ -166,11 +166,37 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
   [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`).
 
 ## Gear inventory (Netlify Functions)
-- Edit inventories in `data/inventory.mjs`.
+- Each list is a file in `data/gear/` (`outdoor.json`, `camera.json`), kept in one canonical form (`utils/gearEdits.mjs`; a test fails on a hand edit that isn't). `data/inventory.mjs` reads them, with the statuses and filters.
 - `netlify/functions/inventory.mjs` serves them:
   - `GET /api/inventory`: all lists
   - `GET /api/inventory/outdoor?section=Climbing&tag=Rappel&status=owned&q=black`: filtered items
 - `/gear/:list` pages are prerendered from the same data, then refreshed from the function in the browser.
+
+## Glossary terms
+Acronyms, lingo and jargon in the site's own text (MLH, SPI, TIAA, CI/CD, SUP, Guide Mode…) have a dotted underline. Hover, focus or tap one for a short definition and a link to where it comes from.
+- The terms are in `data/glossary.js` (term, short definition, link, other spellings).
+- `<Term id="mlh">` marks fixed text and `<TermText :text>` marks data-driven text (the About card's plain-English lines, gear tags and notes). `glossaryHtml` (`server/utils/glossaryHtml.js`) marks the bio's markdown, and blog posts that set `glossary: true` in front matter, after sanitizing. Only the first use of a term in each piece of text is marked.
+- `<TermTip>` (in the default layout) is the one definition bubble for every term. It opens on hover, focus (Enter moves into its link) and tap, stays while the pointer is on it, and closes on Escape, a tap elsewhere or scrolling (WCAG 1.4.13). Screen readers get the definition as the term's description.
+- `tests/app/glossary.test.mjs` fails on an acronym in the display text that has no definition; the fix is a glossary entry or plain words (CLAUDE.md "Display text").
+
+## Editing gear lists
+Signed in, each gear page (`/gear/:list`) has **✏️ Edit list**: change any item (name, brand, quantity, section, category, status, tags, notes), remove it, or add one. Changes show on the page as they'll look and stay in that browser until sent. **Send** turns them into one entry in the rolling **Gear updates** pull request:
+
+1. `/api/gear/token` (`netlify/functions/gear-token.mjs`) checks the changes and signs exactly them for a signed-in owner: an HMAC over the owner's email, the list and a hash of the changes, good for 15 minutes (`netlify/lib/gearToken.mjs`).
+2. The browser posts the changes and the token to the `gear-edit` Netlify Form (defined in `public/forms/gear-edit.html` so Netlify finds it).
+3. The **Gear updates** workflow (`.github/workflows/gear-updates.yml`, `scripts/gear-updates.mjs`) runs weekly (Mondays 13:23 UTC), whenever a pull request merges into main, and on demand. It reads the form's submissions from Netlify and drops any whose token doesn't check out (the form itself is public). It applies the rest in the order they were sent to `data/gear/*.json` on the `gear-updates` branch, one commit per submission. It runs `npm test`, then opens or updates the **Gear updates** pull request and deletes the submissions it handled. The same changes on the same list always give the same file, byte for byte.
+
+Merge the pull request to publish. Until then, the editor shows the live lists plus your unsent changes, not edits already waiting in the pull request. New lists are added by hand (a new `data/gear/<id>.json` and a line in `data/inventory.mjs`).
+
+**One-time setup** (until it's done, the workflow logs "not set up" and passes):
+- Netlify: turn on form detection (Site configuration → Forms), and add an environment variable `GEAR_EDIT_KEY`: a random string of 32+ characters, e.g. `openssl rand -base64 48`.
+- GitHub repository secrets (Settings → Secrets and variables → Actions):
+  - `GEAR_EDIT_KEY`: the same value.
+  - `NETLIFY_API_TOKEN`: a Netlify personal access token.
+  - `NETLIFY_SITE_ID`: the site's API ID (Site configuration → General).
+- GitHub: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests".
+
+A pull request opened with the workflow's own token doesn't start other workflows, so the script runs the tests itself. Netlify still builds a deploy preview, and the next push to the branch runs CI.
 
 ## Install as an app (PWA)
 `public/manifest.webmanifest`, `public/sw.js` and the icons in `public/icons/` make the site installable:
@@ -178,4 +204,4 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 - **iOS / Safari:** Share → *Add to Home Screen*. The installed app uses an opaque status bar (`apple-mobile-web-app-status-bar-style: black`) and starts below it. iOS reads that when the app is added, so remove and re-add the app after changing it. When it runs installed, the page gets `html.is-installed` (`utils/installed.js`) and the nav gets a little more room.
 
 ## License
-The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.
+The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/gear/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.

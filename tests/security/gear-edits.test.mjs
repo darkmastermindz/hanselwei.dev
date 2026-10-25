@@ -1,0 +1,140 @@
+// Gear list edits arrive through a public Netlify Form, so nothing in them is trusted until it is
+// signed by an owner (netlify/lib/gearToken.mjs) and checked (utils/gearEdits.mjs)
+import { test, beforeEach, afterEach } from 'node:test'
+import assert from 'node:assert/strict'
+import { applyOps, describeOp, LIMITS, serializeList, validateOps } from '../../utils/gearEdits.mjs'
+import { createGearToken, GEAR_TOKEN_MAX_AGE, gearKey, readGearToken } from '../../netlify/lib/gearToken.mjs'
+import gearToken from '../../netlify/functions/gear-token.mjs'
+import { createSession, sessionSecret } from '../../netlify/lib/session.mjs'
+import { GEAR_TEXT, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
+
+const KEY = 'g'.repeat(48)
+const NOW = Date.UTC(2026, 9, 25, 12)
+const item = (name = 'Rope') => ({ name, section: 'Climbing', category: 'Ropes' })
+const base = { title: 'T', emoji: '🧪', description: '', sections: ['Climbing'], items: [{ id: 'rope', section: 'Climbing', category: 'Ropes', name: 'Rope', qty: 1, tags: [], status: 'owned' }] }
+
+test('item text is kept as plain text, one line, cut to size', () => {
+  for (const name of [...GEAR_TEXT, ...XSS_HTML]) {
+    const { ops, error } = validateOps([{ op: 'add', item: { ...item(name), brand: name, notes: name, tags: [name] } }])
+    if (error) continue // a name that is nothing but stripped characters
+    const it = ops[0].item
+    for (const value of [it.name, it.brand, it.notes, ...it.tags].filter(Boolean)) {
+      assert.doesNotMatch(value, /[\u0000-\u001f\u007f​-‏‪-‮⁦-⁩]/, JSON.stringify(name))
+    }
+    assert.ok(it.name.length <= LIMITS.name && (it.notes ?? '').length <= LIMITS.notes)
+  }
+})
+
+test('the stored file stays valid JSON whatever the text, and is the same every time', () => {
+  const { ops } = validateOps(GEAR_TEXT.map(name => ({ op: 'add', item: item(name) })).filter(o => validateOps([o]).ops))
+  const once = serializeList(applyOps(base, ops).list)
+  assert.equal(serializeList(applyOps(base, ops).list), once)
+  assert.doesNotThrow(() => JSON.parse(once))
+})
+
+test('ids, operations, quantities and statuses outside what is allowed are rejected or fall back', () => {
+  for (const id of ['__proto__', '__defineGetter__', '../outdoor', 'ROPE', 'rope--x', '', 'a'.repeat(200), null, {}]) {
+    assert.ok(validateOps([{ op: 'remove', id }]).error, String(id))
+  }
+  // Ids are only ever compared, never used as keys: one shaped like "constructor" finds nothing
+  for (const id of PROTOTYPE_KEYS.filter(key => validateOps([{ op: 'remove', id: key }]).ops)) {
+    const { list, skipped } = applyOps(base, validateOps([{ op: 'remove', id }]).ops)
+    assert.equal(list.items.length, 1, id)
+    assert.equal(skipped.length, 1, id)
+  }
+  assert.ok(validateOps([{ op: 'delete', id: 'rope' }]).error)
+  assert.ok(validateOps([{ op: '__proto__' }]).error)
+  assert.ok(validateOps('not a list').error)
+  assert.ok(validateOps([]).error)
+  assert.ok(validateOps(Array.from({ length: LIMITS.ops + 1 }, () => ({ op: 'remove', id: 'rope' }))).error)
+  for (const qty of [-1, 1.5, 1e9, 'NaN', '__proto__', null]) {
+    assert.equal(validateOps([{ op: 'add', item: { ...item(), qty } }]).ops[0].item.qty, 1, String(qty))
+  }
+  assert.equal(validateOps([{ op: 'add', item: { ...item(), status: 'constructor' } }]).ops[0].item.status, 'owned')
+  const tags = Array.from({ length: 100 }, (_, i) => `t${i}`)
+  assert.equal(validateOps([{ op: 'add', item: { ...item(), tags } }]).ops[0].item.tags.length, LIMITS.tags)
+})
+
+test('only the known item fields are kept (no __proto__ or extra keys reach the file)', () => {
+  const sneaky = JSON.parse('{"name":"Rope","section":"Climbing","category":"Ropes","__proto__":{"admin":true},"script":"x"}')
+  const { ops } = validateOps([{ op: 'add', item: sneaky }])
+  assert.deepEqual(Object.keys(ops[0].item), ['section', 'category', 'name', 'qty', 'tags', 'status'])
+  assert.equal({}.admin, undefined)
+})
+
+test('change descriptions defuse @mentions and code spans before GitHub renders them', () => {
+  const line = describeOp({ op: 'add', item: { name: '@everyone `x`', section: 'S', category: 'C', qty: 1 } })
+  assert.doesNotMatch(line, /@everyone/)
+  assert.doesNotMatch(line, /`/)
+})
+
+const sign = (opts = {}, key = KEY, now = NOW) => createGearToken({ email: 'hello@hanselwei.dev', list: 'camera', opsText: '[1]', ...opts }, key, now)
+
+test('a gear token is good only for its list and its exact changes, for 15 minutes', () => {
+  const token = sign()
+  assert.deepEqual(readGearToken(token, { list: 'camera', opsText: '[1]' }, KEY, NOW + 1000), { email: 'hello@hanselwei.dev', list: 'camera' })
+  assert.equal(readGearToken(token, { list: 'outdoor', opsText: '[1]' }, KEY, NOW), null)
+  assert.equal(readGearToken(token, { list: 'camera', opsText: '[2]' }, KEY, NOW), null)
+  assert.equal(readGearToken(token, { list: 'camera', opsText: '[1]' }, 'h'.repeat(48), NOW), null)
+  assert.equal(readGearToken(token, { list: 'camera', opsText: '[1]' }, KEY, NOW + (GEAR_TOKEN_MAX_AGE + 1) * 1000), null)
+  assert.equal(readGearToken(sign({}, KEY, NOW + 10 * 60 * 1000), { list: 'camera', opsText: '[1]' }, KEY, NOW), null) // from the future
+})
+
+test('forged, unsigned and malformed gear tokens are rejected, and short keys are refused', () => {
+  const [, signature] = sign().split('.')
+  const b64 = value => Buffer.from(JSON.stringify(value)).toString('base64url')
+  const iat = Math.floor(NOW / 1000)
+  const forged = `${b64({ email: 'hello@hanselwei.dev', list: 'outdoor', digest: 'x', iat, exp: iat + 60 })}.${signature}`
+  for (const token of [forged, sign().split('.')[0], `${sign()}.x`, '', 'a.b', null, 42, 'x'.repeat(5000)]) {
+    assert.equal(readGearToken(token, { list: 'camera', opsText: '[1]' }, KEY, NOW), null, String(token).slice(0, 20))
+  }
+  assert.equal(gearKey({ GEAR_EDIT_KEY: 'short' }), null)
+  assert.equal(gearKey({}), null)
+})
+
+// /api/gear/token
+const ENV = { GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length', GEAR_EDIT_KEY: KEY }
+const SITE = 'https://www.hanselwei.dev'
+beforeEach(() => Object.assign(process.env, ENV))
+afterEach(() => {
+  for (const key of Object.keys(ENV)) delete process.env[key]
+})
+const call = ({ method = 'POST', email = 'hello@hanselwei.dev', origin = SITE, body = { list: 'camera', ops: [{ op: 'remove', id: 'x-t5' }] } } = {}) =>
+  gearToken(
+    new Request(`${SITE}/api/gear/token`, {
+      method,
+      headers: {
+        ...(origin && { origin }),
+        ...(email && { cookie: `hw_session=${createSession({ email }, sessionSecret(ENV))}` }),
+        'content-type': 'application/json'
+      },
+      ...(method === 'POST' && { body: typeof body === 'string' ? body : JSON.stringify(body) })
+    })
+  )
+
+test('the token endpoint signs only for a signed-in owner, from this site', async () => {
+  assert.equal((await call({ method: 'GET' })).status, 405)
+  assert.equal((await call({ origin: 'https://evil.example' })).status, 403)
+  assert.equal((await call({ origin: null })).status, 403)
+  assert.equal((await call({ email: null })).status, 401)
+  assert.equal((await call({ email: 'someone@example.com' })).status, 403)
+  delete process.env.GEAR_EDIT_KEY
+  assert.equal((await call()).status, 503)
+})
+
+test('the token endpoint refuses unknown lists, bad changes and bad bodies', async () => {
+  for (const list of [...PROTOTYPE_KEYS, '../camera', 'Camera']) assert.equal((await call({ body: { list, ops: [{ op: 'remove', id: 'x' }] } })).status, 404, list)
+  assert.equal((await call({ body: { list: 'camera', ops: [{ op: 'nuke' }] } })).status, 422)
+  assert.equal((await call({ body: '{not json' })).status, 400)
+  assert.equal((await call({ body: 'x'.repeat(300 * 1024) })).status, 413)
+})
+
+test('a signed answer covers exactly the checked changes it returns', async () => {
+  const res = await call({ body: { list: 'camera', ops: [{ op: 'add', item: { ...item('<b>Lens</b>\nx'), extra: 1 } }] } })
+  assert.equal(res.status, 200)
+  assert.equal(res.headers.get('cache-control'), 'private, no-store')
+  const { ops, token } = await res.json()
+  assert.deepEqual(JSON.parse(ops)[0].item.name, '<b>Lens</b> x')
+  assert.ok(readGearToken(token, { list: 'camera', opsText: ops }, KEY))
+  assert.equal(readGearToken(token, { list: 'camera', opsText: ops.replace('Lens', 'Lens2') }, KEY), null)
+})

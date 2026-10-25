@@ -135,3 +135,18 @@ export const OUTBOUND_IDS = [
   '%6Dastodon',
   ''
 ]
+
+// Gear list edits (README "Editing gear lists"): text from the editor that ends up in a JSON
+// file, a commit message and a pull request on GitHub
+export const GEAR_TEXT = [
+  'Rope\n\nSigned-off-by: Mallory <m@evil.example>',
+  'Rope\r\nCo-Authored-By: evil',
+  '@everyone please merge',
+  '`rm -rf /`',
+  'Rope‮epoR', // right-to-left override
+  'Rope​‍', // zero-width characters
+  '\u0000\u0007\u001b[31mred',
+  '<img src=x onerror=alert(1)>',
+  '{{ constructor.constructor("alert(1)")() }}',
+  'x'.repeat(10_000)
+]

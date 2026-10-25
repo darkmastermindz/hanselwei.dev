@@ -14,7 +14,7 @@ and biographical or "about" text; photographs, images and other likenesses of
 Hansel Wei; personal information, accounts and contact details; and personal
 lists and data such as gear inventories and hobby facts. In this repository,
 Personal Content includes, without limitation, the contents of the `content/`
-folder, `data/inventory.mjs`, `data/hobbyFacts.mjs` and
+folder, the `data/gear/` folder, `data/inventory.mjs`, `data/hobbyFacts.mjs` and
 `netlify/lib/bioPhoto.sealed.mjs`, and any copy, excerpt or derivative of them.
 
 Personal Content may not be reproduced, distributed, publicly displayed or

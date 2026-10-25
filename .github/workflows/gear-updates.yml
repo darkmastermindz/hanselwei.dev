@@ -1,0 +1,51 @@
+# Gear list edits from the site (README "Editing gear lists"): the editor on /gear/<list> sends
+# them through the "gear-edit" Netlify Form; this workflow checks each one was signed by an owner,
+# applies them to data/gear/*.json on the gear-updates branch, and opens or updates the one
+# "Gear updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever a pull request
+# merges into main, and on demand.
+name: Gear updates
+on:
+  schedule:
+    - cron: '23 13 * * 1' # Mondays, 13:23 UTC
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# One run at a time; a run that's waiting picks up everything the one before it left
+concurrency:
+  group: gear-updates
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply gear edits
+    # A pull request only counts once it's merged (and the gear PR's own merge has nothing new
+    # to add, but keeps the run cheap: it finds no submissions and stops)
+    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Third-party actions are pinned to full commit SHAs (Dependabot keeps them current).
+      # Always main's code and data, whatever triggered the run.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # The sign-in allow-list the edits are checked against
+      - run: node scripts/build-access.mjs
+      - run: node scripts/gear-updates.mjs
+        env:
+          NETLIFY_API_TOKEN: ${{ secrets.NETLIFY_API_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          GEAR_EDIT_KEY: ${{ secrets.GEAR_EDIT_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}

@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<title>Gear edit form</title>
+</head>
+<body>
+<!-- For Netlify Forms to find at deploy (README "Editing gear lists"); the editor on
+     /gear/<list> posts to it with fetch. Submissions are checked by scripts/gear-updates.mjs. -->
+<form name="gear-edit" method="POST" data-netlify="true" netlify-honeypot="bot-field" hidden>
+<input name="list">
+<textarea name="ops"></textarea>
+<input name="token">
+<input name="bot-field">
+</form>
+</body>
+</html>

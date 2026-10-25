@@ -6,8 +6,30 @@
       <LiveBadge :live="live" />
     </p>
 
+    <!-- The owner's editor (README "Editing gear lists"): changes collect here and go to the
+         "Gear updates" pull request when sent -->
+    <div v-if="user" class="editor-bar">
+      <button type="button" class="btn btn-sm editor-toggle" :class="{ 'is-on': editor.editing.value }" :aria-pressed="editor.editing.value" @click="editor.editing.value = !editor.editing.value">
+        {{ editor.editing.value ? 'Done editing' : '✏️ Edit list' }}
+      </button>
+      <button v-if="editor.editing.value && !adding" type="button" class="btn btn-sm btn-outline btn-success" @click="startAdd({})">＋ Add item</button>
+      <p v-if="editor.sent.value" class="editor-note" role="status">
+        Sent. The changes go into the <a :href="PR_URL" target="_blank" rel="noopener">Gear updates pull request</a> at its next run: weekly, whenever a pull request merges, or
+        <a :href="WORKFLOW_URL" target="_blank" rel="noopener">now</a>.
+      </p>
+    </div>
+    <GearItemForm
+      v-if="adding && !adding.category"
+      :defaults="adding"
+      :sections="shown.sections"
+      :categories="categories"
+      :tags="allTags"
+      @save="item => { editor.add(item); adding = null }"
+      @cancel="adding = null"
+    />
+
     <nav v-if="showSectionHeadings" class="sections" aria-label="Sections">
-      <ChipStrip v-slot="{ item: name }" :items="inventory.sections" label="Jump to a section">
+      <ChipStrip v-slot="{ item: name }" :items="shown.sections" label="Jump to a section">
         <a :href="`#${slugify(name)}`" class="badge badge-lg badge-success badge-outline">{{ name }}</a>
       </ChipStrip>
     </nav>
@@ -52,7 +74,17 @@
       <div v-for="group in section.categories" :key="group.category" class="category">
         <h3>{{ group.category }}</h3>
         <ul>
-          <li v-for="item in group.items" :key="item.name">
+          <li v-for="item in group.items" :key="item.id">
+            <GearItemForm
+              v-if="editingId === item.id"
+              :item="item"
+              :sections="shown.sections"
+              :categories="categories"
+              :tags="allTags"
+              @save="changed => { editor.update(item.id, changed); editingId = null }"
+              @cancel="editingId = null"
+            />
+            <template v-else>
             <div class="item">
               <span class="name">
                 {{ item.name }}
@@ -60,17 +92,54 @@
               </span>
               <span v-if="item.brand" class="brand">{{ item.brand }}</span>
             </div>
-            <p v-if="item.notes" class="notes">{{ item.notes }}</p>
+            <p v-if="item.notes" class="notes"><TermText :text="item.notes" /></p>
             <div v-if="item.status !== 'owned' || item.tags.length" class="item-tags">
               <span v-if="item.status !== 'owned'" :class="['status', `status--${item.status}`]">
                 {{ statuses[item.status]?.emoji }} {{ statuses[item.status]?.label ?? item.status }}
               </span>
-              <span v-for="tag in item.tags" :key="tag" class="tag">{{ hashtag(tag) }}</span>
+              <span v-for="tag in item.tags" :key="tag" class="tag"><TermText :text="hashtag(tag)" /></span>
             </div>
+            <div v-if="editor.editing.value" class="item-actions">
+              <button type="button" class="btn btn-xs" :aria-label="`Edit ${item.name}`" @click="editingId = item.id">Edit</button>
+              <button type="button" class="btn btn-xs btn-error btn-outline" :aria-label="`Remove ${item.name}`" @click="editor.remove(item.id)">Remove</button>
+            </div>
+            </template>
           </li>
         </ul>
+        <GearItemForm
+          v-if="adding && adding.section === section.name && adding.category === group.category"
+          :defaults="adding"
+          :sections="shown.sections"
+          :categories="categories"
+          :tags="allTags"
+          @save="item => { editor.add(item); adding = null }"
+          @cancel="adding = null"
+        />
+        <button
+          v-else-if="editor.editing.value"
+          type="button"
+          class="btn btn-xs btn-ghost add-here"
+          @click="startAdd({ section: section.name, category: group.category })"
+        >＋ Add to {{ group.category }}</button>
       </div>
     </section>
+
+    <aside v-if="user && editor.pending.value.length" :class="['pending', { 'is-docked': !editingId && !adding }]" aria-label="Unsent gear changes">
+      <h2>{{ editor.pending.value.length }} unsent change{{ editor.pending.value.length === 1 ? '' : 's' }}</h2>
+      <ol>
+        <li v-for="(line, i) in editor.changes.value" :key="i">
+          {{ line }}
+          <button type="button" class="btn btn-xs btn-ghost" :aria-label="`Undo: ${line}`" @click="editor.undo(i)">Undo</button>
+        </li>
+      </ol>
+      <p v-if="editor.problem.value" class="pending__problem" role="alert">{{ editor.problem.value }}</p>
+      <div class="pending__buttons">
+        <button type="button" class="btn btn-sm editor-send" :disabled="editor.sending.value" @click="editor.send()">
+          {{ editor.sending.value ? 'Sending…' : 'Send for review' }}
+        </button>
+        <button type="button" class="btn btn-sm btn-ghost" :disabled="editor.sending.value" @click="editor.discard()">Discard all</button>
+      </div>
+    </aside>
 
     <p class="other">
       <NuxtLink to="/gear">← All gear lists</NuxtLink>
@@ -90,6 +159,20 @@ if (!hasInventory(id)) {
 }
 
 const { inventory, live } = useInventory(id)
+const { user } = useAuth()
+const editor = useGearEditor(id, inventory)
+const PR_URL = 'https://github.com/darkmastermindz/hanselwei.dev/pulls?q=is%3Apr+is%3Aopen+head%3Agear-updates'
+const WORKFLOW_URL = 'https://github.com/darkmastermindz/hanselwei.dev/actions/workflows/gear-updates.yml'
+// The list as shown: with the owner's unsent changes in, while there are any
+const shown = computed(() => (user.value ? editor.preview.value : inventory.value))
+const categories = computed(() => [...new Set(shown.value.items.map(i => i.category))])
+const allTags = computed(() => [...new Set(shown.value.items.flatMap(i => i.tags))].sort())
+const editingId = ref(null)
+const adding = ref(null) // { section?, category? } while the add form is open
+const startAdd = defaults => {
+  editingId.value = null
+  adding.value = { ...defaults }
+}
 useHead({ title: () => `${inventory.value.title} · Hansel Wei` })
 
 const search = ref('')
@@ -97,14 +180,14 @@ const activeTag = ref(null)
 const activeStatus = ref(null)
 
 const slugify = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
-const showSectionHeadings = computed(() => inventory.value.sections.length > 1)
+const showSectionHeadings = computed(() => shown.value.sections.length > 1)
 
 // section -> category -> items, in the list's section order
 const grouped = computed(() => {
   const needle = searchText(search.value).toLowerCase() // "#climbing" finds climbing
-  const sections = new Map(inventory.value.sections.map(name => [name, new Map()]))
+  const sections = new Map(shown.value.sections.map(name => [name, new Map()]))
 
-  for (const item of inventory.value.items) {
+  for (const item of shown.value.items) {
     if (activeTag.value && !item.tags.includes(activeTag.value)) continue
     if (activeStatus.value && item.status !== activeStatus.value) continue
     if (needle) {
@@ -250,6 +333,94 @@ const grouped = computed(() => {
   border-radius: 9999px;
   background: #e0e7ff;
   color: #3730a3;
+}
+
+.editor-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+/* The theme's own button colours read as grey here; the site's green marks the main actions */
+.editor-toggle,
+.editor-send {
+  background: #9dff5c;
+  border-color: #9dff5c;
+  color: #1d232a;
+
+  &:hover {
+    background: #7cfc00;
+    border-color: #7cfc00;
+  }
+}
+
+.editor-toggle.is-on {
+  background: #fde68a;
+  border-color: #fde68a;
+}
+
+.editor-note {
+  color: #ccc;
+  font-size: 0.9rem;
+
+  a {
+    color: #9dff5c;
+    text-decoration: underline;
+  }
+}
+
+.item-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.add-here {
+  margin-top: 0.4rem;
+  color: #fff;
+}
+
+/* Docked to the bottom of the screen, except while a form is open (it would cover the form) */
+.pending.is-docked {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
+}
+
+.pending {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #1d232a;
+  color: #eee;
+  border: 2px solid #9dff5c;
+  box-shadow: 5px 5px #1d5c3f;
+
+  h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  ol {
+    max-height: 30vh;
+    overflow-y: auto;
+    margin-bottom: 0.75rem;
+    padding-left: 1.25rem;
+    list-style: decimal;
+    font-size: 0.9rem;
+  }
+}
+
+.pending__problem {
+  color: #fca5a5;
+  margin-bottom: 0.5rem;
+}
+
+.pending__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .other a {

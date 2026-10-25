@@ -5,6 +5,8 @@ Disallow: /connect
 Disallow: /out
 # Live JSON APIs (Netlify functions)
 Disallow: /api/
+# The gear editor's form, for Netlify Forms only
+Disallow: /forms/
 
 # AI crawlers: no training on this site's photos (the Bio photo is served only to the page
 # itself by /api/bio-photo, which also sends noai / noimageai)
