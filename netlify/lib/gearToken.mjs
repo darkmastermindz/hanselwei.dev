@@ -1,17 +1,22 @@
 // The proof that a gear edit came from the owner (README "Editing gear lists"). Netlify Forms
 // take submissions from anyone, so the editor first asks /api/gear/token, which only answers a
 // signed-in owner, to sign exactly these changes. The "Gear updates" workflow
-// (scripts/gear-updates.mjs) checks that signature before it applies anything.
+// (scripts/gear-updates.mjs) has each submission checked by /api/gear/verify before it applies it.
 //
 // The token is an HMAC-SHA256 over { email, list, digest, iat, exp }, where digest is the SHA-256
-// of the changes as submitted, keyed with GEAR_EDIT_KEY. That key is set in Netlify (to sign) and
-// as a GitHub Actions secret (to check), and nowhere else.
-import { createHash, createHmac, timingSafeEqual } from 'node:crypto'
+// of the changes as submitted. Its key comes from the sign-in's own secret (GITHUB_CLIENT_SECRET,
+// HKDF with its own label, like the session key in session.mjs), so there's no separate key to set
+// up: only the site's functions can sign or check one.
+import { createHash, createHmac, hkdfSync, timingSafeEqual } from 'node:crypto'
 
 export const GEAR_TOKEN_MAX_AGE = 15 * 60 // seconds from signing to submitting the form
-const MIN_KEY = 32
+const MIN_CLIENT_SECRET = 16 // as for the session (session.mjs)
 
-export const gearKey = env => (typeof env.GEAR_EDIT_KEY === 'string' && env.GEAR_EDIT_KEY.length >= MIN_KEY ? env.GEAR_EDIT_KEY : null)
+// Derived from GITHUB_CLIENT_SECRET; changing that secret voids edits sent but not yet applied
+export const gearKey = env =>
+  typeof env.GITHUB_CLIENT_SECRET === 'string' && env.GITHUB_CLIENT_SECRET.length >= MIN_CLIENT_SECRET
+    ? Buffer.from(hkdfSync('sha256', env.GITHUB_CLIENT_SECRET, '', 'hanselwei.dev gear edits v1', 32)).toString('base64url')
+    : null
 
 // The changes exactly as they travel in the form's "ops" field
 export const opsDigest = opsText => createHash('sha256').update(String(opsText), 'utf8').digest('hex')

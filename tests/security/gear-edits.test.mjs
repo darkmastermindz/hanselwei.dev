@@ -5,6 +5,7 @@ import assert from 'node:assert/strict'
 import { applyOps, describeOp, LIMITS, serializeList, validateOps } from '../../utils/gearEdits.mjs'
 import { createGearToken, GEAR_TOKEN_MAX_AGE, gearKey, readGearToken } from '../../netlify/lib/gearToken.mjs'
 import gearToken from '../../netlify/functions/gear-token.mjs'
+import gearVerify from '../../netlify/functions/gear-verify.mjs'
 import { createSession, sessionSecret } from '../../netlify/lib/session.mjs'
 import { GEAR_TEXT, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
 
@@ -88,12 +89,25 @@ test('forged, unsigned and malformed gear tokens are rejected, and short keys ar
   for (const token of [forged, sign().split('.')[0], `${sign()}.x`, '', 'a.b', null, 42, 'x'.repeat(5000)]) {
     assert.equal(readGearToken(token, { list: 'camera', opsText: '[1]' }, KEY, NOW), null, String(token).slice(0, 20))
   }
-  assert.equal(gearKey({ GEAR_EDIT_KEY: 'short' }), null)
+  assert.equal(gearKey({ GITHUB_CLIENT_SECRET: 'short' }), null)
   assert.equal(gearKey({}), null)
 })
 
-// /api/gear/token
-const ENV = { GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length', GEAR_EDIT_KEY: KEY }
+test('the edit key comes from the sign-in secret, but is its own key (not the secret, not the session key)', () => {
+  const env = { GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length' }
+  const key = gearKey(env)
+  assert.equal(key, gearKey({ ...env }))
+  assert.notEqual(key, env.GITHUB_CLIENT_SECRET)
+  assert.notEqual(key, sessionSecret(env))
+  assert.notEqual(key, gearKey({ GITHUB_CLIENT_SECRET: 'another-secret-of-sufficient-length' }))
+  // A session cookie's signature can't pass as an edit token's
+  const session = createSession({ email: 'hello@hanselwei.dev' }, sessionSecret(env), NOW)
+  assert.equal(readGearToken(session, { list: 'camera', opsText: '[1]' }, key, NOW), null)
+})
+
+// /api/gear/token and /api/gear/verify
+const ENV = { GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length' }
+const SITE_KEY = gearKey(ENV)
 const SITE = 'https://www.hanselwei.dev'
 beforeEach(() => Object.assign(process.env, ENV))
 afterEach(() => {
@@ -118,7 +132,7 @@ test('the token endpoint signs only for a signed-in owner, from this site', asyn
   assert.equal((await call({ origin: null })).status, 403)
   assert.equal((await call({ email: null })).status, 401)
   assert.equal((await call({ email: 'someone@example.com' })).status, 403)
-  delete process.env.GEAR_EDIT_KEY
+  delete process.env.GITHUB_CLIENT_SECRET
   assert.equal((await call()).status, 503)
 })
 
@@ -135,6 +149,39 @@ test('a signed answer covers exactly the checked changes it returns', async () =
   assert.equal(res.headers.get('cache-control'), 'private, no-store')
   const { ops, token } = await res.json()
   assert.deepEqual(JSON.parse(ops)[0].item.name, '<b>Lens</b> x')
-  assert.ok(readGearToken(token, { list: 'camera', opsText: ops }, KEY))
-  assert.equal(readGearToken(token, { list: 'camera', opsText: ops.replace('Lens', 'Lens2') }, KEY), null)
+  assert.ok(readGearToken(token, { list: 'camera', opsText: ops }, SITE_KEY))
+  assert.equal(readGearToken(token, { list: 'camera', opsText: ops.replace('Lens', 'Lens2') }, SITE_KEY), null)
+})
+
+const verify = (body, method = 'POST') =>
+  gearVerify(new Request(`${SITE}/api/gear/verify`, { method, ...(method === 'POST' && { body: typeof body === 'string' ? body : JSON.stringify(body) }) }))
+const submission = (over = {}, { email = 'hello@hanselwei.dev', signAt = Date.now(), signFor } = {}) => {
+  const ops = '[{"op":"remove","id":"x-t5"}]'
+  const token = createGearToken({ email, list: 'camera', opsText: signFor ?? ops }, SITE_KEY, signAt)
+  return { list: 'camera', ops, token, at: new Date(signAt + 1000).toISOString(), ...over }
+}
+
+test('verify says yes only to an owner\'s token for exactly that list and those changes, sent in time', async () => {
+  assert.equal((await verify(submission())).status, 200)
+  assert.equal((await verify(submission({}, { email: 'someone@example.com' }))).status, 403)
+  assert.equal((await verify(submission({}, { signFor: '[]' }))).status, 403)
+  assert.equal((await verify(submission({ list: 'outdoor' }))).status, 403)
+  assert.equal((await verify(submission({ ops: '[{"op":"remove","id":"other"}]' }))).status, 403)
+  const old = Date.now() - 60 * 60 * 1000
+  assert.equal((await verify(submission({}, { signAt: old }))).status, 200) // sent in time, checked later
+  assert.equal((await verify(submission({ at: new Date().toISOString() }, { signAt: old }))).status, 403) // sent too late
+})
+
+test('verify refuses tokens signed with any other key, and bad requests', async () => {
+  const forged = createGearToken({ email: 'hello@hanselwei.dev', list: 'camera', opsText: '[]' }, 'k'.repeat(48), Date.now())
+  assert.equal((await verify({ ...submission(), ops: '[]', token: forged })).status, 403)
+  for (const list of PROTOTYPE_KEYS) assert.equal((await verify(submission({ list }))).status, 403, list)
+  assert.equal((await verify(submission({ at: 'never' }))).status, 403)
+  assert.equal((await verify(submission({ at: new Date(Date.now() + 3600_000).toISOString() }))).status, 403)
+  assert.equal((await verify(submission({ ops: [1] }))).status, 403)
+  assert.equal((await verify('{nope')).status, 400)
+  assert.equal((await verify('x'.repeat(400 * 1024))).status, 413)
+  assert.equal((await verify(undefined, 'GET')).status, 405)
+  delete process.env.GITHUB_CLIENT_SECRET
+  assert.equal((await verify(submission())).status, 503)
 })

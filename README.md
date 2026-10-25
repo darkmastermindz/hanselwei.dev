@@ -182,18 +182,15 @@ Acronyms, lingo and jargon in the site's own text (MLH, SPI, TIAA, CI/CD, SUP, G
 ## Editing gear lists
 Signed in, each gear page (`/gear/:list`) has **✏️ Edit list**: change any item (name, brand, quantity, section, category, status, tags, notes), remove it, or add one. Changes show on the page as they'll look and stay in that browser until sent. **Send** turns them into one entry in the rolling **Gear updates** pull request:
 
-1. `/api/gear/token` (`netlify/functions/gear-token.mjs`) checks the changes and signs exactly them for a signed-in owner: an HMAC over the owner's email, the list and a hash of the changes, good for 15 minutes (`netlify/lib/gearToken.mjs`).
+1. `/api/gear/token` (`netlify/functions/gear-token.mjs`) checks the changes and signs exactly them for a signed-in owner: an HMAC over the owner's email, the list and a hash of the changes, good for 15 minutes (`netlify/lib/gearToken.mjs`). Its key comes from the sign-in's own secret (`GITHUB_CLIENT_SECRET`), so only the site's functions can sign or check one, and there's no extra key to set up.
 2. The browser posts the changes and the token to the `gear-edit` Netlify Form (defined in `public/forms/gear-edit.html` so Netlify finds it).
-3. The **Gear updates** workflow (`.github/workflows/gear-updates.yml`, `scripts/gear-updates.mjs`) runs weekly (Mondays 13:23 UTC), whenever a pull request merges into main, and on demand. It reads the form's submissions from Netlify and drops any whose token doesn't check out (the form itself is public). It applies the rest in the order they were sent to `data/gear/*.json` on the `gear-updates` branch, one commit per submission. It runs `npm test`, then opens or updates the **Gear updates** pull request and deletes the submissions it handled. The same changes on the same list always give the same file, byte for byte.
+3. The **Gear updates** workflow (`.github/workflows/gear-updates.yml`, `scripts/gear-updates.mjs`) runs weekly (Mondays 13:23 UTC), whenever a pull request merges into main, and on demand. It reads the form's submissions from Netlify and asks the site (`/api/gear/verify`) about each one, dropping any not signed by an owner for exactly those changes (the form itself is public). If the site doesn't answer, the submission waits for the next run. It applies the rest in the order they were sent to `data/gear/*.json` on the `gear-updates` branch, one commit per submission. It runs `npm test`, then opens or updates the **Gear updates** pull request and deletes the submissions it handled. The same changes on the same list always give the same file, byte for byte.
 
 Merge the pull request to publish. Until then, the editor shows the live lists plus your unsent changes, not edits already waiting in the pull request. New lists are added by hand (a new `data/gear/<id>.json` and a line in `data/inventory.mjs`).
 
 **One-time setup** (until it's done, the workflow logs "not set up" and passes):
-- Netlify: turn on form detection (Site configuration → Forms), and add an environment variable `GEAR_EDIT_KEY`: a random string of 32+ characters, e.g. `openssl rand -base64 48`.
-- GitHub repository secrets (Settings → Secrets and variables → Actions):
-  - `GEAR_EDIT_KEY`: the same value.
-  - `NETLIFY_API_TOKEN`: a Netlify personal access token.
-  - `NETLIFY_SITE_ID`: the site's API ID (Site configuration → General).
+- Netlify: turn on form detection (Site configuration → Forms).
+- GitHub repository secret `NETLIFY_API_TOKEN` (Settings → Secrets and variables → Actions): a Netlify personal access token (User settings → Applications), so the workflow can read and delete the form's submissions. The site's ID is in the workflow file; it isn't secret.
 - GitHub: Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests".
 
 A pull request opened with the workflow's own token doesn't start other workflows, so the script runs the tests itself. Netlify still builds a deploy preview, and the next push to the branch runs CI.

@@ -1,8 +1,8 @@
 # Gear list edits from the site (README "Editing gear lists"): the editor on /gear/<list> sends
-# them through the "gear-edit" Netlify Form; this workflow checks each one was signed by an owner,
-# applies them to data/gear/*.json on the gear-updates branch, and opens or updates the one
-# "Gear updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever a pull request
-# merges into main, and on demand.
+# them through the "gear-edit" Netlify Form; this workflow has the site check each one was signed
+# by a signed-in owner, applies them to data/gear/*.json on the gear-updates branch, and opens or
+# updates the one "Gear updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever a
+# pull request merges into main, and on demand.
 name: Gear updates
 on:
   schedule:
@@ -41,11 +41,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
-      # The sign-in allow-list the edits are checked against
-      - run: node scripts/build-access.mjs
+      # The edits' signatures are checked by the site (/api/gear/verify), so the only secret here
+      # is the Netlify token that reads and deletes the form's submissions
       - run: node scripts/gear-updates.mjs
         env:
           NETLIFY_API_TOKEN: ${{ secrets.NETLIFY_API_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          GEAR_EDIT_KEY: ${{ secrets.GEAR_EDIT_KEY }}
+          NETLIFY_SITE_ID: e1939fee-0a59-40be-b538-0f6024576640 # the "hansel" site (not a secret)
           GITHUB_TOKEN: ${{ github.token }}

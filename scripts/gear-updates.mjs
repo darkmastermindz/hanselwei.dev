@@ -4,14 +4,14 @@
 // were sent to data/gear/<list>.json on the gear-updates branch, and opens or updates one pull
 // request for them. Submissions it has dealt with are deleted from Netlify, so each lands once.
 //
-// Needs NETLIFY_API_TOKEN, NETLIFY_SITE_ID and GEAR_EDIT_KEY (GitHub Actions secrets), plus the
-// workflow's own GITHUB_TOKEN. Without the first three it says so and stops (the workflow
-// stays green until editing is set up).
+// Each submission's signature is checked by the site itself (/api/gear/verify): the key that signs
+// edits comes from the sign-in's secret and never leaves Netlify. Needs a NETLIFY_API_TOKEN secret
+// (to read and delete the submissions) and NETLIFY_SITE_ID, plus the workflow's own GITHUB_TOKEN.
+// Without the Netlify token it says so and stops (the workflow stays green until it's set up).
 import { execFileSync } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import { hasInventory } from '../data/inventory.mjs'
 import { applyOps, describeOp, serializeList, validateOps } from '../utils/gearEdits.mjs'
-import { gearKey, readGearToken } from '../netlify/lib/gearToken.mjs'
 
 export const FORM_NAME = 'gear-edit'
 export const BRANCH = 'gear-updates'
@@ -19,13 +19,16 @@ const PR_TITLE = 'Gear updates'
 // Overridable for a dry run against a stand-in server
 const NETLIFY_API = process.env.NETLIFY_API_URL ?? 'https://api.netlify.com/api/v1'
 const GITHUB_API = process.env.GITHUB_API_URL ?? 'https://api.github.com'
+const SITE = process.env.GEAR_VERIFY_SITE ?? 'https://www.hanselwei.dev'
 const MAX_OPS_TEXT = 256 * 1024
 
-// Sorts submissions into the ones to apply (oldest first) and the ones to drop, with why.
-// Nothing from a submission is trusted until its token checks out for exactly its list and changes.
-export const checkSubmissions = (submissions, { key, isOwner }) => {
+// Sorts submissions into the ones to apply (oldest first), the ones to drop (with why), and the ones
+// to leave for the next run (the site couldn't be asked). Nothing from a submission is trusted until
+// `verify` confirms it was signed by an owner for exactly its list and changes.
+export const checkSubmissions = async (submissions, { verify }) => {
   const valid = []
   const invalid = []
+  const later = []
   for (const submission of submissions) {
     const data = submission?.data ?? {}
     const list = typeof data.list === 'string' ? data.list : ''
@@ -40,13 +43,15 @@ export const checkSubmissions = (submissions, { key, isOwner }) => {
       reject('missing or oversize changes')
       continue
     }
-    const signer = readGearToken(data.token, { list, opsText }, key, at)
-    if (!signer) {
-      reject('token missing, forged, expired or not for these changes')
+    let signed
+    try {
+      signed = await verify({ list, ops: opsText, token: typeof data.token === 'string' ? data.token : '', at: new Date(at).toISOString() })
+    } catch {
+      later.push({ id: submission?.id })
       continue
     }
-    if (!isOwner(signer.email)) {
-      reject('signed by someone who is no longer an owner')
+    if (!signed) {
+      reject('not signed by an owner for these changes (forged, expired, or for other changes)')
       continue
     }
     let parsed
@@ -64,7 +69,19 @@ export const checkSubmissions = (submissions, { key, isOwner }) => {
     valid.push({ id: submission.id, at, list, ops: checked.ops })
   }
   valid.sort((a, b) => a.at - b.at || String(a.id).localeCompare(String(b.id)))
-  return { valid, invalid }
+  return { valid, invalid, later }
+}
+
+// Asks the site whether a submission is genuine: true or false, or throws when it can't tell
+const verifyWithSite = async submission => {
+  const res = await fetch(`${SITE}/api/gear/verify`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'user-agent': 'hanselwei.dev gear-updates' },
+    body: JSON.stringify(submission)
+  })
+  if (res.ok) return true
+  if (res.status === 403 || res.status === 400 || res.status === 413) return false
+  throw new Error(`verify answered ${res.status}`)
 }
 
 // The commit for one submission: what changed, in plain lines
@@ -133,19 +150,17 @@ const prBody = log =>
   ].join('\n')
 
 const main = async () => {
-  const key = gearKey(process.env)
-  if (!process.env.NETLIFY_API_TOKEN || !process.env.NETLIFY_SITE_ID || !key) {
-    console.log('[gear-updates] Not set up yet (NETLIFY_API_TOKEN, NETLIFY_SITE_ID and GEAR_EDIT_KEY secrets); nothing to do.')
+  if (!process.env.NETLIFY_API_TOKEN || !process.env.NETLIFY_SITE_ID) {
+    console.log('[gear-updates] Not set up yet (the NETLIFY_API_TOKEN secret); nothing to do.')
     return
   }
-  const { isOwner } = await import('../netlify/lib/owners.mjs')
 
   const forms = await netlify(`/sites/${process.env.NETLIFY_SITE_ID}/forms`)
   const form = forms.find(f => f.name === FORM_NAME)
   const submissions = form ? await allSubmissions(form.id) : []
-  const { valid, invalid } = checkSubmissions(submissions, { key, isOwner })
+  const { valid, invalid, later } = await checkSubmissions(submissions, { verify: verifyWithSite })
   for (const bad of invalid) console.log(`[gear-updates] Dropping submission ${bad.id}: ${bad.reason}`)
-  console.log(`[gear-updates] ${valid.length} edit(s) to apply, ${invalid.length} dropped`)
+  console.log(`[gear-updates] ${valid.length} edit(s) to apply, ${invalid.length} dropped, ${later.length} left for the next run (the site didn't answer)`)
 
   git('config', 'user.name', 'github-actions[bot]')
   git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com')

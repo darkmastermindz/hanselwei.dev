@@ -5,7 +5,8 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { applyOps, serializeList, validateOps } from '../../utils/gearEdits.mjs'
 import { checkSubmissions, commitMessage } from '../../scripts/gear-updates.mjs'
-import { createGearToken } from '../../netlify/lib/gearToken.mjs'
+import { createGearToken, gearKey } from '../../netlify/lib/gearToken.mjs'
+import gearVerify from '../../netlify/functions/gear-verify.mjs'
 import { inventories, queryInventory } from '../../data/inventory.mjs'
 
 const file = id => readFileSync(new URL(`../../data/gear/${id}.json`, import.meta.url), 'utf8')
@@ -78,26 +79,44 @@ test('moving an item to another category puts it with its new group', () => {
   assert.deepEqual(out.items.map(i => i.id), ['atc', 'poles', 'rope'])
 })
 
-test('submissions: only owner-signed ones for exactly their list and changes apply, oldest first', () => {
-  const sign = (opsText, list = 'camera', email = 'hello@hanselwei.dev', at = Date.now()) => createGearToken({ email, list, opsText }, KEY, at)
+test('submissions: only owner-signed ones for exactly their list and changes apply, oldest first', async () => {
+  // Checked the way the workflow does it: by the site's own /api/gear/verify, keyed from the
+  // sign-in secret
+  process.env.GITHUB_CLIENT_SECRET = 'client-secret-of-sufficient-length'
+  const key = gearKey(process.env)
+  const verify = async body => (await gearVerify(new Request('https://www.hanselwei.dev/api/gear/verify', { method: 'POST', body: JSON.stringify(body) }))).ok
+  const sign = (opsText, list = 'camera', email = 'hello@hanselwei.dev', at = Date.now()) => createGearToken({ email, list, opsText }, key, at)
   const textA = JSON.stringify([{ op: 'remove', id: 'x-t5' }])
   const textB = JSON.stringify(ops([{ op: 'add', item: { name: 'Lens', section: 'Cameras & Lenses', category: 'Lenses' } }]))
   const now = Date.now()
   const iso = t => new Date(t).toISOString()
-  const isOwner = email => email === 'hello@hanselwei.dev'
-  const { valid, invalid } = checkSubmissions(
-    [
-      { id: 'b', created_at: iso(now), data: { list: 'camera', ops: textB, token: sign(textB) } },
-      { id: 'a', created_at: iso(now - 1000), data: { list: 'camera', ops: textA, token: sign(textA) } },
-      { id: 'forged', created_at: iso(now), data: { list: 'camera', ops: textA, token: sign(textB) } },
-      { id: 'other-list', created_at: iso(now), data: { list: 'outdoor', ops: textA, token: sign(textA) } },
-      { id: 'late', created_at: iso(now + 20 * 60 * 1000), data: { list: 'camera', ops: textA, token: sign(textA) } },
-      { id: 'stranger', created_at: iso(now), data: { list: 'camera', ops: textA, token: sign(textA, 'camera', 'someone@example.com') } }
-    ],
-    { key: KEY, isOwner }
+  try {
+    const { valid, invalid, later } = await checkSubmissions(
+      [
+        { id: 'b', created_at: iso(now), data: { list: 'camera', ops: textB, token: sign(textB) } },
+        { id: 'a', created_at: iso(now - 1000), data: { list: 'camera', ops: textA, token: sign(textA) } },
+        { id: 'forged', created_at: iso(now), data: { list: 'camera', ops: textA, token: sign(textB) } },
+        { id: 'other-list', created_at: iso(now), data: { list: 'outdoor', ops: textA, token: sign(textA) } },
+        { id: 'wrong-key', created_at: iso(now), data: { list: 'camera', ops: textA, token: createGearToken({ email: 'hello@hanselwei.dev', list: 'camera', opsText: textA }, KEY, now) } },
+        { id: 'stranger', created_at: iso(now), data: { list: 'camera', ops: textA, token: sign(textA, 'camera', 'someone@example.com') } }
+      ],
+      { verify }
+    )
+    assert.deepEqual(valid.map(v => v.id), ['a', 'b'])
+    assert.deepEqual(invalid.map(v => v.id).sort(), ['forged', 'other-list', 'stranger', 'wrong-key'])
+    assert.deepEqual(later, [])
+  } finally {
+    delete process.env.GITHUB_CLIENT_SECRET
+  }
+})
+
+test('when the site can\'t be asked, a submission waits for the next run instead of being dropped', async () => {
+  const text = JSON.stringify([{ op: 'remove', id: 'x-t5' }])
+  const { valid, invalid, later } = await checkSubmissions(
+    [{ id: 's', created_at: new Date().toISOString(), data: { list: 'camera', ops: text, token: 'x.y' } }],
+    { verify: async () => { throw new Error('offline') } }
   )
-  assert.deepEqual(valid.map(v => v.id), ['a', 'b'])
-  assert.deepEqual(invalid.map(v => v.id).sort(), ['forged', 'late', 'other-list', 'stranger'])
+  assert.deepEqual([valid.length, invalid.length, later.map(l => l.id)], [0, 0, ['s']])
 })
 
 test('the commit message says what changed in plain lines', () => {
