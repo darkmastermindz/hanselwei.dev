@@ -33,6 +33,9 @@ export function foldMode({ segments, posture, flat, iphone, apple, width, height
   // of 375, 390, 393, 402, 414, 428, 430, 440)
   const narrow = Math.min(width, height)
   const device = !iphone ? null : narrow >= 500 ? 'iphone-duo' : narrow >= 378 && narrow <= 386 && height > width ? 'iphone-duo-cover' : null
+  // More than one fold (a tri-fold part-way open): no layout for that yet, so the usual one,
+  // and not a fold guessed in the middle (that's a panel, not a hinge)
+  if (segments && segments.length > 2) return { mode: null, device, vars: {} }
   if (segments && segments.length === 2) {
     const [a, b] = segments
     if (b.y > a.y) return { mode: 'tabletop', device, vars: { 'fold-top-end': a.y + a.height, 'fold-bottom-start': b.y, crease: CREASE } }
