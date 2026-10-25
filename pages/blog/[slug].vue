@@ -35,7 +35,7 @@ if (error.value || !post.value) {
 }
 
 useHead({
-  title: `${post.value.title} · hanselwei.dev`,
+  title: `${post.value.title} · Hansel Wei`,
   meta: [
     { name: 'description', content: post.value.description },
     // The post's tags, for search engines and site search

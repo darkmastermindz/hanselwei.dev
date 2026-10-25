@@ -59,7 +59,7 @@ const groups = computed(() =>
 )
 
 useHead({
-  title: 'Open source software · hanselwei.dev',
+  title: 'Open source software · Hansel Wei',
   meta: [{ name: 'description', content: 'The open-source software hanselwei.dev is built with, and their licenses.' }]
 })
 </script>
@@ -133,7 +133,7 @@ h1 {
   margin-left: 0.4rem;
   font-size: 0.75rem;
   font-weight: 400;
-  color: #888;
+  color: #999; /* 5.3:1 on the card (AA) */
 }
 
 .use {

@@ -1,6 +1,6 @@
 // Content-Security-Policy for the generated site (tested in tests/security/headers.test.mjs).
 // Scripts may only come from this site; the few inline scripts Nuxt writes into the
-// prerendered pages (and the font links' onload) are allowed by hash, so an injected
+// prerendered pages (and scripts/first-paint.mjs's loader) are allowed by hash, so an injected
 // <script> or on*= handler still can't run.
 import { createHash } from 'node:crypto'
 
@@ -9,19 +9,20 @@ const sha256 = text => `'sha256-${createHash('sha256').update(text, 'utf8').dige
 const decodeAttr = value =>
   value.replace(/&(quot|#39|apos|lt|gt|amp);/g, (_, e) => ({ quot: '"', '#39': "'", apos: "'", lt: '<', gt: '>', amp: '&' })[e])
 
-// Executable inline <script> bodies (JSON data blocks don't run, so they need no hash)
+// Executable inline <script> bodies and import maps (script-src covers both; JSON data blocks
+// don't run, so they need no hash)
 export const inlineScriptHashes = html => {
   const hashes = new Set()
   for (const [, attrs, body] of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi)) {
     if (/\ssrc\s*=/i.test(attrs)) continue
     const type = attrs.match(/\stype\s*=\s*["']?([^"'\s>]+)/i)?.[1]?.toLowerCase()
-    if (type && !['module', 'text/javascript', 'application/javascript'].includes(type)) continue
+    if (type && !['module', 'importmap', 'text/javascript', 'application/javascript'].includes(type)) continue
     hashes.add(sha256(body))
   }
   return hashes
 }
 
-// Inline event handler attributes (on*="...") the build itself wrote
+// Inline event handler attributes (on*="...") the build itself wrote (none at the moment)
 export const handlerHashes = html => {
   const hashes = new Set()
   for (const tag of html.match(/<[a-z][^>]*>/gi) ?? []) {
@@ -32,14 +33,26 @@ export const handlerHashes = html => {
 
 export const FONT_STYLES = ['https://fonts.googleapis.com', 'https://use.typekit.net', 'https://p.typekit.net']
 export const FONT_FILES = ['https://fonts.gstatic.com', 'https://use.typekit.net']
+// Simple Analytics (added to every page by the site's Netlify settings): its script, and the
+// queue it reports page views to
+export const ANALYTICS_SCRIPTS = ['https://scripts.simpleanalyticscdn.com']
+export const ANALYTICS_CONNECT = ['https://queue.simpleanalyticscdn.com']
 // The projects page lists repos from the GitHub API
-export const CONNECT = ['https://api.github.com']
+export const CONNECT = ['https://api.github.com', ...ANALYTICS_CONNECT]
 
-export const buildCsp = ({ scripts = [], handlers = [] } = {}) => {
+// `reportOnly`: the policy deploy previews only report on (scripts/build-csp.mjs). Browsers ignore
+// upgrade-insecure-requests there and warn about it on every page, so it's left out.
+export const buildCsp = ({ scripts = [], handlers = [], reportOnly = false } = {}) => {
   const handlerList = [...handlers].sort()
   return [
     "default-src 'self'",
-    ['script-src', "'self'", ...[...scripts].sort(), ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])].join(' '),
+    [
+      'script-src',
+      "'self'",
+      ...ANALYTICS_SCRIPTS,
+      ...[...scripts].sort(),
+      ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])
+    ].join(' '),
     // Vue and the components set inline styles; styles can't run code
     ['style-src', "'self'", "'unsafe-inline'", ...FONT_STYLES].join(' '),
     ['font-src', "'self'", 'data:', ...FONT_FILES].join(' '),
@@ -53,6 +66,6 @@ export const buildCsp = ({ scripts = [], handlers = [] } = {}) => {
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    'upgrade-insecure-requests'
+    ...(reportOnly ? [] : ['upgrade-insecure-requests'])
   ].join('; ')
 }

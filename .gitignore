@@ -98,6 +98,7 @@ data/projects.generated.mjs
 data/background.generated.mjs
 data/coinBubble.generated.mjs
 data/seasons.generated.mjs
+data/siteQr.generated.mjs
 data/credits.generated.json
 data/contributions.generated.json
 content/bio/github-readme.generated.md

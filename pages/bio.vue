@@ -26,7 +26,7 @@ if (error.value || !bio.value) {
 }
 
 useHead({
-  title: `${bio.value.title} · hanselwei.dev`,
+  title: `${bio.value.title} · Hansel Wei`,
   meta: [
     { name: 'description', content: bio.value.description },
     // The pinned photo isn't for AI training or image search (also sent as headers by /api/bio-photo)
@@ -60,6 +60,9 @@ useHead({
 
     a {
       color: #fbbf24;
+      /* Links in running text need more than colour to stand out (WCAG 1.4.1) */
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
   }
 }

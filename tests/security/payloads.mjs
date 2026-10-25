@@ -132,5 +132,19 @@ export const HOSTILE_COLORS = [
   '#ffffff" onload="alert(1)',
   'var(--x)',
   ' #ffffff',
+]
+
+// The id on the social link hand-off page (/out/<id>): only known ids lead anywhere
+export const OUTBOUND_IDS = [
+  'https://evil.example',
+  '//evil.example',
+  'javascript:alert(1)',
+  'mastodon/../../evil.example',
+  'mastodon?x=https://evil.example',
+  ' mastodon',
+  'mastodon ',
+  'MASTODON',
+  'mastodon\u0000',
+  '%6Dastodon',
   ''
 ]

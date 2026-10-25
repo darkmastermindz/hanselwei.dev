@@ -1,4 +1,6 @@
 import { fileURLToPath } from 'node:url'
+import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
+import { OUTBOUND } from './utils/outbound.js'
 
 export default defineNuxtConfig({
   nitro: {
@@ -11,7 +13,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', '/rss.xml', '/feed.xml'],
+      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }
@@ -22,7 +24,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      title: 'hanselwei.dev',
+      title: 'Hansel Wei',
       meta: [
         { charset: 'utf-8' },
         // All Things Open verification string, in the head of every page (not shown in search results)
@@ -55,29 +57,19 @@ export default defineNuxtConfig({
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'alternate', type: 'application/rss+xml', title: 'Blog · hanselwei.dev', href: '/rss.xml' },
         { rel: 'alternate', type: 'application/rss+xml', title: 'Curiosity Feed · hanselwei.dev', href: '/feed.xml' },
-        {
-          rel: 'preload',
-          as: 'style',
-          onload: "this.onload=null;this.rel='stylesheet'",
-          href: 'https://fonts.googleapis.com/css?family=Nova+Mono&display=swap'
-        },
-        {
-          rel: 'preload',
-          as: 'style',
-          onload: "this.onload=null;this.rel='stylesheet'",
-          href: 'https://use.typekit.net/rej0haw.css'
-        }
+        // Fonts load once the page has painted, in their fallbacks first (scripts/first-paint.mjs)
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css?family=Nova+Mono&display=swap' },
+        { rel: 'stylesheet', href: 'https://use.typekit.net/rej0haw.css' }
       ],
-      noscript: [
-        {
-          children:
-            '<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nova+Mono&display=swap">'
-        },
-        {
-          children:
-            '<link rel="stylesheet" href="https://use.typekit.net/rej0haw.css">'
-        }
-      ]
+      // Foldables: picks the layout for how the screen is folded before the page paints, and
+      // again on every fold (utils/foldMode.mjs; allowed by hash like Nuxt's own inline scripts)
+      script: [{ innerHTML: `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})` }]
+    }
+  },
+  runtimeConfig: {
+    public: {
+      // Netlify builds send the coin photos through Netlify's Image CDN (utils/coinFaces.mjs)
+      imageCdn: process.env.NETLIFY === 'true'
     }
   },
   /*
@@ -86,6 +78,22 @@ export default defineNuxtConfig({
   css: [
     'tachyons/css/tachyons.css'
   ],
+  // Nuxt 4's CSS minifier (Lightning CSS) stops at old Internet Explorer hacks such as tachyons'
+  // `*zoom: 1`; with error recovery it drops them instead (no modern browser reads them anyway)
+  vite: {
+    css: {
+      lightningcss: { errorRecovery: true }
+    }
+  },
+  hooks: {
+    // Nuxt prefetches a page's images at the lowest priority; the home page's Bitmoji is preloaded
+    // at the highest instead (components/Bitmoji.vue), and both at once would fetch it twice
+    'build:manifest': manifest => {
+      for (const entry of Object.values(manifest)) {
+        if (entry.resourceType === 'image') entry.prefetch = false
+      }
+    }
+  },
   /*
    ** Nuxt.js modules
    */

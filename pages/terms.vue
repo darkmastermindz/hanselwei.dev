@@ -74,7 +74,7 @@
 
 <script setup>
 useHead({
-  title: 'Terms of Service · hanselwei.dev',
+  title: 'Terms of Service · Hansel Wei',
   meta: [
     {
       name: 'description',
@@ -125,6 +125,8 @@ useHead({
 
 .terms a {
   color: #fbbf24;
+  text-decoration: underline; /* links in running text need more than colour */
+  text-underline-offset: 2px;
 }
 
 .back {

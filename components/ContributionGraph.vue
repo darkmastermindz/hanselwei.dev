@@ -3,7 +3,8 @@
     <h2 id="graph-title" class="graph__title">
       <span class="graph__total">{{ calendar.total.toLocaleString() }}</span> contributions in the last year
     </h2>
-    <div class="graph__scroll">
+    <!-- Scrolls sideways on narrow screens: focusable, so keyboards can scroll it too -->
+    <div class="graph__scroll" tabindex="0" role="region" aria-labelledby="graph-title">
       <div class="graph__body">
         <div class="graph__months" aria-hidden="true">
           <span v-for="(label, w) in months" :key="w" class="graph__month" :style="{ gridColumn: w + 1 }">{{ label }}</span>
@@ -67,6 +68,11 @@ const months = computed(() => {
   color: #ddd;
 }
 
+.graph__scroll:focus-visible {
+  outline: 2px solid #7cfc00;
+  outline-offset: 2px;
+}
+
 .graph__title {
   font-size: 1rem;
   font-weight: 500;
@@ -79,6 +85,7 @@ const months = computed(() => {
 }
 
 .graph__scroll {
+  border-radius: 0.25rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 0.25rem;

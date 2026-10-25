@@ -42,7 +42,7 @@
 <script setup>
 import { hashtag } from '~/utils/chips.js'
 
-useHead({ title: 'Blog · hanselwei.dev' })
+useHead({ title: 'Blog · Hansel Wei' })
 
 const { data: posts } = await useFetch('/api/blog', { default: () => [] })
 

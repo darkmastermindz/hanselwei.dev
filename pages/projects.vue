@@ -85,7 +85,7 @@ import { storeToRefs } from 'pinia'
 import { useProjectsStore } from '~/stores/projects'
 import { tagLabel } from '~/utils/projects.mjs'
 
-useHead({ title: 'Projects · hanselwei.dev' })
+useHead({ title: 'Projects · Hansel Wei' })
 
 const CHIPS = [
   { id: 'all', label: 'All' },
@@ -212,6 +212,11 @@ const reset = () => {
     background: #653496;
     color: #fff;
     border-color: #a78bfa;
+
+    /* The count stays readable on the purple: 6.2:1 (the grey #aaa was 3.6:1) */
+    .chip__count {
+      color: #e9d5ff;
+    }
   }
 
   &:focus-visible {
@@ -315,7 +320,7 @@ const reset = () => {
 }
 
 .stars {
-  color: orangered;
+  color: #9a3412; /* orange dark enough to read on the light card: 6.3:1 (orangered was 2.96:1) */
 }
 
 .homepage {

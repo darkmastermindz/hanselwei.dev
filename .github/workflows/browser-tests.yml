@@ -1,0 +1,114 @@
+# The browser tests (tests/e2e) on every Android phone, tablet and foldable Playwright knows, and
+# iPhone Duo, against the generated site. The site is built once; each category then runs on its
+# own runners at the same time, split by Playwright's sharding, so a red check names the category:
+#   Accessibility: axe on every page (tests/e2e/a11y.spec.mjs)
+#   Touch: scrolling with a finger and a phantom controller (tests/e2e/android-touch.spec.mjs)
+#   Foldables: fold layouts, page turns, iPhone Duo (tests/e2e/foldable.spec.mjs)
+name: Browser tests
+on:
+  pull_request:
+    paths:
+      - 'components/**'
+      - 'composables/**'
+      - 'layouts/**'
+      - 'pages/**'
+      - 'plugins/**'
+      - 'utils/**'
+      - 'assets/**'
+      - 'public/**'
+      - 'scripts/**'
+      - 'app.vue'
+      - 'nuxt.config.js'
+      - 'tailwind.config.js'
+      - 'config.toml'
+      - 'package-lock.json'
+      - 'playwright.config.mjs'
+      - 'tests/e2e/**'
+      - '.github/workflows/browser-tests.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request replaces the run still going for the last one
+concurrency:
+  group: browser-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Third-party actions are pinned to full commit SHAs (Dependabot keeps them current)
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # Builds the site the way Netlify does (pregenerate runs the unit and security tests too)
+      - run: npm run generate
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: site
+          path: .output/public
+          retention-days: 1
+          if-no-files-found: error
+
+  test:
+    name: ${{ matrix.category }} (${{ matrix.shard }}/${{ matrix.of }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { category: Accessibility, spec: a11y, shard: 1, of: 6 }
+          - { category: Accessibility, spec: a11y, shard: 2, of: 6 }
+          - { category: Accessibility, spec: a11y, shard: 3, of: 6 }
+          - { category: Accessibility, spec: a11y, shard: 4, of: 6 }
+          - { category: Accessibility, spec: a11y, shard: 5, of: 6 }
+          - { category: Accessibility, spec: a11y, shard: 6, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 1, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 2, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 3, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 4, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 5, of: 6 }
+          - { category: Touch, spec: android-touch, shard: 6, of: 6 }
+          # Most foldable tests only run on the foldables, so two runners are plenty
+          - { category: Foldables, spec: foldable, shard: 1, of: 2 }
+          - { category: Foldables, spec: foldable, shard: 2, of: 2 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - id: playwright
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+      # Chromium is the same for every runner with the same Playwright: fetched once, then cached
+      - id: browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - if: steps.browsers.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+      - if: steps.browsers.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: site
+          path: .output/public
+      # GitHub's runners have 4 cores
+      - run: npx playwright test tests/e2e/${{ matrix.spec }}.spec.mjs --shard=${{ matrix.shard }}/${{ matrix.of }} --workers=4
