@@ -19,9 +19,10 @@
         <a :href="post.canonical" target="_blank" rel="noopener">dev.to</a>.
       </p>
       <div class="prose prose-invert prose-purple max-w-none" v-html="post.html" />
-      <p v-if="kudos.available.value" class="kudos-line">
-        Enjoyed this post?
+      <p class="post-actions">
+        <span v-if="kudos.available.value">Enjoyed this post?</span>
         <KudosButton :id="`post-${slug}`" :name="post.title" />
+        <ShareButton :path="`/blog/${slug}`" :title="post.title" />
       </p>
     </article>
   </main>
@@ -48,7 +49,8 @@ useHead({
   link: post.value.canonical ? [{ rel: 'canonical', href: post.value.canonical }] : []
 })
 
-// Kudos for the post (components/KudosButton.vue), live while it's open
+// Kudos for the post (components/KudosButton.vue), live while it's open; sharing is
+// components/ShareButton.vue
 const kudos = useKudos()
 kudos.watchActive(() => true)
 
@@ -79,7 +81,11 @@ const formatDate = iso =>
   }
 }
 
-.kudos-line {
+.post-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 2rem;
   color: #cbd5e1;
 }

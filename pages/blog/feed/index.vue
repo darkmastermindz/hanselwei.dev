@@ -47,8 +47,9 @@
         <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="entry__link">
           🔗 {{ hostname(entry.link) }}
         </a>
-        <p v-if="kudos.available.value" class="entry__kudos">
+        <p class="entry__actions">
           <KudosButton :id="`post-${entry.slug}`" :name="entry.title" />
+          <ShareButton :path="`/blog/${entry.slug}`" :title="entry.title" />
         </p>
       </article>
     </section>
@@ -189,7 +190,11 @@ const hostname = url => {
   height: auto;
 }
 
-.entry__kudos {
+.entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0.5rem 0 0;
 }
 

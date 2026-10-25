@@ -124,7 +124,7 @@ test.describe('Kudos', () => {
     const sent = []
     await standInKudos(page, sent)
     await open(page, '/blog/hello-world')
-    await checkKudosTap(page, page.locator('.kudos-line .kudos'), sent, 'post-hello-world', 'a blog post with kudos')
+    await checkKudosTap(page, page.locator('.post-actions .kudos'), sent, 'post-hello-world', 'a blog post with kudos')
   })
 
   test('each Curiosity Feed entry has a kudos button with none, and a tap counts for that entry', async ({ page }) => {
@@ -134,5 +134,20 @@ test.describe('Kudos', () => {
     const entry = page.locator('.entry').first()
     const slug = await entry.getAttribute('id')
     await checkKudosTap(page, entry.locator('.kudos'), sent, `post-${slug}`, 'the Curiosity Feed with kudos')
+  })
+
+  test('sharing a post copies its link where there is no share sheet, and says so', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    // No share sheet, so the copy path runs the same on every device
+    await page.addInitScript(() => Object.defineProperty(Navigator.prototype, 'share', { value: undefined }))
+    await open(page, '/blog/hello-world')
+    const button = page.locator('.post-actions .share__button')
+    await expect(button).toHaveAttribute('aria-label', 'Share: Hello World!')
+    await button.click()
+    await expect(button).toContainText('Link copied')
+    await expect(page.locator('.post-actions [role="status"]')).toHaveText('Link copied')
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(new URL('/blog/hello-world', page.url()).href)
+    await settled(page)
+    await check(page, 'a blog post after sharing')
   })
 })
