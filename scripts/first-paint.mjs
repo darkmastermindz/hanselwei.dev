@@ -13,6 +13,10 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import Beasties from 'beasties'
+import render from 'dom-serializer'
+import { cloneNode, Element, Text } from 'domhandler'
+import { appendChild, findAll, findOne, prepend, removeElement } from 'domutils'
+import { parseDocument } from 'htmlparser2'
 
 const OUT = new URL('../.output/public/', import.meta.url)
 
@@ -37,42 +41,42 @@ const TEMPLATE_ID = 'after-paint'
 export const LOADER = `(function(){var t=document.getElementById('${TEMPLATE_ID}'),d;function go(){if(d)return;d=1;var h=document.head;h.insertBefore(document.importNode(t.content,!0),h.querySelector('style'))}requestAnimationFrame(function(){setTimeout(go)});setTimeout(go,1e3)})()`
 
 // Moves the head's stylesheets, module script, module preloads and prefetches into a template the
-// LOADER brings back. <noscript> blocks are left as they are.
+// LOADER brings back. <noscript> blocks are left as they are. Works on the parsed page (htmlparser2),
+// written back out exactly as parsed apart from the moves.
+const ROUND_TRIP = { decodeEntities: false }
+const ORDER = ['stylesheet', 'modulepreload', 'module', 'prefetch']
+const kind = el => {
+  if (el.name === 'script') return el.attribs.type === 'module' && 'src' in el.attribs ? 'module' : null
+  const rel = el.name === 'link' && (el.attribs.rel ?? '').toLowerCase()
+  return ORDER.includes(rel) ? rel : null
+}
+const inNoscript = el => {
+  for (let up = el.parent; up; up = up.parent) if (up.name === 'noscript') return true
+  return false
+}
+
 export const afterPaint = html => {
-  const headEnd = html.indexOf('</head>')
-  const bodyEnd = html.lastIndexOf('</body>')
-  if (headEnd < 0 || bodyEnd < 0) return html
-  const noscripts = []
-  let head = html.slice(0, headEnd).replace(/<noscript>[\s\S]*?<\/noscript>/gi, block => `\0${noscripts.push(block) - 1}\0`)
-  const moved = { stylesheet: [], modulepreload: [], script: [], prefetch: [] }
-  // Beasties puts a sheet's first-paint part in a <style> just before its <link>
-  const critical = []
-  head = head.replace(
-    /(<style\b[^>]*>(?:(?!<\/style>)[\s\S])*<\/style>)?(<link\b[^>]*\brel="(stylesheet|modulepreload|prefetch)"[^>]*>)/gi,
-    (_, style = '', tag, rel) => {
-      rel = rel.toLowerCase()
-      moved[rel].push(tag)
-      if (!style || rel !== 'stylesheet' || !tag.includes('href="/_nuxt/')) return style
-      critical.push(style)
-      return ''
-    }
+  const doc = parseDocument(html, ROUND_TRIP)
+  const head = findOne(el => el.name === 'head', doc.children)
+  const body = findOne(el => el.name === 'body', doc.children)
+  if (!head || !body) return html
+  const tags = findAll(el => kind(el) && !inNoscript(el), head.children).sort(
+    (a, b) => ORDER.indexOf(kind(a)) - ORDER.indexOf(kind(b))
   )
+  if (!tags.length) return html
+  const sheets = tags.filter(el => kind(el) === 'stylesheet')
+  // Beasties puts a sheet's first-paint part in a <style> just before its <link>
+  const critical = sheets.map(el => el.prev).filter((prev, i) => prev?.name === 'style' && sheets[i].attribs.href?.startsWith('/_nuxt/'))
+  tags.forEach(removeElement)
+  critical.forEach(removeElement)
   // The site-wide sheet comes before the components' own styles, as it did as a <link> (they
   // override it); the loader puts the full sheets back in the same place
-  if (critical.length) {
-    const at = head.search(/<style\b/i)
-    head = at < 0 ? head + critical.join('') : head.slice(0, at) + critical.join('') + head.slice(at)
-  }
-  head = head.replace(/<script\b[^>]*\btype="module"[^>]*\bsrc="[^"]*"[^>]*><\/script>/gi, tag => {
-    moved.script.push(tag)
-    return ''
-  })
-  head = head.replace(/\0(\d+)\0/g, (_, i) => noscripts[i])
-  const tags = [...moved.stylesheet, ...moved.modulepreload, ...moved.script, ...moved.prefetch]
-  if (!tags.length) return html
-  const noscript = moved.stylesheet.length ? `<noscript>${moved.stylesheet.join('')}</noscript>` : ''
-  const body = html.slice(headEnd, bodyEnd)
-  return `${head}${noscript}${body}<template id="${TEMPLATE_ID}">${tags.join('')}</template><script>${LOADER}</script>${html.slice(bodyEnd)}`
+  const firstStyle = findOne(el => el.name === 'style', head.children)
+  critical.forEach(style => (firstStyle ? prepend(firstStyle, style) : appendChild(head, style)))
+  if (sheets.length) appendChild(head, new Element('noscript', {}, sheets.map(el => cloneNode(el))))
+  appendChild(body, new Element('template', { id: TEMPLATE_ID }, tags))
+  appendChild(body, new Element('script', {}, [new Text(LOADER)]))
+  return render(doc, ROUND_TRIP)
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
