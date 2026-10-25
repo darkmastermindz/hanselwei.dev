@@ -225,7 +225,7 @@ const education = [
     school: 'Chakra Flow University',
     location: 'Charlotte, NC',
     date: '2025',
-    readable: '200-hour Yoga Teacher Training with Chakra Flow University at the Whitewater Center in Charlotte, NC.'
+    readable: '200-hour Yoga Teacher Training Graduate from Chakra Flow University at the Whitewater Center in Charlotte, NC.'
   },
   {
     category: 'Education',
