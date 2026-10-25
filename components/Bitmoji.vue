@@ -46,6 +46,8 @@
           <span class="token__caption">hanselwei.dev</span>
         </span>
         <span class="token__edge" />
+        <!-- The coin's rim: thin reeded strips around the edge, so edge-on it reads as a real coin -->
+        <span v-for="i in EDGE_SEGMENTS" :key="i" class="token__rim" :style="{ '--i': i - 1 }" />
       </span>
     </button>
     <span
@@ -94,6 +96,7 @@ useHead({ link: [{ rel: 'preload', as: 'image', href: bitmojiUrl, fetchpriority:
 const photosReady = ref(false)
 
 const MAX_SPEED = 24 // degrees per frame
+const EDGE_SEGMENTS = 40 // strips around the rim (--segments in the styles below)
 const angle = ref(0)
 // The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
 // reset), otherwise an index into COIN_FACES. A photo that can't load drops out of the rotation.
@@ -305,6 +308,8 @@ const release = () => {
 }
 
 .token__coin {
+  --thickness: calc(var(--size) * 0.06);
+  --segments: 40;
   position: relative;
   display: block;
   width: 100%;
@@ -334,7 +339,7 @@ const release = () => {
 }
 
 .token__face--front {
-  transform: translateZ(2px);
+  transform: translateZ(calc(var(--thickness) / 2));
   /* The original bitmoji backdrop pattern */
   background-color: #653496;
   background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
@@ -357,7 +362,7 @@ const release = () => {
 }
 
 .token__face--back {
-  transform: rotateY(180deg) translateZ(2px);
+  transform: rotateY(180deg) translateZ(calc(var(--thickness) / 2));
   background: radial-gradient(circle at 70% 30%, #9dff5c, #41b883 55%, #1d5c3f);
   color: #2c2f33;
 }
@@ -376,12 +381,32 @@ const release = () => {
   margin-top: 0.4em;
 }
 
-/* Core between the two faces so the coin has some thickness when edge-on */
+/* Core between the two faces, so nothing shows through the coin at a glancing angle */
 .token__edge {
   position: absolute;
   inset: 1%;
   border-radius: 50%;
   background: #4c8f1f;
+}
+
+/* One strip of the rim: as wide as the coin is thick and a little longer than its share of the
+   circumference (so neighbours overlap), turned to its place around the edge and stood on end.
+   Reeded like a real coin's edge, darker towards the faces, and shaded by where it sits so the
+   rim reads as round */
+.token__rim {
+  --turn: calc(var(--i) * 360deg / var(--segments));
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--thickness);
+  height: calc(var(--size) * 3.1416 / var(--segments) * 1.08);
+  margin-top: calc(var(--size) * -1.5708 / var(--segments) * 1.08);
+  margin-left: calc(var(--thickness) / -2);
+  background:
+    linear-gradient(90deg, rgba(0, 0, 0, 0.35), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.35)),
+    repeating-linear-gradient(0deg, #3d7a17 0 1.5px, #7cfc00 1.5px 3px);
+  box-shadow: inset 0 0 0 999px rgb(0 0 0 / calc(0.25 - 0.25 * cos(var(--turn) + 45deg)));
+  transform: rotateZ(var(--turn)) translateX(calc(var(--size) / 2 - 1px)) rotateY(90deg);
 }
 
 .token__shine {
