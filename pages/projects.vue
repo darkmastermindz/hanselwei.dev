@@ -212,6 +212,11 @@ const reset = () => {
     background: #653496;
     color: #fff;
     border-color: #a78bfa;
+
+    /* The count stays readable on the purple: 6.2:1 (the grey #aaa was 3.6:1) */
+    .chip__count {
+      color: #e9d5ff;
+    }
   }
 
   &:focus-visible {
