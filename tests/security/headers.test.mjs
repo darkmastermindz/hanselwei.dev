@@ -20,7 +20,9 @@ test('every response gets the security headers', () => {
   assert.equal(h['X-Frame-Options'], 'DENY')
   assert.equal(h['Referrer-Policy'], 'strict-origin-when-cross-origin')
   for (const feature of ['camera', 'microphone', 'geolocation', 'payment']) assert.match(h['Permissions-Policy'], new RegExp(`${feature}=\\(\\)`))
-  assert.equal(h['Cross-Origin-Opener-Policy'], 'same-origin-allow-popups')
+  // Pages opened from other sites (in-app browsers, redirects) must load on iPhone: no isolation
+  assert.equal(h['Cross-Origin-Opener-Policy'], 'unsafe-none')
+  assert.equal(h['Cross-Origin-Embedder-Policy'], undefined)
   assert.equal(headersFor('/api/*')['X-Robots-Tag'], 'noindex')
 })
 

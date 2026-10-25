@@ -53,8 +53,10 @@
     X-Frame-Options = "DENY"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), browsing-topics=()"
-    # Sign-in popups and links opened in new tabs keep working
-    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    # No opener isolation: with any stricter value Safari on iPhone blocked the page from loading
+    # when it was opened from another site (social apps' in-app browsers, the hansel.run links).
+    # COOP has no allowlist, and nothing here needs isolation (no SharedArrayBuffer).
+    Cross-Origin-Opener-Policy = "unsafe-none"
 
 [[headers]]
   for = "/api/*"
