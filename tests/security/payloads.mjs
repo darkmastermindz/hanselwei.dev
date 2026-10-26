@@ -175,3 +175,23 @@ export const KUDOS_POST_IDS = [
   'POST-hello-world',
   'posthello-world'
 ]
+
+// Build-environment values that must never pass as a commit (utils/buildCommit.mjs)
+export const BAD_COMMITS = [
+  '',
+  'main',
+  'abc1234', // short hashes aren't accepted
+  'g'.repeat(40),
+  'a'.repeat(39),
+  'a'.repeat(41),
+  'a'.repeat(40) + '"><script>alert(1)</script>',
+  '"><script>alert(1)</script>' + 'a'.repeat(40),
+  'a'.repeat(40) + '\nX-Injected: 1',
+  '../../' + 'a'.repeat(34),
+  'javascript:alert(1)',
+  { toString: () => 'a'.repeat(40) },
+  ['a'.repeat(40)],
+  null,
+  undefined,
+  40
+]
