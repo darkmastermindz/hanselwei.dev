@@ -173,6 +173,24 @@ export const KUDOS_BODIES = [
   '{id:"education-ytt200"}'
 ]
 
+// Post ids for kudos (`post-<slug>`): only a plain slug, and only for a post the site has
+export const KUDOS_POST_IDS = [
+  'post-',
+  'post--x',
+  'post-../counts',
+  'post-hello-world/../x',
+  'post-hello-world/',
+  'post-Hello-World',
+  'post-hello world',
+  'post-hello%2Fworld',
+  'post-hello.world',
+  'post-hello-world\u0000',
+  'post-__proto__',
+  `post-${'a'.repeat(300)}`,
+  'POST-hello-world',
+  'posthello-world'
+]
+
 // Bearer tokens for /api/gear/pending (GitHub Actions' sign-in, netlify/lib/githubOidc.mjs) that
 // aren't a token at all; the ones that look right but are signed or aimed wrong are made in
 // tests/security/github-oidc.test.mjs

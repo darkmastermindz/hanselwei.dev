@@ -126,20 +126,7 @@
                 <span class="xp-entry__count" aria-hidden="true">{{ i + 1 }}/{{ yearEntries.length }}</span>
                 <span class="visually-hidden">Entry {{ i + 1 }} of {{ yearEntries.length }}, {{ entry.category }}: </span>
                 <strong>{{ entry.label }}</strong> · <TermText :text="entry.text" />
-                <!-- Live kudos (composables/useKudos.js): the count is in the label, not read out on every refresh -->
-                <button
-                  v-if="kudos.available.value"
-                  type="button"
-                  :class="['kudos', { 'kudos--given': kudos.given.value.has(entry.id) }]"
-                  :aria-label="kudos.given.value.has(entry.id) ? `Kudos given: ${entry.name}, ${kudos.counts.value[entry.id] ?? 0} in all` : `Give kudos: ${entry.name}, ${kudos.counts.value[entry.id] ?? 0} so far`"
-                  :aria-disabled="kudos.given.value.has(entry.id) ? 'true' : undefined"
-                  @click.stop="kudos.give(entry.id)"
-                  @pointerdown.stop
-                  @pointerup.stop
-                  @keydown.stop
-                >
-                  <span aria-hidden="true">👏 {{ kudos.counts.value[entry.id] ?? 0 }}</span>
-                </button>
+                <KudosButton :id="entry.id" :name="entry.name" />
               </li>
             </ul>
             <p v-else key="edu-json" class="json json--edu json--xp soft-pulse">{{ yearJson }}</p>
@@ -947,34 +934,6 @@ cite {
 .prose-line {
   font-size: clamp(0.95rem, 3.6vw, 1.1rem);
   line-height: 1.55;
-}
-
-.kudos {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  min-width: 24px;
-  margin-left: 0.4rem;
-  padding: 0 0.5rem;
-  border: 1px solid #475569;
-  border-radius: 999px;
-  background: transparent;
-  color: #e2e8f0;
-  font-size: 0.75rem;
-  line-height: 1.4;
-  white-space: nowrap;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.kudos:hover,
-.kudos:focus-visible {
-  border-color: #94a3b8;
-}
-
-.kudos--given {
-  border-color: #22c55e;
-  cursor: default;
 }
 
 .edu-list li + li {

@@ -76,17 +76,34 @@ test('the Instagram menu has none when open', async ({ page }) => {
 // Kudos on the plain-English XP list (netlify/functions/kudos.mjs, stood in for here): the
 // buttons have no violations, and a tap counts without flipping the card back to JSON. The
 // service worker is off so the stand-in sees the requests.
-test.describe('XP kudos', () => {
+// A stand-in for /api/kudos: no counts yet, and each kudos counts as the first
+const standInKudos = async (page, sent) => {
+  await page.route('**/api/kudos', async route => {
+    const request = route.request()
+    if (request.method() === 'POST') sent.push(request.postDataJSON().id)
+    const body = request.method() === 'POST' ? { id: sent.at(-1), count: 1, counted: true } : { counts: {} }
+    await route.fulfill({ status: 200, contentType: 'application/json; charset=utf-8', body: JSON.stringify(body) })
+  })
+}
+
+// A kudos button: no violations before or after a tap, and the tap counts for `id`
+const checkKudosTap = async (page, button, sent, id, what) => {
+  await expect(button).toBeVisible({ timeout: 5000 })
+  await check(page, what)
+  await button.click()
+  await expect(button).toHaveClass(/kudos--given/)
+  await expect(button).toContainText('1')
+  expect(sent).toEqual([id])
+  await settled(page)
+  await check(page, `${what} after a kudos`)
+}
+
+test.describe('Kudos', () => {
   test.use({ serviceWorkers: 'block' })
 
   test('the kudos buttons have none, and a tap counts without leaving plain English', async ({ page }) => {
     const sent = []
-    await page.route('**/api/kudos', async route => {
-      const request = route.request()
-      if (request.method() === 'POST') sent.push(request.postDataJSON().id)
-      const body = request.method() === 'POST' ? { id: sent.at(-1), count: 1, counted: true } : { counts: {} }
-      await route.fulfill({ status: 200, contentType: 'application/json; charset=utf-8', body: JSON.stringify(body) })
-    })
+    await standInKudos(page, sent)
     await open(page, '/#xp')
     await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
     await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
@@ -101,5 +118,36 @@ test.describe('XP kudos', () => {
     await expect(page.locator('.edu-list')).toBeVisible()
     await settled(page)
     await check(page, 'the XP list after a kudos')
+  })
+
+  test('a blog post has a kudos button with none, and a tap counts for that post', async ({ page }) => {
+    const sent = []
+    await standInKudos(page, sent)
+    await open(page, '/blog/hello-world')
+    await checkKudosTap(page, page.locator('.post-actions .kudos'), sent, 'post-hello-world', 'a blog post with kudos')
+  })
+
+  test('each Curiosity Feed entry has a kudos button with none, and a tap counts for that entry', async ({ page }) => {
+    const sent = []
+    await standInKudos(page, sent)
+    await open(page, '/blog/feed')
+    const entry = page.locator('.entry').first()
+    const slug = await entry.getAttribute('id')
+    await checkKudosTap(page, entry.locator('.kudos'), sent, `post-${slug}`, 'the Curiosity Feed with kudos')
+  })
+
+  test('sharing a post copies its link where there is no share sheet, and says so', async ({ page, context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+    // No share sheet, so the copy path runs the same on every device
+    await page.addInitScript(() => Object.defineProperty(Navigator.prototype, 'share', { value: undefined }))
+    await open(page, '/blog/hello-world')
+    const button = page.locator('.post-actions .share__button')
+    await expect(button).toHaveAttribute('aria-label', 'Share: Hello World!')
+    await button.click()
+    await expect(button).toContainText('Link copied')
+    await expect(page.locator('.post-actions [role="status"]')).toHaveText('Link copied')
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(new URL('/blog/hello-world', page.url()).href)
+    await settled(page)
+    await check(page, 'a blog post after sharing')
   })
 })
