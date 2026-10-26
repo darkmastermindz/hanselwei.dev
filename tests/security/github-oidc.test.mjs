@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { createSign, createHmac, generateKeyPairSync } from 'node:crypto'
 import { GITHUB_OIDC_ISSUER, githubKey, verifyGithubOidc } from '../../netlify/lib/githubOidc.mjs'
-import { GEAR_AUDIENCE, GEAR_REPOSITORY, GEAR_WORKFLOW_REF, handlePending } from '../../netlify/functions/gear-pending.mjs'
+import { GEAR_AUDIENCE, GEAR_OWNER_ID, GEAR_REPOSITORY, GEAR_REPOSITORY_ID, GEAR_WORKFLOW_REF, handlePending } from '../../netlify/functions/gear-pending.mjs'
 import { BAD_BEARER_TOKENS, PATH_TRAVERSAL, PROTOTYPE_KEYS } from './payloads.mjs'
 
 // A stand-in for GitHub's signing key, and another key nobody trusts
@@ -23,6 +23,8 @@ const goodClaims = {
   iss: GITHUB_OIDC_ISSUER,
   aud: GEAR_AUDIENCE,
   repository: GEAR_REPOSITORY,
+  repository_id: GEAR_REPOSITORY_ID,
+  repository_owner_id: GEAR_OWNER_ID,
   job_workflow_ref: GEAR_WORKFLOW_REF,
   ref: 'refs/heads/main',
   iat: T - 10,
@@ -35,7 +37,7 @@ const jwt = ({ claims = {}, header = {}, key = github.privateKey } = {}) => {
   const signature = createSign('RSA-SHA256').update(`${head}.${body}`).sign(key).toString('base64url')
   return `${head}.${body}.${signature}`
 }
-const expect = { repository: GEAR_REPOSITORY, job_workflow_ref: GEAR_WORKFLOW_REF, ref: 'refs/heads/main' }
+const expect = { repository: GEAR_REPOSITORY, repository_id: GEAR_REPOSITORY_ID, repository_owner_id: GEAR_OWNER_ID, job_workflow_ref: GEAR_WORKFLOW_REF, ref: 'refs/heads/main' }
 const check = token => verifyGithubOidc(token, { audience: GEAR_AUDIENCE, expect, now: NOW, getKey })
 
 test('a genuine token for this workflow on main is accepted', async () => {
@@ -144,3 +146,12 @@ test('the workflow gets the pending edits oldest first, and deletes only pending
   assert.deepEqual(await res.json(), { deleted: 1 })
   assert.deepEqual([...store.blobs.keys()].sort(), ['other/keep', 'pending/2026-10-26T02-00-00-000Z-bbbbbbbbbbbb'])
 })
+
+test('the endpoint wants this repository by id too: the same name with another id is refused', async () => {
+  const store = memoryStore({ 'pending/2026-10-26T01-00-00-000Z-aaaaaaaaaaaa': edit })
+  for (const claims of [{ repository_id: '1' }, { repository_owner_id: '1' }, { repository_id: 200772732 }, { repository_id: undefined }, { repository_owner_id: undefined }]) {
+    assert.equal((await pending(store, { token: jwt({ claims }) })).status, 401, JSON.stringify(claims))
+  }
+  assert.equal((await pending(store)).status, 200)
+})
+

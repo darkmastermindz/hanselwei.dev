@@ -33,7 +33,7 @@ sequenceDiagram
     GitHub-->>Workflow: Token signed by GitHub<br/>(repo, workflow, ref = main)
     Workflow->>Pending: GET + Bearer token
     Pending->>GitHub: GitHub's public keys (cached for an hour)
-    Note over Pending: RS256 only · issuer · audience<br/>repository · gear-updates.yml@main · expiry
+    Note over Pending: RS256 only · issuer · audience<br/>repository (name and id) · gear-updates.yml@main · expiry
     Pending->>Store: list pending/*
     Pending-->>Workflow: Pending edits, oldest first
 

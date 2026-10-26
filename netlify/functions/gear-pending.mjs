@@ -3,7 +3,7 @@
 //
 // For the Gear updates workflow only (.github/workflows/gear-updates.yml, README "Editing gear
 // lists"): it shows GitHub Actions' own sign-in token (netlify/lib/githubOidc.mjs) for this
-// repository's gear-updates.yml on main, so no secret is stored anywhere. The edits come from
+// repository's gear-updates.yml on main (by name and by id), so no secret is stored anywhere. The edits come from
 // /api/gear/submit (owners only), and the workflow still has each one verified before applying it.
 import { getStore } from '@netlify/blobs'
 import { verifyGithubOidc } from '../lib/githubOidc.mjs'
@@ -11,6 +11,10 @@ import { verifyGithubOidc } from '../lib/githubOidc.mjs'
 export const GEAR_AUDIENCE = 'hanselwei.dev/gear-updates'
 export const GEAR_REPOSITORY = 'darkmastermindz/hanselwei.dev'
 export const GEAR_WORKFLOW_REF = `${GEAR_REPOSITORY}/.github/workflows/gear-updates.yml@refs/heads/main`
+// The repository's and its owner's numeric ids (GitHub's tokens carry them as strings): they stay
+// the same through a rename and can't be reused, unlike the names
+export const GEAR_REPOSITORY_ID = '200772732'
+export const GEAR_OWNER_ID = '6164335'
 const KEY = /^pending\/[0-9A-Za-z-]{1,80}$/
 const MAX_BODY = 64 * 1024
 const MAX_KEYS = 500
@@ -22,7 +26,13 @@ const fromWorkflow = (req, verifyToken) => {
   const token = auth.startsWith('Bearer ') ? auth.slice(7) : ''
   return verifyToken(token, {
     audience: GEAR_AUDIENCE,
-    expect: { repository: GEAR_REPOSITORY, job_workflow_ref: GEAR_WORKFLOW_REF, ref: 'refs/heads/main' }
+    expect: {
+      repository: GEAR_REPOSITORY,
+      repository_id: GEAR_REPOSITORY_ID,
+      repository_owner_id: GEAR_OWNER_ID,
+      job_workflow_ref: GEAR_WORKFLOW_REF,
+      ref: 'refs/heads/main'
+    }
   })
 }
 
