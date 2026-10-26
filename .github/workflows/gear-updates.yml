@@ -28,7 +28,7 @@ concurrency:
 jobs:
   apply:
     name: Apply gear edits
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       # Third-party actions are pinned to full commit SHAs (Dependabot keeps them current).
