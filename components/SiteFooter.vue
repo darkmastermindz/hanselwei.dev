@@ -4,18 +4,29 @@
     <p v-if="eventCode" class="site-footer__code">{{ eventCode }}</p>
     <p class="site-footer__line">Designed &amp; created with &lt;3 by Hansel Wei • ©️ 2026 hanselwei.dev</p>
     <p><NuxtLink to="/terms">Terms of Service</NuxtLink> • <NuxtLink to="/credits">Open source software &lt;3</NuxtLink></p>
+    <!-- Signed in as the owner: which commit this build came from -->
+    <p v-if="user && buildHref" class="site-footer__build">
+      Build <a :href="buildHref" target="_blank" rel="noopener">{{ commit.slice(0, 7) }}</a>
+    </p>
   </footer>
 </template>
 
 <script setup>
 import eventSettings from '~/data/coinBubble.generated.mjs'
 import { bubbleActive } from '~/utils/coinBubble.mjs'
+import { commitUrl } from '~/utils/buildCommit.mjs'
+import { safeUrl } from '~/utils/safeUrl.js'
 
 // In the prerendered page while the event is on at build time; the browser drops it once it's over
 const eventCode = ref(bubbleActive(eventSettings) ? eventSettings.footerCode : null)
 onMounted(() => {
   if (!bubbleActive(eventSettings)) eventCode.value = null
 })
+
+// Only the signed-in owner sees it; the server decides who that is (composables/useAuth.js)
+const { user } = useAuth()
+const commit = useRuntimeConfig().public.commit || ''
+const buildHref = computed(() => safeUrl(commitUrl(commit)))
 </script>
 
 <style scoped>
@@ -48,6 +59,11 @@ onMounted(() => {
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   color: #999;
+}
+
+.site-footer__build {
+  font-family: 'Nova Mono', monospace;
+  font-size: 0.75rem;
 }
 
 .site-footer a {
