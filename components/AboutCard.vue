@@ -65,7 +65,20 @@
             “{{ fact.text }}”
             <cite>— {{ fact.author }}</cite>
           </blockquote>
-          <p v-else>{{ fact.text }}</p>
+          <!-- A study's fact links to the study, inline at the end of the text. Kept from the card's
+               own tap (switch category) and Enter key, so the link just opens -->
+          <p v-else>
+            {{ fact.text }}
+            <a
+              v-if="safeUrl(fact.source)"
+              :href="safeUrl(fact.source)"
+              target="_blank"
+              rel="noopener"
+              class="fact__source"
+              @click.stop
+              @keydown.stop
+            >{{ fact.sourceLabel || 'Read the study' }} ↗</a>
+          </p>
         </figure>
         <p v-else-if="view === 'skills'" data-content :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
           <template v-if="readable">I'm a {{ sentence(skills) }}. ✨</template>
@@ -757,6 +770,19 @@ blockquote {
   font-style: italic;
 }
 
+.fact__source {
+  white-space: nowrap; /* the arrow stays with its words */
+  font-size: 0.85rem;
+  color: #c084fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fact__source:focus-visible {
+  outline: 2px dashed #7cfc00;
+  outline-offset: 2px;
+}
+
 cite {
   display: block;
   margin-top: 0.35rem;
@@ -823,7 +849,8 @@ cite {
   background: linear-gradient(135deg, #c084fc, #41b883);
   box-shadow: 0 0 0 2px #c084fc66;
   transform: translate(-50%, -50%);
-  transition: left 0.2s ease;
+  /* SwiftUI's .snappy spring: a quick slide to the picked year with a hint of overshoot */
+  transition: left var(--spring-snappy-duration) var(--spring-snappy);
   pointer-events: none;
 }
 

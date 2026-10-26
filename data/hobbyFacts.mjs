@@ -1,5 +1,6 @@
 // Facts and motivation revealed by spinning the profile token on the home page.
-// Each entry is tied to a hobby (most are listed on the home page), origami, or software engineering.
+// Each entry is tied to a hobby (most are listed on the home page), origami, software engineering,
+// or social data science.
 const hobbies = {
   hiking: { label: 'Hiking', emoji: '🥾' },
   photography: { label: 'Photography', emoji: '📷' },
@@ -14,10 +15,15 @@ const hobbies = {
   stainedglass: { label: 'Stained Glass', emoji: '🪟' },
   stargazing: { label: 'Stargazing', emoji: '🔭' },
   origami: { label: 'Origami', emoji: '🦢' },
-  software: { label: 'Software Engineering', emoji: '💻' }
+  software: { label: 'Software Engineering', emoji: '💻' },
+  datascience: { label: 'Social Data Science', emoji: '📊' }
 }
 
-const fact = (id, hobby, text) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text })
+// `source`: for a fact from a study, a link to the study itself. `sourceLabel` names the link
+// when it isn't a study (the card says "Read the study" otherwise)
+const fact = (id, hobby, text, source, sourceLabel) => ({
+  id, type: 'fact', ...hobbies[hobby], hobby, text, ...(source && { source }), ...(sourceLabel && { sourceLabel })
+})
 const quote = (id, hobby, text, author) => ({ id, type: 'quote', ...hobbies[hobby], hobby, text, author })
 
 export const hobbyFacts = [
@@ -33,7 +39,7 @@ export const hobbyFacts = [
   // Hiking
   fact('hike-at', 'hiking', 'The Appalachian Trail runs roughly 2,190 miles through 14 states, from Georgia to Maine.'),
   fact('hike-pct', 'hiking', 'The Pacific Crest Trail stretches about 2,650 miles from the Mexican border to Canada.'),
-  fact('hike-creativity', 'hiking', 'A 2014 Stanford study found walking boosted creative thinking by around 60% compared to sitting.'),
+  fact('hike-creativity', 'hiking', 'A 2014 Stanford study found walking boosted creative thinking by around 60% compared to sitting.', 'https://doi.org/10.1037/a0036577'),
   quote('hike-muir-walk', 'hiking', 'In every walk with nature one receives far more than he seeks.', 'John Muir'),
   quote('hike-muir-calling', 'hiking', 'The mountains are calling and I must go.', 'John Muir'),
 
@@ -90,7 +96,7 @@ export const hobbyFacts = [
 
   // Community building
   fact('community-dunbar', 'community', "Anthropologist Robin Dunbar estimated people can keep about 150 stable relationships: \"Dunbar's number\"."),
-  fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.'),
+  fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.', 'https://www.adultdevelopmentstudy.org/'),
   quote('community-mead', 'community', 'Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it\'s the only thing that ever has.', 'Margaret Mead'),
   quote('community-proverb', 'community', 'If you want to go fast, go alone. If you want to go far, go together.', 'African proverb'),
   quote('community-bend', 'community', 'If we can bend a little, maybe shift our perception and appreciate a different point of view, we can perhaps improve the world around us.', 'Unknown'),
@@ -116,7 +122,7 @@ export const hobbyFacts = [
   fact('stars-count', 'stargazing', 'About 9,000 stars are bright enough to see without a telescope across the whole sky; under a truly dark sky you can see a few thousand at once.'),
   fact('stars-andromeda', 'stargazing', 'The Andromeda Galaxy, about 2.5 million light-years away, is the farthest thing most people can see with their own eyes.'),
   fact('stars-bortle', 'stargazing', 'The Bortle scale rates how dark a sky is, from 1 (the darkest) to 9 (an inner city). Amateur astronomer John Bortle published it in 2001.'),
-  fact('stars-milkyway', 'stargazing', 'A 2016 world atlas of light pollution found that more than a third of humanity can no longer see the Milky Way from home.'),
+  fact('stars-milkyway', 'stargazing', 'A 2016 world atlas of light pollution found that more than a third of humanity can no longer see the Milky Way from home.', 'https://doi.org/10.1126/sciadv.1600377'),
   quote('stars-sagan', 'stargazing', 'The cosmos is within us. We are made of star-stuff.', 'Carl Sagan'),
 
   // Origami
@@ -132,5 +138,13 @@ export const hobbyFacts = [
   quote('sw-hopper-always', 'software', "The most dangerous phrase in the language is, 'We've always done it this way.'", 'Grace Hopper'),
   quote('sw-hopper-ship', 'software', "A ship in port is safe, but that's not what ships are built for.", 'Grace Hopper'),
   quote('sw-brooks', 'software', 'Adding manpower to a late software project makes it later.', 'Fred Brooks'),
-  quote('sw-torvalds', 'software', 'Talk is cheap. Show me the code.', 'Linus Torvalds')
+  quote('sw-torvalds', 'software', 'Talk is cheap. Show me the code.', 'Linus Torvalds'),
+
+  // Social data science: what it is, then findings from large studies of people, each linked to its source
+  fact('ds-definition', 'datascience', 'Social data science is an interdisciplinary field that tackles social science questions with computational and digital methods, drawing on data science, network science and computer science. Its data is always about people.', 'https://en.wikipedia.org/wiki/Social_data_science', 'Wikipedia'),
+  fact('ds-happiness-report', 'datascience', 'Finland topped the 2026 World Happiness Report for the ninth year in a row. The rankings come from people in more than 140 countries rating their own lives.', 'https://www.unsdsn.org/resources/world-happiness-report-2026'),
+  fact('ds-wandering-mind', 'datascience', 'In a 2010 Science paper, Harvard psychologists Matthew Killingsworth and Daniel Gilbert found our minds wander 46.9% of waking hours: "a human mind is a wandering mind, and a wandering mind is an unhappy mind."', 'https://news.harvard.edu/gazette/story/2010/11/wandering-mind-not-a-happy-mind/'),
+  fact('ds-happiness-spreads', 'datascience', "A 2008 study of the Framingham Heart Study's social network found happiness spreads up to three degrees of separation: to your friends' friends' friends.", 'https://doi.org/10.1136/bmj.a2338'),
+  fact('ds-four-degrees', 'datascience', 'A 2012 study of 721 million Facebook users found any two of them were, on average, 4.74 hops apart: closer than the classic "six degrees".', 'https://arxiv.org/abs/1111.4570'),
+  fact('ds-kevin-bacon', 'datascience', 'In 1994 three Albright College students invented Six Degrees of Kevin Bacon: link any actor to Bacon through films they shared. It is a classic graph problem (actors are nodes, shared films are edges, an actor\'s "Bacon number" is the length of the shortest path to Bacon) often set in data structures courses.', 'https://en.wikipedia.org/wiki/Six_Degrees_of_Kevin_Bacon', 'Wikipedia')
 ]
