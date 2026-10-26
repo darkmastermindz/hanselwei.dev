@@ -1,6 +1,6 @@
 // Gear list edits (README "Editing gear lists"): the owner's changes to a list, as a short list
 // of operations, applied the same way everywhere they're used. The editor on /gear/[list] previews
-// them, /api/gear/token checks them before signing, and scripts/gear-updates.mjs applies them to
+// them, /api/gear/submit checks them before signing, and scripts/gear-updates.mjs applies them to
 // data/gear/<list>.json for the "Gear updates" pull request. Given the same file and the same
 // operations, the result is the same bytes every time.
 //

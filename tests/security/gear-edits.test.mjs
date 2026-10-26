@@ -1,10 +1,11 @@
-// Gear list edits arrive through a public Netlify Form, so nothing in them is trusted until it is
-// signed by an owner (netlify/lib/gearToken.mjs) and checked (utils/gearEdits.mjs)
+// Gear list edits are only kept for a signed-in owner (/api/gear/submit), and still nothing in them
+// is trusted until it is signed by an owner (netlify/lib/gearToken.mjs) and checked
+// (utils/gearEdits.mjs)
 import { test, beforeEach, afterEach } from 'node:test'
 import assert from 'node:assert/strict'
 import { applyOps, describeOp, LIMITS, serializeList, validateOps } from '../../utils/gearEdits.mjs'
 import { createGearToken, GEAR_TOKEN_MAX_AGE, gearKey, readGearToken } from '../../netlify/lib/gearToken.mjs'
-import gearToken from '../../netlify/functions/gear-token.mjs'
+import { handleSubmit } from '../../netlify/functions/gear-submit.mjs'
 import gearVerify from '../../netlify/functions/gear-verify.mjs'
 import { createSession, sessionSecret } from '../../netlify/lib/session.mjs'
 import { GEAR_TEXT, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
@@ -105,7 +106,7 @@ test('the edit key comes from the sign-in secret, but is its own key (not the se
   assert.equal(readGearToken(session, { list: 'camera', opsText: '[1]' }, key, NOW), null)
 })
 
-// /api/gear/token and /api/gear/verify
+// /api/gear/submit and /api/gear/verify
 const ENV = { GITHUB_CLIENT_SECRET: 'client-secret-of-sufficient-length' }
 const SITE_KEY = gearKey(ENV)
 const SITE = 'https://www.hanselwei.dev'
@@ -113,9 +114,16 @@ beforeEach(() => Object.assign(process.env, ENV))
 afterEach(() => {
   for (const key of Object.keys(ENV)) delete process.env[key]
 })
+// A stand-in for the "gear-edits" Netlify Blobs store
+const memoryStore = () => {
+  const blobs = new Map()
+  return { blobs, setJSON: async (key, value) => void blobs.set(key, JSON.stringify(value)) }
+}
+let store = memoryStore()
+beforeEach(() => (store = memoryStore()))
 const call = ({ method = 'POST', email = 'hello@hanselwei.dev', origin = SITE, body = { list: 'camera', ops: [{ op: 'remove', id: 'x-t5' }] } } = {}) =>
-  gearToken(
-    new Request(`${SITE}/api/gear/token`, {
+  handleSubmit(
+    new Request(`${SITE}/api/gear/submit`, {
       method,
       headers: {
         ...(origin && { origin }),
@@ -123,10 +131,11 @@ const call = ({ method = 'POST', email = 'hello@hanselwei.dev', origin = SITE, b
         'content-type': 'application/json'
       },
       ...(method === 'POST' && { body: typeof body === 'string' ? body : JSON.stringify(body) })
-    })
+    }),
+    { store }
   )
 
-test('the token endpoint signs only for a signed-in owner, from this site', async () => {
+test('submit keeps edits only for a signed-in owner, from this site', async () => {
   assert.equal((await call({ method: 'GET' })).status, 405)
   assert.equal((await call({ origin: 'https://evil.example' })).status, 403)
   assert.equal((await call({ origin: null })).status, 403)
@@ -134,23 +143,30 @@ test('the token endpoint signs only for a signed-in owner, from this site', asyn
   assert.equal((await call({ email: 'someone@example.com' })).status, 403)
   delete process.env.GITHUB_CLIENT_SECRET
   assert.equal((await call()).status, 503)
+  assert.equal(store.blobs.size, 0, 'nothing kept')
 })
 
-test('the token endpoint refuses unknown lists, bad changes and bad bodies', async () => {
+test('submit refuses unknown lists, bad changes and bad bodies, and keeps nothing for them', async () => {
   for (const list of [...PROTOTYPE_KEYS, '../camera', 'Camera']) assert.equal((await call({ body: { list, ops: [{ op: 'remove', id: 'x' }] } })).status, 404, list)
   assert.equal((await call({ body: { list: 'camera', ops: [{ op: 'nuke' }] } })).status, 422)
   assert.equal((await call({ body: '{not json' })).status, 400)
   assert.equal((await call({ body: 'x'.repeat(300 * 1024) })).status, 413)
+  assert.equal(store.blobs.size, 0)
 })
 
-test('a signed answer covers exactly the checked changes it returns', async () => {
+test('what submit keeps is the checked changes, signed for exactly them, under a pending/ key', async () => {
   const res = await call({ body: { list: 'camera', ops: [{ op: 'add', item: { ...item('<b>Lens</b>\nx'), extra: 1 } }] } })
   assert.equal(res.status, 200)
   assert.equal(res.headers.get('cache-control'), 'private, no-store')
-  const { ops, token } = await res.json()
-  assert.deepEqual(JSON.parse(ops)[0].item.name, '<b>Lens</b> x')
-  assert.ok(readGearToken(token, { list: 'camera', opsText: ops }, SITE_KEY))
-  assert.equal(readGearToken(token, { list: 'camera', opsText: ops.replace('Lens', 'Lens2') }, SITE_KEY), null)
+  const { key } = await res.json()
+  assert.match(key, /^pending\/\d{4}-\d\d-\d\dT[\d-]+Z-[0-9a-f]{12}$/)
+  const kept = JSON.parse(store.blobs.get(key))
+  assert.deepEqual(Object.keys(kept).sort(), ['at', 'list', 'ops', 'token'])
+  assert.equal(JSON.parse(kept.ops)[0].item.name, '<b>Lens</b> x')
+  assert.ok(readGearToken(kept.token, { list: 'camera', opsText: kept.ops }, SITE_KEY, Date.parse(kept.at)))
+  assert.equal(readGearToken(kept.token, { list: 'camera', opsText: kept.ops.replace('Lens', 'Lens2') }, SITE_KEY), null)
+  // And the site's own check agrees
+  assert.equal((await verify(kept)).status, 200)
 })
 
 const verify = (body, method = 'POST') =>

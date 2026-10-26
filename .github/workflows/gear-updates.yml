@@ -1,20 +1,24 @@
-# Gear list edits from the site (README "Editing gear lists"): the editor on /gear/<list> sends
-# them through the "gear-edit" Netlify Form; this workflow has the site check each one was signed
-# by a signed-in owner, applies them to data/gear/*.json on the gear-updates branch, and opens or
-# updates the one "Gear updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever a
-# pull request merges into main, and on demand.
+# Gear list edits from the site (README "Editing gear lists"): the editor on /gear/<list> keeps
+# them on Netlify (/api/gear/submit); this workflow signs in to the site with GitHub's own token for
+# this run (no stored secret), has the site check each edit was signed by a signed-in owner,
+# applies them to data/gear/*.json on the gear-updates branch, and opens or updates the one "Gear
+# updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever main changes (a merged
+# pull request), and on demand from main.
 name: Gear updates
 on:
   schedule:
     - cron: '23 13 * * 1' # Mondays, 13:23 UTC
-  pull_request:
-    types: [closed]
+  # A merged pull request is a push to main. (Not pull_request: the site only answers this
+  # workflow's runs on main, and a pull request's run is on its merge ref.)
+  push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
+  # GitHub's sign-in token for this run, which the site checks (netlify/lib/githubOidc.mjs)
+  id-token: write
 
 # One run at a time; a run that's waiting picks up everything the one before it left
 concurrency:
@@ -24,9 +28,6 @@ concurrency:
 jobs:
   apply:
     name: Apply gear edits
-    # A pull request only counts once it's merged (and the gear PR's own merge has nothing new
-    # to add, but keeps the run cheap: it finds no submissions and stops)
-    if: github.event_name != 'pull_request' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -41,10 +42,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci --ignore-scripts
-      # The edits' signatures are checked by the site (/api/gear/verify), so the only secret here
-      # is the Netlify token that reads and deletes the form's submissions
+      # No secrets: the site reads GitHub's token for this run, and checks the edits' signatures
+      # itself (/api/gear/verify)
       - run: node scripts/gear-updates.mjs
         env:
-          NETLIFY_API_TOKEN: ${{ secrets.NETLIFY_API_TOKEN }}
-          NETLIFY_SITE_ID: e1939fee-0a59-40be-b538-0f6024576640 # the "hansel" site (not a secret)
           GITHUB_TOKEN: ${{ github.token }}

@@ -1,7 +1,7 @@
 // The owner's gear editor on /gear/[list] (README "Editing gear lists"). Changes collect here
 // as operations (utils/gearEdits.mjs), shown on the page as they'd look, and kept in this
-// browser until they're sent. Sending asks /api/gear/token to sign them, then posts them to the
-// "gear-edit" Netlify Form; the Gear updates workflow adds them to the "Gear updates" pull request.
+// browser until they're sent. Sending gives them to /api/gear/submit, which checks, signs and keeps
+// them on Netlify; the Gear updates workflow adds them to the "Gear updates" pull request.
 import { applyOps, describeOp, validateOps } from '~/utils/gearEdits.mjs'
 
 const storageKey = id => `gear-edits:${id}`
@@ -87,19 +87,13 @@ export const useGearEditor = (id, inventory) => {
     sending.value = true
     problem.value = ''
     try {
-      const res = await fetch('/api/gear/token', {
+      const res = await fetch('/api/gear/submit', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ list: id, ops: pending.value })
       })
-      const signed = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(signed.error ?? 'Couldn\'t sign the changes')
-      const form = await fetch('/', {
-        method: 'POST',
-        headers: { 'content-type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ 'form-name': 'gear-edit', list: id, ops: signed.ops, token: signed.token, 'bot-field': '' })
-      })
-      if (!form.ok) throw new Error('Netlify didn\'t take the changes')
+      const answer = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(answer.error ?? 'Couldn\'t send the changes')
       pending.value = []
       sent.value = true
       editing.value = false

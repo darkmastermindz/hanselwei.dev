@@ -1,6 +1,6 @@
 // POST /api/gear/verify { list, ops, token, at } -> 200 { ok: true } or 403: whether a gear edit
-// from the "gear-edit" Netlify Form was signed by a current owner, for exactly this list and these
-// changes, and sent while its signature was good (`at`: when Netlify received it). The Gear updates
+// kept by /api/gear/submit was signed by a current owner, for exactly this list and these changes,
+// and kept while its signature was good (`at`: when it was kept). The Gear updates
 // workflow (scripts/gear-updates.mjs) asks this for every submission, so the key that signs edits
 // (netlify/lib/gearToken.mjs, derived from the sign-in secret) never leaves Netlify.
 // It only says yes or no; it signs nothing, and its answer can't be used to make a token.

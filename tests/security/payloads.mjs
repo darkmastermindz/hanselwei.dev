@@ -172,3 +172,19 @@ export const KUDOS_BODIES = [
   '{"id":"<img src=x onerror=alert(1)>"}',
   '{id:"education-ytt200"}'
 ]
+
+// Bearer tokens for /api/gear/pending (GitHub Actions' sign-in, netlify/lib/githubOidc.mjs) that
+// aren't a token at all; the ones that look right but are signed or aimed wrong are made in
+// tests/security/github-oidc.test.mjs
+export const BAD_BEARER_TOKENS = [
+  '',
+  'null',
+  'Bearer',
+  'a.b',
+  'a.b.c.d',
+  '..',
+  'eyJhbGciOiJub25lIn0.eyJpc3MiOiJodHRwczovL3Rva2VuLmFjdGlvbnMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIn0.',
+  'not base64!.x.y',
+  '<script>alert(1)</script>',
+  'x'.repeat(10_000)
+]

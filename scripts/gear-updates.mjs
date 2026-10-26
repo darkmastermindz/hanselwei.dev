@@ -1,25 +1,26 @@
 // The "Gear updates" workflow (.github/workflows/gear-updates.yml, README "Editing gear lists"):
-// reads the gear edits sent from the editor on /gear/<list> through the "gear-edit" Netlify Form,
+// reads the gear edits sent from the editor on /gear/<list> (kept on Netlify by /api/gear/submit),
 // keeps only those the owner signed (netlify/lib/gearToken.mjs), applies them in the order they
 // were sent to data/gear/<list>.json on the gear-updates branch, and opens or updates one pull
-// request for them. Submissions it has dealt with are deleted from Netlify, so each lands once.
+// request for them. Edits it has dealt with are deleted from the site, so each lands once.
 //
-// Each submission's signature is checked by the site itself (/api/gear/verify): the key that signs
-// edits comes from the sign-in's secret and never leaves Netlify. Needs a NETLIFY_API_TOKEN secret
-// (to read and delete the submissions) and NETLIFY_SITE_ID, plus the workflow's own GITHUB_TOKEN.
-// Without the Netlify token it says so and stops (the workflow stays green until it's set up).
+// No stored secret: the run signs in to the site (/api/gear/pending) with GitHub Actions' own
+// token for this workflow on main (netlify/lib/githubOidc.mjs), and the site checks each edit's
+// signature itself (/api/gear/verify), since the key that signs edits never leaves Netlify. Needs
+// the workflow's `id-token: write` permission and its own GITHUB_TOKEN. Run anywhere else (no
+// GitHub Actions token to ask for), it says so and stops.
 import { execFileSync } from 'node:child_process'
 import { readFile, writeFile } from 'node:fs/promises'
 import { hasInventory } from '../data/inventory.mjs'
 import { applyOps, describeOp, serializeList, validateOps } from '../utils/gearEdits.mjs'
 
-export const FORM_NAME = 'gear-edit'
 export const BRANCH = 'gear-updates'
 const PR_TITLE = 'Gear updates'
 // Overridable for a dry run against a stand-in server
-const NETLIFY_API = process.env.NETLIFY_API_URL ?? 'https://api.netlify.com/api/v1'
 const GITHUB_API = process.env.GITHUB_API_URL ?? 'https://api.github.com'
-const SITE = process.env.GEAR_VERIFY_SITE ?? 'https://www.hanselwei.dev'
+const SITE = process.env.GEAR_SITE ?? 'https://www.hanselwei.dev'
+// What the site expects the token to be for (GEAR_AUDIENCE in netlify/functions/gear-pending.mjs)
+const AUDIENCE = 'hanselwei.dev/gear-updates'
 const MAX_OPS_TEXT = 256 * 1024
 
 // Sorts submissions into the ones to apply (oldest first), the ones to drop (with why), and the ones
@@ -92,7 +93,7 @@ export const commitMessage = ({ list, title, ops, skipped, id, at }) =>
     ...ops.map(op => `- ${op.line}`),
     ...(skipped.length ? ['', 'Skipped:', ...skipped.map(s => `- ${s.line} (${s.reason})`)] : []),
     '',
-    `From the editor on /gear/${list} (form submission ${id}, ${new Date(at).toISOString()}).`
+    `From the editor on /gear/${list} (submission ${id}, ${new Date(at).toISOString()}).`
   ].join('\n')
 
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
@@ -105,14 +106,27 @@ const gitOk = (...args) => {
   }
 }
 
-const netlify = async (path, options = {}) => {
-  const res = await fetch(`${NETLIFY_API}${path}`, {
-    ...options,
-    headers: { authorization: `Bearer ${process.env.NETLIFY_API_TOKEN}`, 'user-agent': 'hanselwei.dev gear-updates' }
-  })
-  if (!res.ok) throw new Error(`Netlify ${options.method ?? 'GET'} ${path.replace(/\/[0-9a-f]{24}/g, '/…')}: ${res.status}`)
-  return res.status === 204 ? null : res.json()
+// GitHub Actions' sign-in token for this run, for the site's audience (null outside Actions or
+// without the workflow's id-token permission)
+const actionsToken = async () => {
+  const { ACTIONS_ID_TOKEN_REQUEST_URL: url, ACTIONS_ID_TOKEN_REQUEST_TOKEN: bearer } = process.env
+  if (!url || !bearer) return null
+  const res = await fetch(`${url}&audience=${encodeURIComponent(AUDIENCE)}`, { headers: { authorization: `Bearer ${bearer}` } })
+  if (!res.ok) throw new Error(`GitHub's sign-in token: ${res.status}`)
+  return (await res.json()).value
 }
+
+const site = async (token, options = {}) => {
+  const res = await fetch(`${SITE}/api/gear/pending`, {
+    ...options,
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'user-agent': 'hanselwei.dev gear-updates' }
+  })
+  if (!res.ok) throw new Error(`Site ${options.method ?? 'GET'} /api/gear/pending: ${res.status}`)
+  return res.json()
+}
+
+// The pending edits in the shape checkSubmissions reads
+export const asSubmissions = pending => pending.map(p => ({ id: p.key, created_at: p.at, data: { list: p.list, ops: p.ops, token: p.token } }))
 
 const github = async (path, options = {}) => {
   const res = await fetch(`${GITHUB_API}/repos/${process.env.GITHUB_REPOSITORY}${path}`, {
@@ -128,15 +142,6 @@ const github = async (path, options = {}) => {
   return res.json()
 }
 
-const allSubmissions = async formId => {
-  const all = []
-  for (let page = 1; ; page++) {
-    const batch = await netlify(`/forms/${formId}/submissions?per_page=100&page=${page}`)
-    all.push(...batch)
-    if (batch.length < 100) return all
-  }
-}
-
 const prBody = log =>
   [
     'Gear list edits from the editor on the gear pages (README "Editing gear lists"), collected by the **Gear updates** workflow. It runs weekly and whenever a pull request merges into main, and adds new edits to this pull request until it is merged.',
@@ -150,15 +155,14 @@ const prBody = log =>
   ].join('\n')
 
 const main = async () => {
-  if (!process.env.NETLIFY_API_TOKEN || !process.env.NETLIFY_SITE_ID) {
-    console.log('[gear-updates] Not set up yet (the NETLIFY_API_TOKEN secret); nothing to do.')
+  const token = await actionsToken()
+  if (!token) {
+    console.log('[gear-updates] Not in GitHub Actions with id-token: write (no sign-in token for the site); nothing to do.')
     return
   }
 
-  const forms = await netlify(`/sites/${process.env.NETLIFY_SITE_ID}/forms`)
-  const form = forms.find(f => f.name === FORM_NAME)
-  const submissions = form ? await allSubmissions(form.id) : []
-  const { valid, invalid, later } = await checkSubmissions(submissions, { verify: verifyWithSite })
+  const { submissions: pending } = await site(token)
+  const { valid, invalid, later } = await checkSubmissions(asSubmissions(pending), { verify: verifyWithSite })
   for (const bad of invalid) console.log(`[gear-updates] Dropping submission ${bad.id}: ${bad.reason}`)
   console.log(`[gear-updates] ${valid.length} edit(s) to apply, ${invalid.length} dropped, ${later.length} left for the next run (the site didn't answer)`)
 
@@ -220,8 +224,10 @@ const main = async () => {
     else await github('/pulls', { method: 'POST', body: JSON.stringify({ title: PR_TITLE, head: BRANCH, base: 'main', body: prBody(log) }) })
   }
 
-  // Only now that the edits are pushed: each submission is dealt with once
-  for (const { id } of [...valid, ...invalid]) if (id) await netlify(`/submissions/${id}`, { method: 'DELETE' })
+  // Only now that the edits are pushed: each one is dealt with once. A fresh token, in case the
+  // run took longer than the first one lasts.
+  const done = [...valid, ...invalid].map(e => e.id).filter(Boolean)
+  for (let i = 0; i < done.length; i += 500) await site(await actionsToken(), { method: 'DELETE', body: JSON.stringify({ keys: done.slice(i, i + 500) }) })
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

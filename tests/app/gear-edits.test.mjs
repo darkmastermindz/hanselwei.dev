@@ -121,5 +121,5 @@ test('when the site can\'t be asked, a submission waits for the next run instead
 
 test('the commit message says what changed in plain lines', () => {
   const msg = commitMessage({ list: 'camera', title: 'Camera Gear', ops: [{ line: 'Remove X-T5' }], skipped: [], id: 's1', at: Date.UTC(2026, 9, 25) })
-  assert.match(msg, /^Gear: Camera Gear: 1 change\n\n- Remove X-T5\n\nFrom the editor on \/gear\/camera \(form submission s1, 2026-10-25T00:00:00.000Z\)\.$/)
+  assert.match(msg, /^Gear: Camera Gear: 1 change\n\n- Remove X-T5\n\nFrom the editor on \/gear\/camera \(submission s1, 2026-10-25T00:00:00.000Z\)\.$/)
 })
