@@ -9,8 +9,11 @@
 // - Open flat: a near-square touch screen (Android foldables), or iPhone Duo's inner screen
 //   held sideways. iPhone Duo is the only iPhone whose page is 500px or more both ways.
 // - Anything else: null, the usual layout.
+// - iPad held sideways (900px or more wide): no fold, but the menu offers the book layout with a
+//   📖 button (components/BookToggle.vue). Chosen, the spine is the middle of the screen.
 // It also names iPhone Duo's screens (data-device="iphone-duo" inside, "iphone-duo-cover" on the
-// front), for the touches made just for it (components/DuoLaptopLid.vue, components/FoldPong.vue).
+// front), for the touches made just for it (components/DuoLaptopLid.vue, components/FoldPong.vue),
+// and an iPad held sideways (data-device="ipad"), where the 📖 button shows.
 //
 // The script in the page head (nuxt.config.js) runs foldMode before the first paint and again on
 // every resize and fold, and sets <html data-fold="tabletop|book|flat"> and the --fold-*
@@ -22,17 +25,23 @@ export const FLAT_QUERY =
   '(min-width: 600px) and (max-width: 1100px) and (min-aspect-ratio: 4/5) and (max-aspect-ratio: 5/4) and (pointer: coarse) and (hover: none)'
 
 // segments: [{x, y, width, height}, …] or null; posture: 'folded', 'continuous' or undefined.
-// apple: an iPhone or an iPad (iPad Safari says it's a Mac). width and height: the page's size,
-// not counting pinch zoom or the keyboard (watchFold).
+// apple: an iPhone or an iPad (iPad Safari says it's a Mac). ipad: an iPad (a "Mac" with touch).
+// book: the visitor chose the book layout on an iPad. width and height: the page's size, not
+// counting pinch zoom or the keyboard (watchFold).
 // Self-contained: it's also turned into a string for the page head script.
-export function foldMode({ segments, posture, flat, iphone, apple, width, height }) {
+export function foldMode({ segments, posture, flat, iphone, apple, ipad, book, width, height }) {
   const CREASE = 16 // px kept clear on both sides of a known fold (seamless folds report none)
   const GUESSED_CREASE = 32 // where the fold is only guessed (the middle)
+  const SPINE = 24 // px kept clear on both sides of an iPad's spine (there's no fold to avoid)
   // iPhone Duo's inner screen is the only iPhone page 500px or more both ways; its front (outer)
   // screen is 382px wide upright in Safari, a width no other iPhone has (they're 320-440 in steps
   // of 375, 390, 393, 402, 414, 428, 430, 440)
   const narrow = Math.min(width, height)
-  const device = !iphone ? null : narrow >= 500 ? 'iphone-duo' : narrow >= 378 && narrow <= 386 && height > width ? 'iphone-duo-cover' : null
+  // An iPad held sideways and wide enough for two pages (not a narrow Split View or Stage Manager
+  // window): the 📖 button shows, and the book layout is there to choose
+  const ipadWide = Boolean(ipad) && !iphone && width > height && width >= 900
+  const device = ipadWide ? 'ipad' : !iphone ? null : narrow >= 500 ? 'iphone-duo' : narrow >= 378 && narrow <= 386 && height > width ? 'iphone-duo-cover' : null
+  if (ipadWide && book) return { mode: 'book', device, vars: { 'fold-left-end': width / 2, 'fold-right-start': width / 2, crease: SPINE } }
   // More than one fold (a tri-fold part-way open): no layout for that yet, so the usual one,
   // and not a fold guessed in the middle (that's a panel, not a hinge)
   if (segments && segments.length > 2) return { mode: null, device, vars: {} }
@@ -51,7 +60,7 @@ export function foldMode({ segments, posture, flat, iphone, apple, width, height
   // The near-square query is for Android foldables. On Apple devices it would also catch an iPad
   // window in Split View or Stage Manager, and iPhone Duo upright once Safari's bars take a little
   // height; iPhone Duo has its own rule.
-  if ((flat && !apple) || (device && width >= 700 && width > height)) return { mode: 'flat', device, vars: {} }
+  if ((flat && !apple) || (device === 'iphone-duo' && width >= 700 && width > height)) return { mode: 'flat', device, vars: {} }
   return { mode: null, device, vars: {} }
 }
 
@@ -63,6 +72,13 @@ export function watchFold(foldMode, flatQuery) {
   var names = ['fold-top-end', 'fold-bottom-start', 'fold-left-end', 'fold-right-start', 'crease']
   var ua = navigator.userAgent
   var last
+  // The iPad book layout, if it was chosen before (storage can be off: then it starts off).
+  // data-book-chosen tells the 📖 button it's on.
+  var book = false
+  try {
+    book = localStorage.getItem('book:chosen') === '1'
+  } catch (e) {}
+  if (book) root.setAttribute('data-book-chosen', '')
   var apply = function () {
     var vp = window.viewport
     var segments = vp && vp.segments ? Array.prototype.map.call(vp.segments, function (s) { return { x: s.x, y: s.y, width: s.width, height: s.height } }) : null
@@ -77,6 +93,9 @@ export function watchFold(foldMode, flatQuery) {
       flat: flat.matches,
       iphone: /iPhone/.test(ua),
       apple: /iPhone|iPad|Macintosh/.test(ua),
+      // iPad Safari says it's a Mac; Macs have no touch screen
+      ipad: /iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 0),
+      book: book,
       width: root.clientWidth || innerWidth,
       height: root.clientHeight || innerHeight
     })
@@ -95,6 +114,11 @@ export function watchFold(foldMode, flatQuery) {
   }
   apply()
   addEventListener('resize', apply)
+  // The 📖 button turning the iPad book layout on or off (components/BookToggle.vue)
+  addEventListener('bookchange', function (e) {
+    book = Boolean(e && e.detail)
+    apply()
+  })
   // Back from Safari's back-forward cache, the phone may have been turned or folded meanwhile
   addEventListener('pageshow', apply)
   flat.addEventListener && flat.addEventListener('change', apply)

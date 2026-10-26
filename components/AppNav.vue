@@ -15,6 +15,8 @@
       <Transition name="reveal">
         <AuthButton v-if="showSignIn" />
       </Transition>
+      <!-- iPad held sideways: read the site as a book -->
+      <BookToggle />
     </div>
   </nav>
 </template>
