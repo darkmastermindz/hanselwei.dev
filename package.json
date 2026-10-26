@@ -55,7 +55,7 @@
     "domutils": "4.0.2",
     "htmlparser2": "12.0.0",
     "postcss": "^8.5.28",
-    "sass": "^1.104.0",
+    "sass": "^1.106.1",
     "smol-toml": "^1.9.1",
     "tailwind-ios-glass": "file:packages/tailwind-ios-glass",
     "uqr": "0.1.3"
