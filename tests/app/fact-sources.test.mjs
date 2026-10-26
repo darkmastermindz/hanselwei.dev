@@ -6,8 +6,8 @@ import { hobbyFacts } from '../../data/hobbyFacts.mjs'
 import { safeUrl } from '../../utils/safeUrl.js'
 
 test('every fact that cites a study links to it', () => {
-  const studies = hobbyFacts.filter(f => f.type === 'fact' && /(?<!-)\bstudy\b|\batlas\b/i.test(f.text))
-  assert.ok(studies.length >= 3)
+  const studies = hobbyFacts.filter(f => f.type === 'fact' && /(?<!-)\bstudy\b|\batlas\b|\breport\b/i.test(f.text))
+  assert.ok(studies.length >= 6)
   for (const f of studies) assert.ok(f.source, `${f.id} names a study but has no source`)
 })
 
@@ -20,4 +20,10 @@ test('every source is an https link that passes safeUrl', () => {
 
 test('facts without a study carry no source key', () => {
   for (const f of hobbyFacts.filter(f => f.type === 'quote')) assert.equal('source' in f, false, f.id)
+})
+
+test('every social data science fact links to its source', () => {
+  const facts = hobbyFacts.filter(f => f.hobby === 'datascience')
+  assert.ok(facts.length >= 4)
+  for (const f of facts) assert.ok(f.source, f.id)
 })
