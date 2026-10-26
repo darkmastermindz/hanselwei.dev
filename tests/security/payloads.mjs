@@ -177,3 +177,25 @@ export const BAD_COMMITS = [
   undefined,
   40
 ]
+
+// Visitor addresses as the kudos function might see them (netlify/functions/kudos.mjs visitorNet):
+// odd, broken or hostile ones must never throw or grow the stored marker
+export const KUDOS_IPS = [
+  '',
+  ' ',
+  '::',
+  ':::',
+  '1::2::3',
+  '12345::1',
+  'g::1',
+  '1:2:3:4:5:6:7:8:9',
+  '999.999.999.999',
+  '1.2.3',
+  '::ffff:999.1.1.1',
+  '[::1',
+  'fe80::1%' + 'x'.repeat(500),
+  '__proto__',
+  '<script>alert(1)</script>',
+  '../../seen',
+  'x'.repeat(10_000)
+]
