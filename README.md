@@ -170,11 +170,32 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
   [dev.to/@hansel](https://dev.to/hansel) (override with `DEVTO_USERNAME`; optional `DEVTO_API_KEY`).
 
 ## Gear inventory (Netlify Functions)
-- Edit inventories in `data/inventory.mjs`.
+- Each list is a file in `data/gear/` (`outdoor.json`, `camera.json`), kept in one canonical form (`utils/gearEdits.mjs`; a test fails on a hand edit that isn't). `data/inventory.mjs` reads them, with the statuses and filters.
 - `netlify/functions/inventory.mjs` serves them:
   - `GET /api/inventory`: all lists
   - `GET /api/inventory/outdoor?section=Climbing&tag=Rappel&status=owned&q=black`: filtered items
 - `/gear/:list` pages are prerendered from the same data, then refreshed from the function in the browser.
+
+## Glossary terms
+Acronyms, lingo and jargon in the site's own text (MLH, SPI, TIAA, CI/CD, SUP, Guide Mode…) have a dotted underline. Hover, focus or tap one for a short definition and a link to where it comes from.
+- The terms are in `data/glossary.js` (term, short definition, link, other spellings).
+- `<Term id="mlh">` marks fixed text and `<TermText :text>` marks data-driven text (the About card's plain-English lines, gear tags and notes). `glossaryHtml` (`server/utils/glossaryHtml.js`) marks the bio's markdown, and blog posts that set `glossary: true` in front matter, after sanitizing. Only the first use of a term in each piece of text is marked.
+- `<TermTip>` (in the default layout) is the one definition bubble for every term. It opens on hover, focus (Enter moves into its link) and tap, stays while the pointer is on it, and closes on Escape, a tap elsewhere or scrolling (WCAG 1.4.13). Screen readers get the definition as the term's description.
+- `tests/app/glossary.test.mjs` fails on an acronym in the display text that has no definition; the fix is a glossary entry or plain words (CLAUDE.md "Display text").
+
+## Editing gear lists
+How it fits together, as diagrams: [docs/gear-editing.md](docs/gear-editing.md).
+
+Signed in, each gear page (`/gear/:list`) has **✏️ Edit list**: change any item (name, brand, quantity, section, category, status, tags, notes), remove it, or add one. Changes show on the page as they'll look and stay in that browser until sent. **Send** turns them into one entry in the rolling **Gear updates** pull request:
+
+1. `/api/gear/submit` (`netlify/functions/gear-submit.mjs`) takes the changes from a signed-in owner only. It checks them and signs exactly them: an HMAC over the owner's email, the list and a hash of the changes (`netlify/lib/gearToken.mjs`), keyed from the sign-in's own secret (`GITHUB_CLIENT_SECRET`), so only the site's functions can sign or check one. It keeps the signed changes on Netlify, in the `gear-edits` Blobs store under `pending/<time>-<random>`.
+2. The **Gear updates** workflow (`.github/workflows/gear-updates.yml`, `scripts/gear-updates.mjs`) runs weekly (Mondays 13:23 UTC), whenever main changes (a merged pull request), and on demand from main. It reads the pending edits from `/api/gear/pending` (`netlify/functions/gear-pending.mjs`), signing in with **GitHub Actions' own token** for the run (OIDC): the site checks it was signed by GitHub, for this repository (by name and by id) and its `gear-updates.yml` on main (`netlify/lib/githubOidc.mjs`), so there's no secret to store anywhere. It still asks the site (`/api/gear/verify`) about each edit and drops any not signed by an owner for exactly those changes; if the site doesn't answer, the edit waits for the next run. It applies the rest in the order they were sent to `data/gear/*.json` on the `gear-updates` branch, one commit per edit, runs `npm test`, opens or updates the **Gear updates** pull request, and then deletes the edits it handled from the site. The same changes on the same list always give the same file, byte for byte.
+
+Merge the pull request to publish. Until then, the editor shows the live lists plus your unsent changes, not edits already waiting in the pull request. New lists are added by hand (a new `data/gear/<id>.json` and a line in `data/inventory.mjs`).
+
+**One-time setup:** GitHub → Settings → Actions → General → "Allow GitHub Actions to create and approve pull requests". That's all: no secrets, and nothing to turn on at Netlify (the store comes with the site).
+
+A pull request opened with the workflow's own token doesn't start other workflows, so the script runs the tests itself. Netlify still builds a deploy preview, and the next push to the branch runs CI.
 
 ## Install as an app (PWA)
 `public/manifest.webmanifest`, `public/sw.js` and the icons in `public/icons/` make the site installable:
@@ -182,4 +203,4 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 - **iOS / Safari:** Share → *Add to Home Screen*. The installed app uses an opaque status bar (`apple-mobile-web-app-status-bar-style: black`) and starts below it. iOS reads that when the app is added, so remove and re-add the app after changing it. When it runs installed, the page gets `html.is-installed` (`utils/installed.js`) and the nav gets a little more room.
 
 ## License
-The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.
+The source code is licensed under the [BSD 3-Clause License](LICENSE.md). The site's Personal Content is not covered by it, as set out in [CONTENT-NOTICE.md](CONTENT-NOTICE.md): writing, photographs and other likenesses, personal information, and personal lists and data. That includes `content/`, `data/gear/`, `data/inventory.mjs`, `data/hobbyFacts.mjs` and `netlify/lib/bioPhoto.sealed.mjs`. It's all rights reserved, may not be reproduced or distributed without written permission, and must be removed from forks. The same terms are on `/terms`.

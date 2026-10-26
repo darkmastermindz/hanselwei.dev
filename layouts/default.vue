@@ -6,6 +6,7 @@
     <slot />
     <SiteFooter />
     <BookPager />
+    <TermTip />
   </div>
 </template>
 

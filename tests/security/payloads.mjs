@@ -136,6 +136,21 @@ export const OUTBOUND_IDS = [
   ''
 ]
 
+// Gear list edits (README "Editing gear lists"): text from the editor that ends up in a JSON
+// file, a commit message and a pull request on GitHub
+export const GEAR_TEXT = [
+  'Rope\n\nSigned-off-by: Mallory <m@evil.example>',
+  'Rope\r\nCo-Authored-By: evil',
+  '@everyone please merge',
+  '`rm -rf /`',
+  'Rope‮epoR', // right-to-left override
+  'Rope​‍', // zero-width characters
+  '\u0000\u0007\u001b[31mred',
+  '<img src=x onerror=alert(1)>',
+  '{{ constructor.constructor("alert(1)")() }}',
+  'x'.repeat(10_000)
+]
+
 // POST /api/kudos bodies (netlify/functions/kudos.mjs): only a known XP entry id counts
 export const KUDOS_BODIES = [
   '',
@@ -156,6 +171,22 @@ export const KUDOS_BODIES = [
   '{"id":"seen/2026-10-25/x"}',
   '{"id":"<img src=x onerror=alert(1)>"}',
   '{id:"education-ytt200"}'
+]
+
+// Bearer tokens for /api/gear/pending (GitHub Actions' sign-in, netlify/lib/githubOidc.mjs) that
+// aren't a token at all; the ones that look right but are signed or aimed wrong are made in
+// tests/security/github-oidc.test.mjs
+export const BAD_BEARER_TOKENS = [
+  '',
+  'null',
+  'Bearer',
+  'a.b',
+  'a.b.c.d',
+  '..',
+  'eyJhbGciOiJub25lIn0.eyJpc3MiOiJodHRwczovL3Rva2VuLmFjdGlvbnMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIn0.',
+  'not base64!.x.y',
+  '<script>alert(1)</script>',
+  'x'.repeat(10_000)
 ]
 
 // Build-environment values that must never pass as a commit (utils/buildCommit.mjs)
