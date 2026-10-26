@@ -1,4 +1,6 @@
+import { execSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { buildCommit } from './utils/buildCommit.mjs'
 import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
 import { OUTBOUND } from './utils/outbound.js'
 
@@ -69,7 +71,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Netlify builds send the coin photos through Netlify's Image CDN (utils/coinFaces.mjs)
-      imageCdn: process.env.NETLIFY === 'true'
+      imageCdn: process.env.NETLIFY === 'true',
+      // The commit this build was made from, shown in the footer to the signed-in owner only
+      // (components/SiteFooter.vue, utils/buildCommit.mjs)
+      commit: buildCommit(process.env, () => execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString()) || ''
     }
   },
   /*
