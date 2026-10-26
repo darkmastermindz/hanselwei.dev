@@ -216,3 +216,65 @@ test('the page-turn hint shows the first few times, then not again', () => {
   for (let n = 0; n < TURN_HINT_TIMES; n++) assert.equal(turnHintDue(n), true, String(n))
   for (const n of [TURN_HINT_TIMES, TURN_HINT_TIMES + 1, 99, -1, NaN, Infinity]) assert.equal(turnHintDue(n), false, String(n))
 })
+
+test('an iPad held sideways is offered the book layout, with the spine in the middle once chosen', () => {
+  const ipad = { ...base, apple: true, ipad: true }
+  assert.deepEqual(foldMode({ ...ipad, width: 1180, height: 820 }), { mode: null, device: 'ipad', vars: {} })
+  assert.deepEqual(foldMode({ ...ipad, book: true, width: 1180, height: 820 }), {
+    mode: 'book',
+    device: 'ipad',
+    vars: { 'fold-left-end': 590, 'fold-right-start': 590, crease: 24 }
+  })
+  assert.equal(foldMode({ ...ipad, book: true, width: 1366, height: 1024 }).vars['fold-left-end'], 683)
+})
+
+test('an iPad upright, or in a narrow window, gets neither the button nor the book', () => {
+  const ipad = { ...base, apple: true, ipad: true, book: true }
+  assert.deepEqual(foldMode({ ...ipad, width: 820, height: 1180 }), { mode: null, device: null, vars: {} })
+  // Split View or Stage Manager: a window too narrow for two pages, even sideways
+  assert.deepEqual(foldMode({ ...ipad, width: 880, height: 700 }), { mode: null, device: null, vars: {} })
+  // ...and the near-square query never makes an iPad window "flat"
+  assert.equal(foldMode({ ...ipad, flat: true, book: false, width: 1000, height: 900 }).mode, null)
+})
+
+test('the book choice means nothing off an iPad', () => {
+  // A Mac (no touch), an iPhone Duo held sideways (open flat), an Android tablet
+  assert.deepEqual(foldMode({ ...base, apple: true, book: true, width: 1440, height: 900 }), { mode: null, device: null, vars: {} })
+  assert.equal(foldMode({ ...base, iphone: true, apple: true, ipad: true, book: true, width: 951, height: 600 }).mode, 'flat')
+  assert.deepEqual(foldMode({ ...base, book: true, width: 1280, height: 800 }), { mode: null, device: null, vars: {} })
+})
+
+
+test('the head script: an iPad that chose the book opens as one, and the 📖 button turns it on and off', () => {
+  const attrs = {}
+  const style = {}
+  const listeners = {}
+  const root = {
+    clientWidth: 1180,
+    clientHeight: 820,
+    setAttribute: (k, v) => (attrs[k] = v),
+    removeAttribute: k => delete attrs[k],
+    style: { setProperty: (k, v) => (style[k] = v), removeProperty: k => delete style[k] }
+  }
+  const stored = { 'book:chosen': '1' }
+  const env = {
+    document: { documentElement: root },
+    window: {},
+    navigator: { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Safari/605.1.15', maxTouchPoints: 5 },
+    localStorage: { getItem: k => stored[k] ?? null },
+    matchMedia: () => ({ matches: false, addEventListener() {} }),
+    addEventListener: (e, f) => (listeners[e] = f),
+    innerWidth: 1180,
+    innerHeight: 820
+  }
+  new Function(...Object.keys(env), `(${watchFold})(${foldMode}, ${JSON.stringify(FLAT_QUERY)})`)(...Object.values(env))
+  assert.equal(attrs['data-fold'], 'book')
+  assert.equal(attrs['data-device'], 'ipad')
+  assert.equal(attrs['data-book-chosen'], '')
+  assert.equal(style['--fold-left-end'], '590px')
+  listeners.bookchange({ detail: false })
+  assert.equal(attrs['data-fold'], undefined)
+  assert.equal(attrs['data-device'], 'ipad')
+  listeners.bookchange({ detail: true })
+  assert.equal(attrs['data-fold'], 'book')
+})

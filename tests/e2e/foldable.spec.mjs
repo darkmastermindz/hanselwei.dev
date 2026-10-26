@@ -589,8 +589,84 @@ test('no other device gets a foldable layout', async ({ page }, testInfo) => {
   if (f.mode) expect(testInfo.project.name, `only foldables get the ${f.mode} layout`).toMatch(/Fold|Flip|Duo/)
   expect(['tabletop', 'book'], 'nothing is folded').not.toContain(f.mode)
   if (f.device) expect(testInfo.project.name).toMatch(/^iPhone Duo/)
+  // The iPad's 📖 book button shows on no phone, foldable or iPhone Duo
+  await expect(page.locator('.book-toggle')).toBeHidden()
   // iPhone Duo's own touches stay hidden everywhere else
   if (!f.device) {
     for (const extra of ['.duo-lid', '.duo-badge', '.fold-pong__play']) await expect(page.locator(extra), extra).toBeHidden()
   }
+})
+
+// iPad held sideways (README "Foldables"): no fold, but the menu's 📖 button lays the site out as
+// a book, like a foldable folded down the middle, and turns it back. Run on one project, with an
+// iPad's page size and Safari's user agent (iPad Safari says it's a Mac; touch tells them apart).
+const IPAD_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15'
+const IPAD = { width: 1180, height: 820 } // iPad Air 11-inch, sideways
+
+test.describe('iPad book layout', () => {
+  test.use({ userAgent: IPAD_UA, viewport: IPAD, screen: IPAD, deviceScaleFactor: 2, isMobile: false, hasTouch: true })
+  test.beforeEach(({}, testInfo) => test.skip(testInfo.project.name !== FOLD, 'one project is enough'))
+
+  test('the 📖 button turns the book layout on and off, and it stays chosen', async ({ page }) => {
+    await open(page, '/')
+    const toggle = page.locator('.book-toggle')
+    await expect(toggle).toBeVisible()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: 'ipad' })
+
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    const f = await foldOf(page)
+    expect(f.mode).toBe('book')
+    expect(f.leftEnd).toBe(IPAD.width / 2)
+    expect((await box(page, '.home__hero')).right).toBeLessThanOrEqual(f.leftEnd)
+    expect((await box(page, '.app-nav')).right, 'the menu keeps to the left page').toBeLessThanOrEqual(f.leftEnd)
+    expect((await box(page, '.home__deck')).left).toBeGreaterThanOrEqual(f.rightStart)
+    expect(await onFold(page), 'nothing on the spine').toEqual([])
+    const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).disableRules(['label-content-name-mismatch']).analyze()
+    expect(violations.map(v => v.id)).toEqual([])
+
+    // Chosen before: a new visit opens as a book, on any page
+    await open(page, '/projects')
+    expect((await foldOf(page)).mode).toBe('book')
+    expect((await box(page, '.app-nav')).right).toBeLessThanOrEqual(IPAD.width / 2)
+    expect(await onFold(page), 'nothing on the spine, another page').toEqual([])
+
+    // Upright: the usual layout and no button; sideways again, the book is back
+    await page.setViewportSize({ width: IPAD.height, height: IPAD.width })
+    await page.waitForTimeout(400)
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: null })
+    await expect(page.locator('.book-toggle')).toBeHidden()
+    await page.setViewportSize(IPAD)
+    await page.waitForTimeout(400)
+    expect((await foldOf(page)).mode).toBe('book')
+
+    // Off again, and it stays off
+    await page.locator('.book-toggle').click()
+    expect((await foldOf(page)).mode).toBe(null)
+    await open(page, '/')
+    expect((await foldOf(page)).mode).toBe(null)
+    await expect(page.locator('.book-toggle')).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  test('in the book layout the corner turns the page, like on a foldable', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('book:chosen', '1'))
+    await open(page, '/')
+    expect((await foldOf(page)).mode).toBe('book')
+    await page.locator('.book-pager__corner--next').click()
+    await expect(page).toHaveURL(/\/projects$/)
+    expect((await foldOf(page)).mode).toBe('book')
+  })
+})
+
+test.describe('a Mac (no touch screen)', () => {
+  test.use({ userAgent: IPAD_UA, viewport: IPAD, screen: IPAD, deviceScaleFactor: 2, isMobile: false, hasTouch: false })
+  test.beforeEach(({}, testInfo) => test.skip(testInfo.project.name !== FOLD, 'one project is enough'))
+
+  test('gets no 📖 button and no book layout, even if it was chosen on an iPad', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('book:chosen', '1'))
+    await open(page, '/')
+    expect(await foldOf(page)).toMatchObject({ mode: null, device: null })
+    await expect(page.locator('.book-toggle')).toBeHidden()
+  })
 })
