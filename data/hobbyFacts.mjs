@@ -17,7 +17,8 @@ const hobbies = {
   software: { label: 'Software Engineering', emoji: '💻' }
 }
 
-const fact = (id, hobby, text) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text })
+// `source`: for a fact from a study, a link to the study itself
+const fact = (id, hobby, text, source) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text, ...(source && { source }) })
 const quote = (id, hobby, text, author) => ({ id, type: 'quote', ...hobbies[hobby], hobby, text, author })
 
 export const hobbyFacts = [
@@ -33,7 +34,7 @@ export const hobbyFacts = [
   // Hiking
   fact('hike-at', 'hiking', 'The Appalachian Trail runs roughly 2,190 miles through 14 states, from Georgia to Maine.'),
   fact('hike-pct', 'hiking', 'The Pacific Crest Trail stretches about 2,650 miles from the Mexican border to Canada.'),
-  fact('hike-creativity', 'hiking', 'A 2014 Stanford study found walking boosted creative thinking by around 60% compared to sitting.'),
+  fact('hike-creativity', 'hiking', 'A 2014 Stanford study found walking boosted creative thinking by around 60% compared to sitting.', 'https://doi.org/10.1037/a0036577'),
   quote('hike-muir-walk', 'hiking', 'In every walk with nature one receives far more than he seeks.', 'John Muir'),
   quote('hike-muir-calling', 'hiking', 'The mountains are calling and I must go.', 'John Muir'),
 
@@ -90,7 +91,7 @@ export const hobbyFacts = [
 
   // Community building
   fact('community-dunbar', 'community', "Anthropologist Robin Dunbar estimated people can keep about 150 stable relationships: \"Dunbar's number\"."),
-  fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.'),
+  fact('community-harvard', 'community', 'The Harvard Study of Adult Development, running since 1938, found close relationships are a top predictor of lifelong happiness.', 'https://www.adultdevelopmentstudy.org/'),
   quote('community-mead', 'community', 'Never doubt that a small group of thoughtful, committed citizens can change the world; indeed, it\'s the only thing that ever has.', 'Margaret Mead'),
   quote('community-proverb', 'community', 'If you want to go fast, go alone. If you want to go far, go together.', 'African proverb'),
   quote('community-bend', 'community', 'If we can bend a little, maybe shift our perception and appreciate a different point of view, we can perhaps improve the world around us.', 'Unknown'),
@@ -116,7 +117,7 @@ export const hobbyFacts = [
   fact('stars-count', 'stargazing', 'About 9,000 stars are bright enough to see without a telescope across the whole sky; under a truly dark sky you can see a few thousand at once.'),
   fact('stars-andromeda', 'stargazing', 'The Andromeda Galaxy, about 2.5 million light-years away, is the farthest thing most people can see with their own eyes.'),
   fact('stars-bortle', 'stargazing', 'The Bortle scale rates how dark a sky is, from 1 (the darkest) to 9 (an inner city). Amateur astronomer John Bortle published it in 2001.'),
-  fact('stars-milkyway', 'stargazing', 'A 2016 world atlas of light pollution found that more than a third of humanity can no longer see the Milky Way from home.'),
+  fact('stars-milkyway', 'stargazing', 'A 2016 world atlas of light pollution found that more than a third of humanity can no longer see the Milky Way from home.', 'https://doi.org/10.1126/sciadv.1600377'),
   quote('stars-sagan', 'stargazing', 'The cosmos is within us. We are made of star-stuff.', 'Carl Sagan'),
 
   // Origami
