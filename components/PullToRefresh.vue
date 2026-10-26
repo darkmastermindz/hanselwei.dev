@@ -1,7 +1,7 @@
 <template>
   <div
     class="ptr"
-    :class="{ 'is-armed': armed || done, 'is-shown': shown }"
+    :class="{ 'is-armed': armed || done, 'is-shown': shown, 'is-pulling': pulling }"
     :style="{ '--pull': `${done ? PULL_THRESHOLD : distance}px` }"
     role="status"
     aria-live="polite"
@@ -22,6 +22,8 @@ const distance = ref(0)
 const done = ref(false)
 const armed = computed(() => isPullArmed(distance.value))
 const shown = computed(() => distance.value > 0 || done.value)
+// While the finger is down the pill tracks it exactly; the spring is only for letting go
+const pulling = ref(false)
 
 let start = null
 let mode = 'idle' // idle | undecided | pull | ignore
@@ -42,6 +44,7 @@ const watchMoves = () => {
 const stop = () => {
   start = null
   mode = 'idle'
+  pulling.value = false
   distance.value = 0
 }
 
@@ -61,6 +64,7 @@ const onMove = event => {
   if (mode !== 'pull') return
   // Ours now: keep the page (and the browser's own pull-to-refresh) still
   if (event.cancelable) event.preventDefault()
+  pulling.value = true
   distance.value = pullDistance(dy)
 }
 
@@ -111,7 +115,13 @@ onBeforeUnmount(() => {
   pointer-events: none;
   opacity: 0;
   transform: translate(-50%, calc(var(--pull, 0px) - 100%));
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  /* Snaps back on SwiftUI's .snappy spring when let go */
+  transition: transform var(--spring-snappy-duration) var(--spring-snappy), opacity 0.2s ease;
+}
+
+/* Following the finger: no easing, so it never lags behind the drag */
+.ptr.is-pulling {
+  transition: opacity 0.2s ease;
 }
 
 .ptr.is-shown {
