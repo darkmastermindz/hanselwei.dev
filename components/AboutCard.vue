@@ -65,10 +65,10 @@
             “{{ fact.text }}”
             <cite>— {{ fact.author }}</cite>
           </blockquote>
-          <template v-else>
-            <p>{{ fact.text }}</p>
-            <!-- A study's fact links to the study. Kept from the card's own tap (switch category)
-                 and Enter key, so the link just opens -->
+          <!-- A study's fact links to the study, inline at the end of the text. Kept from the card's
+               own tap (switch category) and Enter key, so the link just opens -->
+          <p v-else>
+            {{ fact.text }}
             <a
               v-if="safeUrl(fact.source)"
               :href="safeUrl(fact.source)"
@@ -77,8 +77,8 @@
               class="fact__source"
               @click.stop
               @keydown.stop
-            >Read the study ↗</a>
-          </template>
+            >{{ fact.sourceLabel || 'Read the study' }} ↗</a>
+          </p>
         </figure>
         <p v-else-if="view === 'skills'" data-content :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
           <template v-if="readable">I'm a {{ sentence(skills) }}. ✨</template>
@@ -771,8 +771,7 @@ blockquote {
 }
 
 .fact__source {
-  display: inline-block;
-  margin-top: 0.4rem;
+  white-space: nowrap; /* the arrow stays with its words */
   font-size: 0.85rem;
   color: #c084fc;
   text-decoration: underline;

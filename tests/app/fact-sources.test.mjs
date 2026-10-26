@@ -27,3 +27,10 @@ test('every social data science fact links to its source', () => {
   assert.ok(facts.length >= 4)
   for (const f of facts) assert.ok(f.source, f.id)
 })
+
+test('a source label, when given, is short plain text', () => {
+  for (const f of hobbyFacts.filter(f => 'sourceLabel' in f)) {
+    assert.ok(f.source, `${f.id} has a label but no source`)
+    assert.match(f.sourceLabel, /^[\w .&-]{1,30}$/, f.id)
+  }
+})

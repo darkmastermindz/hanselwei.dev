@@ -19,8 +19,11 @@ const hobbies = {
   datascience: { label: 'Social Data Science', emoji: '📊' }
 }
 
-// `source`: for a fact from a study, a link to the study itself
-const fact = (id, hobby, text, source) => ({ id, type: 'fact', ...hobbies[hobby], hobby, text, ...(source && { source }) })
+// `source`: for a fact from a study, a link to the study itself. `sourceLabel` names the link
+// when it isn't a study (the card says "Read the study" otherwise)
+const fact = (id, hobby, text, source, sourceLabel) => ({
+  id, type: 'fact', ...hobbies[hobby], hobby, text, ...(source && { source }), ...(sourceLabel && { sourceLabel })
+})
 const quote = (id, hobby, text, author) => ({ id, type: 'quote', ...hobbies[hobby], hobby, text, author })
 
 export const hobbyFacts = [
@@ -137,7 +140,8 @@ export const hobbyFacts = [
   quote('sw-brooks', 'software', 'Adding manpower to a late software project makes it later.', 'Fred Brooks'),
   quote('sw-torvalds', 'software', 'Talk is cheap. Show me the code.', 'Linus Torvalds'),
 
-  // Social data science: findings from large studies of people, each linked to its source
+  // Social data science: what it is, then findings from large studies of people, each linked to its source
+  fact('ds-definition', 'datascience', 'Social data science brings statistics, computing and network science to the social sciences: it uses large-scale data on how people behave, connect and build institutions to understand societal problems, from misinformation to public health, and help solve them.', 'https://catalog.mit.edu/schools/mit-schwarzman-college-computing/data-systems-society/', 'MIT IDSS'),
   fact('ds-happiness-report', 'datascience', 'Finland topped the 2026 World Happiness Report for the ninth year in a row. The rankings come from people in more than 140 countries rating their own lives.', 'https://www.unsdsn.org/resources/world-happiness-report-2026'),
   fact('ds-wandering-mind', 'datascience', 'In a 2010 Science paper, Harvard psychologists Matthew Killingsworth and Daniel Gilbert found our minds wander 46.9% of waking hours: "a human mind is a wandering mind, and a wandering mind is an unhappy mind."', 'https://news.harvard.edu/gazette/story/2010/11/wandering-mind-not-a-happy-mind/'),
   fact('ds-happiness-spreads', 'datascience', "A 2008 study of the Framingham Heart Study's social network found happiness spreads up to three degrees of separation: to your friends' friends' friends.", 'https://doi.org/10.1136/bmj.a2338'),
