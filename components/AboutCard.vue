@@ -65,7 +65,20 @@
             “{{ fact.text }}”
             <cite>— {{ fact.author }}</cite>
           </blockquote>
-          <p v-else>{{ fact.text }}</p>
+          <!-- A study's fact links to the study, inline at the end of the text. Kept from the card's
+               own tap (switch category) and Enter key, so the link just opens -->
+          <p v-else>
+            {{ fact.text }}
+            <a
+              v-if="safeUrl(fact.source)"
+              :href="safeUrl(fact.source)"
+              target="_blank"
+              rel="noopener"
+              class="fact__source"
+              @click.stop
+              @keydown.stop
+            >{{ fact.sourceLabel || 'Read the study' }} ↗</a>
+          </p>
         </figure>
         <p v-else-if="view === 'skills'" data-content :key="`skills-${readable}`" :class="['json--skills json-bounce', readable ? 'prose-line' : 'json']">
           <template v-if="readable">I'm a {{ sentence(skills) }}. ✨</template>
@@ -755,6 +768,19 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 
 blockquote {
   font-style: italic;
+}
+
+.fact__source {
+  white-space: nowrap; /* the arrow stays with its words */
+  font-size: 0.85rem;
+  color: #c084fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.fact__source:focus-visible {
+  outline: 2px dashed #7cfc00;
+  outline-offset: 2px;
 }
 
 cite {
