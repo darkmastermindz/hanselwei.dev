@@ -125,7 +125,7 @@
                 <span class="xp-entry__icon" aria-hidden="true">{{ CATEGORY_ICON[entry.category] }}</span>
                 <span class="xp-entry__count" aria-hidden="true">{{ i + 1 }}/{{ yearEntries.length }}</span>
                 <span class="visually-hidden">Entry {{ i + 1 }} of {{ yearEntries.length }}, {{ entry.category }}: </span>
-                <strong>{{ entry.label }}</strong> · {{ entry.text }}
+                <strong>{{ entry.label }}</strong> · <TermText :text="entry.text" />
                 <KudosButton :id="entry.id" :name="entry.name" />
               </li>
             </ul>

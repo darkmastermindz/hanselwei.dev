@@ -1,0 +1,378 @@
+{
+  "title": "Camera Gear",
+  "emoji": "📷",
+  "description": "Cameras, lenses, video kit and the accessories that carry them.",
+  "sections": [
+    "Cameras & Lenses",
+    "Video",
+    "Accessories"
+  ],
+  "items": [
+    {
+      "id": "x-t5",
+      "section": "Cameras & Lenses",
+      "category": "Cameras",
+      "name": "X-T5",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Mirrorless",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "snap-digital-instant-camera-red",
+      "section": "Cameras & Lenses",
+      "category": "Cameras",
+      "name": "Snap Digital Instant Camera (Red)",
+      "brand": "Polaroid",
+      "qty": 1,
+      "tags": [
+        "Instant"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf-56mm-f1-2-r-wr",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 56mm F1.2 R WR",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Portrait",
+        "Prime",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "dispolens-for-x-mount",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "DispoLens for X-Mount",
+      "brand": "DispoStudio",
+      "qty": 1,
+      "tags": [
+        "Fun Lens",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "triplelens-for-x-mount",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "TripleLens for X-Mount",
+      "brand": "DispoStudio",
+      "qty": 1,
+      "tags": [
+        "Fun Lens",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf-18-55mm-f2-8-4-r-lm-ois",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 18-55mm F2.8-4 R LM OIS",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Zoom",
+        "X-Mount"
+      ],
+      "status": "owned",
+      "notes": "X-T5 kit lens"
+    },
+    {
+      "id": "xf-16mm-f2-8-r-wr-black",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 16mm F2.8 R WR (Black)",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Wide",
+        "Prime",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf-18mm-f1-4-r-lm-wr",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 18mm F1.4 R LM WR",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Wide",
+        "Prime",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf-35mm-f2-r-wr-black",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 35mm F2 R WR (Black)",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Prime",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf-70-300mm-f4-5-6-r-lm-ois-wr",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF 70-300mm F4-5.6 R LM OIS WR",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Telephoto",
+        "Zoom",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "xf2x-tc-wr-teleconverter",
+      "section": "Cameras & Lenses",
+      "category": "Lenses",
+      "name": "XF2X TC WR Teleconverter",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Teleconverter",
+        "X-Mount"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "obsbot-me-iphone-11",
+      "section": "Video",
+      "category": "Cameras",
+      "name": "OBSBOT Me / iPhone 11",
+      "qty": 1,
+      "tags": [
+        "Phone"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "spectacles-v1-black",
+      "section": "Video",
+      "category": "Cameras",
+      "name": "Spectacles v1 (Black)",
+      "brand": "Snap",
+      "qty": 1,
+      "tags": [
+        "Wearable"
+      ],
+      "status": "retired"
+    },
+    {
+      "id": "spectacles-v1-cyan",
+      "section": "Video",
+      "category": "Cameras",
+      "name": "Spectacles v1 (Cyan)",
+      "brand": "Snap",
+      "qty": 1,
+      "tags": [
+        "Wearable"
+      ],
+      "status": "retired"
+    },
+    {
+      "id": "spectacles-v2-nico",
+      "section": "Video",
+      "category": "Cameras",
+      "name": "Spectacles v2 (Nico)",
+      "brand": "Snap",
+      "qty": 1,
+      "tags": [
+        "Wearable"
+      ],
+      "status": "retired"
+    },
+    {
+      "id": "brio-4k-ultra-hd-webcam",
+      "section": "Video",
+      "category": "Cameras",
+      "name": "BRIO 4K Ultra HD Webcam",
+      "brand": "Logitech",
+      "qty": 1,
+      "tags": [
+        "Webcam",
+        "4K"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "shadowcast-capture",
+      "section": "Video",
+      "category": "Capture",
+      "name": "ShadowCast Capture",
+      "brand": "Genki",
+      "qty": 2,
+      "tags": [
+        "Capture Card"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "final-cut-pro",
+      "section": "Video",
+      "category": "Software",
+      "name": "Final Cut Pro",
+      "brand": "Apple",
+      "qty": 1,
+      "tags": [
+        "Editing"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "lemurstrap-with-bronze-baseplate",
+      "section": "Accessories",
+      "category": "Straps",
+      "name": "LemurStrap with Bronze Baseplate",
+      "brand": "LemurStrap",
+      "qty": 1,
+      "tags": [
+        "Strap"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "x-t5-half-case-green",
+      "section": "Accessories",
+      "category": "Cases",
+      "name": "X-T5 Half Case (Green)",
+      "brand": "MUZIRI KINOKOO",
+      "qty": 1,
+      "tags": [
+        "Case"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "np-w235-battery",
+      "section": "Accessories",
+      "category": "Power",
+      "name": "NP-W235 Battery",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Battery"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "bc-w235-dual-battery-charger",
+      "section": "Accessories",
+      "category": "Power",
+      "name": "BC-W235 Dual Battery Charger",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Charger"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "np-w235-dual-fast-charger",
+      "section": "Accessories",
+      "category": "Power",
+      "name": "NP-W235 Dual Fast Charger",
+      "brand": "llano",
+      "qty": 1,
+      "tags": [
+        "Charger"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "mc-uv-filter-43mm-49mm-58mm",
+      "section": "Accessories",
+      "category": "Filters",
+      "name": "MC UV Filter (43mm, 49mm, 58mm)",
+      "brand": "K&F Concept",
+      "qty": 3,
+      "tags": [
+        "Filter",
+        "UV"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "variable-nd2-nd32-filter-58mm-67mm",
+      "section": "Accessories",
+      "category": "Filters",
+      "name": "Variable ND2-ND32 Filter (58mm, 67mm)",
+      "brand": "K&F Concept",
+      "qty": 2,
+      "tags": [
+        "Filter",
+        "ND"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "49mm-center-pinch-lens-cap",
+      "section": "Accessories",
+      "category": "Filters",
+      "name": "49mm Center-Pinch Lens Cap",
+      "brand": "K&F Concept",
+      "qty": 1,
+      "tags": [
+        "Lens Cap"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "ef-x8-clip-on-flash",
+      "section": "Accessories",
+      "category": "Lighting",
+      "name": "EF-X8 Clip-On Flash",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Flash"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "mini-flexible-tripod",
+      "section": "Accessories",
+      "category": "Support",
+      "name": "Mini Flexible Tripod",
+      "brand": "ULANZI",
+      "qty": 1,
+      "tags": [
+        "Tripod"
+      ],
+      "status": "owned"
+    },
+    {
+      "id": "instax-sp-3-mobile-printer-black",
+      "section": "Accessories",
+      "category": "Printing",
+      "name": "Instax SP-3 Mobile Printer (Black)",
+      "brand": "Fujifilm",
+      "qty": 1,
+      "tags": [
+        "Instax",
+        "Printer"
+      ],
+      "status": "owned"
+    }
+  ]
+}

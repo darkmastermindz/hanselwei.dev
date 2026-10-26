@@ -74,6 +74,12 @@
   [headers.values]
     Cache-Control = "private, no-store"
 
+# Signed gear edits (README "Editing gear lists") are the owner's alone
+[[headers]]
+  for = "/api/gear/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+
 [[headers]]
   for = "/sw.js"
   [headers.values]
