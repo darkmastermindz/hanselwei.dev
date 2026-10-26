@@ -182,6 +182,8 @@ Acronyms, lingo and jargon in the site's own text (MLH, SPI, TIAA, CI/CD, SUP, G
 - `tests/app/glossary.test.mjs` fails on an acronym in the display text that has no definition; the fix is a glossary entry or plain words (CLAUDE.md "Display text").
 
 ## Editing gear lists
+How it fits together, as diagrams: [docs/gear-editing.md](docs/gear-editing.md).
+
 Signed in, each gear page (`/gear/:list`) has **✏️ Edit list**: change any item (name, brand, quantity, section, category, status, tags, notes), remove it, or add one. Changes show on the page as they'll look and stay in that browser until sent. **Send** turns them into one entry in the rolling **Gear updates** pull request:
 
 1. `/api/gear/submit` (`netlify/functions/gear-submit.mjs`) takes the changes from a signed-in owner only. It checks them and signs exactly them: an HMAC over the owner's email, the list and a hash of the changes (`netlify/lib/gearToken.mjs`), keyed from the sign-in's own secret (`GITHUB_CLIENT_SECRET`), so only the site's functions can sign or check one. It keeps the signed changes on Netlify, in the `gear-edits` Blobs store under `pending/<time>-<random>`.
