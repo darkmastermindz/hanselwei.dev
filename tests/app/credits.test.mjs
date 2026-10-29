@@ -9,8 +9,9 @@ import lock from '../../package-lock.json' with { type: 'json' }
 test('every dependency of the site is credited, at its installed version, with nothing hand-kept', () => {
   const targets = creditTargets(pkg, lock)
   const names = targets.map(t => t.name)
-  for (const name of Object.keys(pkg.dependencies)) assert.ok(names.includes(name), name)
-  for (const name of Object.keys(pkg.devDependencies)) assert.ok(names.includes(name), name)
+  const local = name => lock.packages[`node_modules/${name}`]?.link
+  for (const name of Object.keys(pkg.dependencies)) assert.ok(local(name) || names.includes(name), name)
+  for (const name of Object.keys(pkg.devDependencies)) assert.ok(local(name) || names.includes(name), name)
   for (const name of Object.keys(INCLUDED)) assert.ok(names.includes(name), name)
   assert.equal(new Set(names).size, names.length, 'each once')
   for (const target of targets) {
@@ -56,4 +57,10 @@ test('npm descriptions are plain one-line text', () => {
   assert.equal(plainText('x'.repeat(500)).length, 160)
   assert.equal(plainText(''), null)
   assert.equal(plainText(42), null)
+})
+
+test("the site's own local packages aren't credited", () => {
+  const next = { ...pkg, devDependencies: { ...pkg.devDependencies, 'my-lib': 'file:packages/my-lib' } }
+  const nextLock = { packages: { ...lock.packages, 'node_modules/my-lib': { resolved: 'packages/my-lib', link: true } } }
+  assert.equal(creditTargets(next, nextLock).find(t => t.name === 'my-lib'), undefined)
 })
