@@ -29,6 +29,9 @@
 
 <script setup>
 import { pickGame } from '~/utils/arcade.mjs'
+
+// autofocus: put focus on the Play button once it shows (after the 404 page's slide to unlock)
+const props = defineProps({ autofocus: { type: Boolean, default: false } })
 import * as pong from '~/utils/foldPong.mjs'
 import * as blocks from '~/utils/blockBreaker.mjs'
 import * as invaders from '~/utils/spaceInvaders.mjs'
@@ -239,6 +242,7 @@ const onVisibility = () => {
 
 onMounted(() => {
   game.value = pickGame()
+  if (props.autofocus) nextTick(() => playButton.value?.focus())
   addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
 })

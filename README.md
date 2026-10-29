@@ -119,12 +119,18 @@ Tag and filter chips use `components/ChipStrip.vue` everywhere (blog, Curiosity 
 - `tests/e2e/a11y.spec.mjs` runs axe-core (WCAG 2.1 A and AA) on every page and on the home page's card states and Instagram menu, on a phone and a tablet. It runs with `npm run test:android`, and as the Accessibility check in CI.
 
 ## 404 page and its arcade
-Any address that isn't on the site gets the 404 page (`error.vue`, Nuxt's error page, built as `404.html`, which Netlify serves for unknown paths): a way home, and an easter egg in the style of Fold Pong (below). A button offers one classic game, picked at random on each visit (`components/LostArcade.vue`, `utils/arcade.mjs`):
+Any address that isn't on the site gets the 404 page (`error.vue`, Nuxt's error page, built as `404.html`, which Netlify serves for unknown paths): a way home, **I'm Feeling Lucky**, and an easter egg in the style of Fold Pong (below).
+
+**I'm Feeling Lucky** (`components/FeelingLucky.vue`, `utils/lucky.mjs`) goes somewhere at random: a kind first (a blog post, a home page fact or a definition from the glossary), then one of that kind. A post opens. A fact or a definition is searched for you in the page, Let Me Google That For You style (`components/LetMeSearch.vue`): a pointer clicks the search box, types the question and presses Search, then the answer shows with the search itself. With reduced motion, or "Skip to the answer", it shows straight away.
+- **Decoupled from the rest of the site.** The button only reads `/lucky.json` (`server/routes/lucky.json.js`, prerendered), a plain list built from the data (the blog posts, `data/hobbyFacts.mjs`, `data/glossary.js`), never from the pages or components that show them. Each source is read on its own and anything that doesn't look right is left out, so a change to one can at worst drop it from the draw. Posts are only ever `/blog/<slug>` on this site.
+- **Google's results in the page.** Google's search pages can't be shown in a frame on another site, and Let Me Google That For You has no official embed. Google's official way is the [Programmable Search Element](https://developers.google.com/custom-search/docs/element): make a search engine that searches the whole web at [programmablesearchengine.google.com](https://programmablesearchengine.google.com) and put its ID in `config.toml` `[lucky] search_engine_id`. The results then show under the answer, and the Content-Security-Policy allows Google's search scripts and frames (`scripts/lib/csp.mjs`; without an ID it allows none). Without one, the search ends with a link to the same search on Google.
+
+**The arcade** is locked behind **slide to unlock** in Liquid Glass (`components/SwipeToUnlock.vue`): drag the knob to the end (let go early and it springs back), or use the keyboard (→ steps along, End or Enter goes all the way). Then a button offers one classic game, picked at random on each visit (`components/LostArcade.vue`, `utils/arcade.mjs`):
 - **Pong**: you at the bottom against the computer, first to 5 (the same rules as Fold Pong, `utils/foldPong.mjs`).
 - **Block Breaker**: knock out every brick, with three lives (`utils/blockBreaker.mjs`).
 - **Space Invaders**: shoot the marching block before it lands or its bombs cost your three lives (`utils/spaceInvaders.mjs`).
 
-Drag anywhere (held down, that also shoots) or use ← → (and Space to shoot); Escape closes. Each game's rules are pure, like Fold Pong's, and tested in `tests/app/arcade.test.mjs`; `tests/e2e/not-found.spec.mjs` plays each one in the browser.
+Drag anywhere (held down, that also shoots) or use ← → (and Space to shoot); Escape closes. Each game's rules are pure, like Fold Pong's, and tested in `tests/app/arcade.test.mjs`. `tests/app/lucky.test.mjs` and `tests/security/lucky.test.mjs` cover I'm Feeling Lucky, and `tests/e2e/not-found.spec.mjs` unlocks the arcade, plays each game and tries each kind of lucky pick in the browser.
 
 ## Foldables and iPhone Duo
 

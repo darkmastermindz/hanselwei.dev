@@ -248,3 +248,38 @@ export const KUDOS_IPS = [
   '../../seen',
   'x'.repeat(10_000)
 ]
+
+// Blog slugs as I'm Feeling Lucky would turn them into a path (utils/lucky.mjs luckyPool): anything
+// that could leave the site, climb out of /blog or carry markup
+export const LUCKY_SLUGS = [
+  '//evil.example',
+  'https://evil.example',
+  'javascript:alert(1)',
+  '../../admin',
+  '..',
+  'a/b',
+  'hello world',
+  'x?redirect=https://evil.example',
+  'x#frag',
+  '%2F%2Fevil.example',
+  '<img src=x onerror=alert(1)>',
+  '\\\\evil.example',
+  '-leading-dash',
+  ''
+]
+
+// config.toml [lucky] search_engine_id goes into the cse.js script URL (components/LetMeSearch.vue)
+export const BAD_SEARCH_ENGINE_IDS = [
+  'abc&cx=other',
+  'abc"><script>alert(1)</script>',
+  'abc/../../evil.js',
+  'abc?x=1',
+  'abc#x',
+  'abc def',
+  'https://evil.example/x.js',
+  'a'.repeat(65),
+  42,
+  true,
+  ['abc'],
+  { id: 'abc' }
+]

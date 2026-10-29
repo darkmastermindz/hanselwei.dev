@@ -1,6 +1,7 @@
 <template>
   <!-- Nuxt's error page: a page that isn't here (prerendered as 404.html, which Netlify serves for
-       unknown paths), or one that failed. Lost? Play a classic game (components/LostArcade.vue). -->
+       unknown paths), or one that failed. Lost? Feel lucky (components/FeelingLucky.vue), or slide
+       to unlock a classic game (components/SwipeToUnlock.vue, components/LostArcade.vue). -->
   <NuxtLayout>
     <main class="page lost">
       <h1 class="page-title text-[#c084fc]">{{ notFound ? '404 · Page not found' : 'Something went wrong' }}</h1>
@@ -12,8 +13,10 @@
           <NuxtLink to="/blog" class="button--grey" @click="clearError()">Read the blog 📰</NuxtLink>
         </div>
       </section>
+      <FeelingLucky />
       <p class="lost__hint">While you're here:</p>
-      <LostArcade />
+      <SwipeToUnlock v-if="!unlocked" label="slide to unlock the arcade" @unlock="unlocked = true" />
+      <LostArcade v-else autofocus />
     </main>
   </NuxtLayout>
 </template>
@@ -26,6 +29,9 @@ const notFound = computed(() => !props.error?.statusCode || props.error.statusCo
 useHead({ title: () => (notFound.value ? 'Page not found · Hansel Wei' : 'Something went wrong · Hansel Wei') })
 
 const home = () => clearError({ redirect: '/' })
+
+// The arcade is an easter egg: locked until you slide it open (each visit)
+const unlocked = ref(false)
 </script>
 
 <style scoped>
@@ -44,7 +50,7 @@ const home = () => clearError({ redirect: '/' })
 }
 
 .lost__hint {
-  margin-top: 2rem;
+  margin: 2rem 0 0.75rem;
   text-align: center;
   color: #bbb;
 }
