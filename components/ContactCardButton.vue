@@ -5,9 +5,9 @@
       href="/connect"
       target="_blank"
       rel="noopener nofollow"
-      class="contact-card__button contact-card__button--unlocked"
+      class="contact-card__button contact-card__button--unlocked liquid-glass liquid-glass-prominent liquid-glass-interactive"
     >Open Apple Contact Card ✨</a>
-    <span v-else class="contact-card__button contact-card__button--locked" aria-disabled="true">
+    <span v-else class="contact-card__button contact-card__button--locked liquid-glass" aria-disabled="true">
       🔒 Spin the token to unlock my contact card
     </span>
   </div>
@@ -50,8 +50,14 @@ onMounted(() => {
   text-decoration: none;
 }
 
+/* Liquid Glass buttons (packages/tailwind-ios-glass): unlocked, tinted green glass that responds
+   to a press, like SwiftUI's .glassProminent; locked, plain glass */
 .contact-card__button--unlocked {
-  background: #00b489;
+  --glass-accent: 0 180 137;
+  /* Pressing it swells on SwiftUI's .bouncy spring, like the unlock below (assets/css/springs.css) */
+  --glass-press-easing: var(--spring-bouncy);
+  --glass-press-duration: var(--spring-bouncy-duration);
+  border: 0;
   animation: unlock var(--spring-bouncy-duration) var(--spring-bouncy);
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <section id="xp" ref="cardEl" class="about-card" @keydown="onCardKey">
+  <section id="xp" ref="cardEl" class="about-card material" @keydown="onCardKey">
     <div class="about-card__tabs" role="tablist" aria-label="About Hansel" @keydown="onTabsKey">
       <button
         v-for="tab in tabs"
@@ -633,15 +633,17 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 </script>
 
 <style scoped>
+/* Frosted glass comes from the `material` class: Apple's regular material
+   (packages/tailwind-ios-glass) */
 .about-card {
   max-width: 40rem;
   margin: 1.75rem auto 2.25rem;
   scroll-margin-top: 1rem; /* /#xp lands with a little room above the card */
   padding: 0.9rem 1.1rem 1.1rem;
   border-radius: 0.9rem;
-  background: #23262a;
   border: 1px solid #653496;
-  box-shadow: 4px 4px #7cfc00;
+  /* The site's green offset shadow, plus the lit top edge of the glass */
+  box-shadow: 4px 4px #7cfc00, inset 0 1px 0 rgb(255 255 255 / 0.12);
   text-align: left;
   color: #eee;
 }

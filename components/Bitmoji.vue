@@ -3,7 +3,7 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-shining': shining, 'is-moving': moving }"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -13,8 +13,12 @@
       @keyup.space.enter.prevent="release"
       @contextmenu.prevent
     >
-      <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
-        <span class="token__face token__face--front" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
+      <!-- The coin's shadow and, while it's held, a green glow: their own layers behind the coin, so
+           neither has to be redrawn from the turning coin each frame -->
+      <span class="token__shadow" aria-hidden="true" />
+      <span class="token__halo" aria-hidden="true" />
+      <span ref="coinEl" class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
+        <span ref="frontEl" class="token__face token__face--front liquid-glass-edge" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
           <!-- The first thing anyone sees (the page's largest paint), so it loads first (preloaded below) -->
           <img :src="bitmojiUrl" alt="" draggable="false" fetchpriority="high" />
           <!-- Each heads landing shows the next photo (utils/coinFaces.mjs). They load once the page
@@ -34,8 +38,11 @@
             @error="dropFace(i)"
           />
           <span class="token__shine" />
+          <span class="token__rimlight" aria-hidden="true" />
+          <span class="token__glint" aria-hidden="true" />
+          <span class="token__twinkle" aria-hidden="true" />
         </span>
-        <span class="token__face token__face--back" aria-hidden="true">
+        <span ref="backEl" class="token__face token__face--back liquid-glass-edge" aria-hidden="true">
           <!-- During an event, once the bubble has shown, tails carries an engraved QR to the site -->
           <span v-if="showQr" class="token__qr">
             <svg :viewBox="`0 0 ${bubbleSettings.qrSize} ${bubbleSettings.qrSize}`" shape-rendering="crispEdges">
@@ -44,8 +51,19 @@
           </span>
           <span v-else class="token__monogram">HW</span>
           <span class="token__caption">hanselwei.dev</span>
+          <span class="token__rimlight" aria-hidden="true" />
+          <span class="token__glint" aria-hidden="true" />
+          <span class="token__twinkle" aria-hidden="true" />
         </span>
-        <span class="token__edge" />
+        <!-- The coin's edge: a ring of reeded slats between the faces, so it has thickness edge-on -->
+        <span ref="rimEl" class="token__rim">
+          <span
+            v-for="slat in RIM_SLATS"
+            :key="slat.turn"
+            class="token__slat"
+            :style="{ '--turn': `${slat.turn}deg`, '--flash-at': `${slat.flashAt}ms` }"
+          ><i class="token__glow" /></span>
+        </span>
       </span>
     </button>
     <span
@@ -87,6 +105,7 @@ import bubbleSettings from '~/data/coinBubble.generated.mjs'
 import { COIN_FACES, nextFace, photoSources } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
 import { springEasing } from '~/utils/spring.mjs'
+import { HINT_BUSY_MS, HINT_FIRST_MS, HINT_IDLE_MS, hintSteps, nextHintWait } from '~/utils/coinHint.mjs'
 
 const emit = defineEmits(['spin', 'release'])
 // Photos through Netlify's Image CDN on Netlify builds (utils/coinFaces.mjs)
@@ -95,6 +114,18 @@ useHead({ link: [{ rel: 'preload', as: 'image', href: bitmojiUrl, fetchpriority:
 const photosReady = ref(false)
 
 const MAX_SPEED = 24 // degrees per frame
+// It's a heavy coin: it takes a while to get going and coasts a long way when let go
+const SPIN_UP = 0.45 // degrees per frame gained each frame while held
+// A tap's glint goes once round the rim, clockwise from the top left (-45°), at a steady pace
+const SHINE_MS = 900
+const FLASH_MS = 180 // how long each slat of the edge flashes as the glint passes it
+// Where each slat of the edge sits around the rim, in degrees from the top (lit in CSS), and when
+// the glint passes it
+const RIM_SLAT_COUNT = 24 // a 24-sided rim strays under 1% of the radius from a true circle
+const RIM_SLATS = Array.from({ length: RIM_SLAT_COUNT }, (_, i) => {
+  const turn = (i * 360) / RIM_SLAT_COUNT
+  return { turn, flashAt: Math.round((((turn + 45) % 360) / 360) * SHINE_MS - FLASH_MS / 2) }
+})
 const angle = ref(0)
 // The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
 // reset), otherwise an index into COIN_FACES. A photo that can't load drops out of the rotation.
@@ -107,13 +138,78 @@ const dropFace = i => {
 }
 const resetAt = useState('token:resetAt', () => 0)
 watch(resetAt, () => {
+  stopHint()
   face.value = -1
-  transition.value = 'transform var(--spring-smooth-duration) var(--spring-smooth)'
-  angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
+  transition.value = turning('var(--spring-smooth-duration) var(--spring-smooth)')
+  angle.value = Math.round(angle.value / 360) * 360
+  lightFor(800) // back to heads up, on the Bitmoji
 })
 const pressed = ref(false)
 const intro = ref(true)
 const transition = ref('none')
+const turning = timing => `transform ${timing}`
+
+// The lighting follows the coin. It turns by its transform, which the browser animates off the
+// main thread (smooth even while the page is loading); while it's moving, this reads how far it has
+// actually turned, once a frame, and sets the opacity of the lights that depend on it. They're
+// small elements with nothing inside them, so this restyles only them and repaints nothing (a
+// custom property set on the coin, the edge or a face would restyle everything inside it, every
+// frame).
+// The light is fixed in front of the coin, up and to the left, where the shadow puts it:
+// L = (-0.45, -0.6, 0.66), with x to the right, y down and z towards you. Turned by φ about the
+// vertical, the front face faces (sin φ, 0, cos φ) and the back face the opposite way.
+// - Each face's rim glints as the face mirrors the light towards you: face · H, with H halfway
+//   between the light and you, (-0.247, -0.329, 0.911).
+// - The edge glows green with the light let in through whichever face is turned to it, |face · L|.
+const coinEl = ref(null)
+const rimEl = ref(null)
+const frontEl = ref(null)
+const backEl = ref(null)
+let lights = null // the elements: { front, back, glows }
+let lightFrame = null
+let lightUntil = 0
+let litAt = null
+// Changes too small to see are skipped (each write repaints a little), except the last, at rest
+const setOpacity = (el, value, exact) => {
+  const was = parseFloat(el.style.opacity)
+  if (exact ? el.style.opacity !== value.toFixed(2) : !(Math.abs(value - was) < 0.03)) el.style.opacity = value.toFixed(2)
+}
+// While the coin moves, its rims stop blurring what's under them: re-blurring a turning rim every
+// frame is about the costliest thing a phone's GPU can be asked to do, and frosting can't be seen in
+// motion anyway. It comes back when the coin settles.
+const moving = ref(false)
+const light = () => {
+  lights ??= {
+    shadow: coinEl.value?.parentElement.querySelector('.token__shadow'),
+    front: frontEl.value?.querySelector('.token__rimlight'),
+    back: backEl.value?.querySelector('.token__rimlight'),
+    glows: [...(rimEl.value?.querySelectorAll('.token__glow') ?? [])]
+  }
+  const last = performance.now() >= lightUntil
+  const m = new DOMMatrixReadOnly(getComputedStyle(coinEl.value).transform)
+  const φ = Math.atan2(-m.m13, m.m11)
+  const spin = Math.round((φ * 180) / Math.PI)
+  if (spin !== litAt || last) {
+    litAt = spin
+    const facing = -0.247 * Math.sin(φ) + 0.911 * Math.cos(φ) // front face · H
+    if (lights.front) setOpacity(lights.front, Math.min(1, 0.25 + 1.5 * Math.max(0, facing - 0.4)), last)
+    if (lights.back) setOpacity(lights.back, Math.min(1, 0.25 + 1.5 * Math.max(0, -facing - 0.4)), last)
+    const piped = Math.abs(-0.45 * Math.sin(φ) + 0.66 * Math.cos(φ))
+    for (const glow of lights.glows) setOpacity(glow, 0.15 + 0.85 * piped, last)
+    // The shadow narrows as the coin turns edge-on, like the coin's own outline
+    const narrow = `scaleX(${Math.max(0.08, Math.abs(Math.cos(φ))).toFixed(2)})`
+    if (lights.shadow && lights.shadow.style.transform !== narrow) lights.shadow.style.transform = narrow
+  }
+  lightFrame = last ? null : requestAnimationFrame(light)
+  if (last) moving.value = false
+}
+// Keep the light following for (at least) the next `ms`
+const lightFor = ms => {
+  if (!coinEl.value) return
+  lightUntil = Math.max(lightUntil, performance.now() + ms)
+  if (!lightFrame) lightFrame = requestAnimationFrame(light)
+  moving.value = true
+}
 const pops = ref([])
 
 let speed = 0
@@ -124,11 +220,64 @@ let pressStartAngle = 0
 let spinsThisHold = 0
 let pressStartTime = 0
 let popId = 0
+let landingTimer = null
+let shineTimer = null
+
+// The "you can tap me" nudge (utils/coinHint.mjs). It holds off while the coin is pressed, still
+// coasting, off screen, in a hidden tab or showing its bubble, and never plays with reduced motion.
+let hintTimers = []
+let idleTimer = null
+let idleWait = HINT_IDLE_MS
+let busyUntil = 0 // the coin is still coasting or nudging until then
+let onScreen = true
+let screenWatch = null
+const stopHint = () => {
+  hintTimers.forEach(clearTimeout)
+  hintTimers = []
+  clearTimeout(idleTimer)
+}
+const waitForIdle = (ms = idleWait) => {
+  clearTimeout(idleTimer)
+  if (!reducedMotion) idleTimer = setTimeout(nudge, ms)
+}
+const nudge = () => {
+  if (pressed.value || document.hidden || !onScreen || bubble.value || performance.now() < busyUntil) {
+    waitForIdle() // not now: try again after another wait
+    return
+  }
+  const rest = angle.value
+  for (const step of hintSteps(rest)) {
+    hintTimers.push(
+      setTimeout(() => {
+        transition.value = turning(step.timing)
+        angle.value = step.angle
+      }, step.at)
+    )
+  }
+  busyUntil = performance.now() + HINT_BUSY_MS
+  lightFor(HINT_BUSY_MS)
+  idleWait = nextHintWait(idleWait)
+  waitForIdle()
+}
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
   setTimeout(() => (intro.value = false), 1600)
+  lightFor(1500) // through the intro flip
+  // The nudge: once a visit just after the intro, then whenever the coin is left alone
+  if ('IntersectionObserver' in window) {
+    screenWatch = new IntersectionObserver(([entry]) => (onScreen = entry.isIntersecting))
+    screenWatch.observe(document.querySelector('.token'))
+  }
+  let firstVisit = false
+  try {
+    firstVisit = !sessionStorage.getItem('coin:nudged')
+    sessionStorage.setItem('coin:nudged', '1')
+  } catch {
+    // Storage blocked: just the idle nudges
+  }
+  waitForIdle(firstVisit ? 1600 + HINT_FIRST_MS : HINT_IDLE_MS)
   const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
   if (document.readyState === 'complete') loadPhotos()
   else addEventListener('load', loadPhotos, { once: true })
@@ -136,6 +285,11 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
+  clearTimeout(landingTimer)
+  clearTimeout(shineTimer)
+  cancelAnimationFrame(lightFrame)
+  stopHint()
+  screenWatch?.disconnect()
   hideBubble()
 })
 
@@ -187,7 +341,7 @@ const countSpin = () => {
 }
 
 const spin = () => {
-  speed = Math.min(MAX_SPEED, speed + 0.6)
+  speed = Math.min(MAX_SPEED, speed + SPIN_UP)
   angle.value += speed
   if (Math.floor((angle.value - pressStartAngle) / 360) > spinsThisHold) countSpin()
   frame = requestAnimationFrame(spin)
@@ -199,6 +353,10 @@ const press = event => {
   if (pressed.value || !event?.isTrusted) return
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
+  clearTimeout(landingTimer)
+  stopHint() // a press takes over from a nudge
+  idleWait = HINT_IDLE_MS
+  lightFor(Infinity) // while it's held
   intro.value = false
   photosReady.value = true // held before the page finished loading
   hideBubble()
@@ -208,7 +366,8 @@ const press = event => {
   navigator.vibrate?.(12)
 
   if (reducedMotion) {
-    transition.value = 'transform 0.4s ease'
+    transition.value = turning('0.4s ease')
+    lightFor(450)
     angle.value += 180
     return
   }
@@ -217,12 +376,30 @@ const press = event => {
   frame = requestAnimationFrame(spin)
 }
 
+// A tap (not a hold) sends a glint of light round the coin's glass edges: the rims on the faces,
+// with a twinkle where it's brightest, and the edge between them. It's all rotation and opacity,
+// which the browser animates off the main thread. Not with reduced motion.
+const TAP_MS = 250
+const shining = ref(false)
+const shine = () => {
+  if (reducedMotion) return
+  clearTimeout(shineTimer)
+  shining.value = false
+  requestAnimationFrame(() => {
+    shining.value = true // a fresh class each tap, so the glint starts over
+    shineTimer = setTimeout(() => (shining.value = false), SHINE_MS + FLASH_MS)
+  })
+}
+
 const release = () => {
   if (!pressed.value) return
   pressed.value = false
   cancelAnimationFrame(frame)
+  lightUntil = performance.now() + 450 // the reduced-motion flip; a coast extends it below
   if (!spinsThisHold) countSpin()
-  emit('release', spinsThisHold, performance.now() - pressStartTime)
+  const heldMs = performance.now() - pressStartTime
+  emit('release', spinsThisHold, heldMs)
+  if (heldMs < TAP_MS) shine()
   if (reducedMotion) {
     if (landsHeads(angle.value)) {
       advanceFace()
@@ -233,15 +410,22 @@ const release = () => {
 
   // Coast to the next face, taking longer the faster it was spinning. Like a SwiftUI spring
   // after a fling, it starts at the speed the coin was turning (degrees per frame at 60fps, as
-  // whole distances per second) instead of jolting to a fixed curve, and settles with a little wobble.
-  const target = Math.ceil((angle.value + speed * 6) / 180) * 180
-  const coastSeconds = 0.5 + speed / 30
+  // whole distances per second) instead of jolting to a fixed curve. Being heavy, it carries on a
+  // long way (up to two turns, over about three and a half seconds) and glides to a stop on the
+  // face. The distance is what a spring of that length covers from that speed, so it never
+  // overshoots and swings back.
+  const coastSeconds = 1 + speed / 12
+  const target = Math.ceil((angle.value + (speed * 60 * coastSeconds) / (2 * Math.PI)) / 180) * 180
   const velocity = (speed * 60) / Math.max(target - angle.value, 1)
+  let settleSeconds = coastSeconds
   if (springs) {
-    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0.2, velocity })
-    transition.value = `transform ${seconds}s ${easing}`
+    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0, velocity })
+    transition.value = turning(`${seconds}s ${easing}`)
+    settleSeconds = seconds
   } else {
-    transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+    // Browsers without CSS linear(): a fixed curve that slows to a stop without overshooting, like
+    // the spring
+    transition.value = turning(`${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1)`)
   }
   angle.value = target
   if (landsHeads(target)) {
@@ -249,7 +433,13 @@ const release = () => {
     showBubble(coastSeconds * 1000)
   }
   speed = 0
-  navigator.vibrate?.([8, 40, 8])
+  navigator.vibrate?.(8)
+  // A tap as it comes to rest
+  landingTimer = setTimeout(() => navigator.vibrate?.(20), coastSeconds * 1000 * 0.8)
+  // No nudges until it's settled and been left alone a while
+  busyUntil = performance.now() + settleSeconds * 1000
+  lightFor(settleSeconds * 1000 + 50)
+  waitForIdle(settleSeconds * 1000 + HINT_IDLE_MS)
 }
 </script>
 
@@ -296,23 +486,72 @@ const release = () => {
   -webkit-touch-callout: none;
   user-select: none;
   cursor: grab;
-  transition: transform 0.2s ease, filter 0.2s ease;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+  /* How thick the coin is, front face to back */
+  --thickness: calc(var(--size) * 0.045);
+  /* Green glass, for the rims on the faces (`liquid-glass-edge`) and the edge between them. Its
+     alpha follows Liquid Glass's transparency rules (below): opaque with Reduce Transparency or
+     Increase Contrast, or without backdrop-filter. */
+  --glass-edge-tint: 124 252 0;
+  --glass-edge-alpha: 0.45;
+  position: relative;
+  transition: transform 0.2s ease;
 
   &:focus-visible {
     outline: 3px dashed #7cfc00;
     outline-offset: 6px;
   }
 
+  /* Picked up: it lifts, so its shadow drops further, spreads and fades, and it glows green */
   &.is-pressed {
     cursor: grabbing;
-    transform: scale(1.06);
-    filter: drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
+    transform: scale(1.06) translateY(-4px);
+
+    .token__shadow {
+      translate: 0 10px;
+      scale: 1.08;
+      opacity: 0.6;
+    }
+
+    .token__halo {
+      opacity: 1;
+    }
   }
+
 
   &.is-intro .token__coin {
     animation: intro-flip 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) both;
   }
+}
+
+/* No frosting under the rims while the coin moves (see `moving` in the script) */
+.token.is-moving .liquid-glass-edge::after {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* A heavy coin's shadow: dark where it sits and soft around it, a gradient rather than a filter.
+   light() narrows it (its transform) as the coin turns edge-on. Moving and fading it are all the
+   compositor's work. */
+.token__shadow,
+.token__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: translate 0.2s ease, scale 0.2s ease, opacity 0.2s ease;
+}
+
+.token__shadow {
+  inset: 2% -4% -10%;
+  translate: 0 6px;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55) 72%, rgb(0 0 0 / 0.25) 86%, transparent);
+}
+
+.token__halo {
+  inset: -14%;
+  background: radial-gradient(closest-side, rgb(124 252 0 / 0.45) 62%, transparent);
+  opacity: 0;
 }
 
 .token__coin {
@@ -334,8 +573,11 @@ const release = () => {
   border-radius: 50%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border: 7px solid #7cfc00;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25), inset 0 -10px 30px rgba(0, 0, 0, 0.35);
+  /* The rim is green glass (`liquid-glass-edge`, packages/tailwind-ios-glass): the face runs under
+     it, frosted, and it catches the light. The padding keeps the face's content inside it. */
+  padding: 7px;
+  --glass-edge-width: 7px;
+  box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.35);
 
   img {
     width: 96%;
@@ -345,7 +587,9 @@ const release = () => {
 }
 
 .token__face--front {
-  transform: translateZ(2px);
+  transform: translateZ(calc(var(--thickness) / 2));
+  /* The rim's glint is .token__rimlight, which follows the light as the coin turns */
+  --glass-edge-shine: 0;
   /* The original bitmoji backdrop pattern */
   background-color: #653496;
   background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
@@ -368,7 +612,8 @@ const release = () => {
 }
 
 .token__face--back {
-  transform: rotateY(180deg) translateZ(2px);
+  transform: rotateY(180deg) translateZ(calc(var(--thickness) / 2));
+  --glass-edge-shine: 0;
   background: radial-gradient(circle at 70% 30%, #9dff5c, #41b883 55%, #1d5c3f);
   color: #2c2f33;
 }
@@ -387,21 +632,260 @@ const release = () => {
   margin-top: 0.4em;
 }
 
-/* Core between the two faces so the coin has some thickness when edge-on */
-.token__edge {
+/* The edge: slats stood up around the rim, each as thick as the coin, so turned edge-on it's a
+   solid band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
+   (translateY) and turned to its place around it (rotateZ).
+   It's the side of a slab of the same green glass as the rims on the faces, and coloured glass
+   is coloured by what it absorbs on the way through: the longer the path, the deeper the colour
+   and the less shows through. Looking into its side, light crosses about three times as much
+   glass as through a rim, so the edge is deep green and only a little see-through: opacity
+   1 − (1 − alpha)³ for the rims' alpha (0.83 for 0.45), and opaque wherever the rims are (the
+   transparency rules below). Light that enters through a face bounces along inside and comes
+   out at the edge, so the edge glows green, more the more squarely a face is turned to the light.
+   Only light reflected off the surface stays white: thin lines at the two corners where it meets
+   the faces. The light is fixed in front of the coin, up and to the left, where the rims' glints
+   and the shadow put it.
+   What shows through it is the page's dark background, so the glass is mixed over that colour
+   rather than drawn see-through: see-through slats show seams where they meet (doubled glass
+   where they overlap, hairline gaps where they don't). */
+.token__rim {
   position: absolute;
-  inset: 1%;
-  border-radius: 50%;
-  background: #4c8f1f;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
 }
 
+.token__slat {
+  --width: calc(var(--size) * 3.1416 / 24 + 0.5px); /* a 24th of the way round, overlapping a hair */
+  /* Only the slats facing you are drawn; the far side of the rim is behind the faces anyway */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--width);
+  height: var(--thickness);
+  margin: calc(var(--thickness) / -2) 0 0 calc(var(--width) / -2);
+  /* Lit from above: the coin turns about the vertical, so the top of the rim always faces up to the
+     light and the bottom away from it, and this is fixed for each slat (--top: 1 at the top of the
+     rim, 0 at the bottom). Thin white lines at the two corners where it meets the faces catch the
+     light, brightest at the top; the glass darkens towards the bottom. */
+  --top: calc(0.5 + 0.5 * cos(var(--turn)));
+  background:
+    linear-gradient(
+      rgb(255 255 255 / calc(0.25 + 0.6 * var(--top))),
+      rgb(255 255 255 / 0.15) 1.5px,
+      transparent 25%,
+      transparent 75%,
+      rgb(255 255 255 / 0.15) calc(100% - 1.5px),
+      rgb(255 255 255 / calc(0.25 + 0.6 * var(--top)))
+    ),
+    linear-gradient(rgb(0 0 0 / calc(0.45 * (1 - var(--top)))), rgb(0 0 0 / calc(0.45 * (1 - var(--top))))),
+    color-mix(
+      in srgb,
+      color-mix(in srgb, rgb(var(--glass-edge-tint)), black 55%)
+        calc((1 - (1 - var(--glass-edge-alpha)) * (1 - var(--glass-edge-alpha)) * (1 - var(--glass-edge-alpha))) * 100%),
+      #1d232a /* the page behind it */
+    );
+  transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
+}
+
+/* The green glow: light that gets in through whichever face is turned to the light and comes out
+   at the edge. How much changes as the coin turns (its opacity, set by light() in the script). */
+.token__glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / 0.9) 50%, transparent 85%);
+  opacity: 0.71 /* face on, until the coin first turns */;
+  pointer-events: none;
+}
+
+/* The rim's glint, as the library's glass ring draws it (light from the top left), on a layer of
+   its own so the coin can turn it up and down (its opacity, set by light() in the script) as the
+   face turns towards and away from the light. The back face is turned round, so its top left is
+   at the top right of its own. */
+.token__rimlight {
+  will-change: opacity; /* its own layer: light() changes it every frame without repainting the face */
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: var(--glass-edge-width);
+  border-radius: 50%;
+  background: linear-gradient(150deg, rgb(255 255 255 / 0.5), transparent 30%, transparent 70%, rgb(255 255 255 / 0.22));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 1;
+  pointer-events: none;
+}
+
+.token__face--back .token__rimlight {
+  background: linear-gradient(210deg, rgb(255 255 255 / 0.5), transparent 30%, transparent 70%, rgb(255 255 255 / 0.22));
+  opacity: 0.25;
+}
+
+/* A tap's glint flashing this slat white as it goes past (--flash-at: when it gets here) */
+.token__slat::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 10%, rgb(255 255 255 / 0.9) 50%, transparent 90%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.token.is-shining .token__slat::after {
+  animation: slat-flash 180ms ease-in-out var(--flash-at) both;
+}
+
+@keyframes slat-flash {
+  50% {
+    opacity: 1;
+  }
+}
+
+
+/* Liquid Glass's transparency rules (packages/tailwind-ios-glass), for the coin's glass as a
+   whole: the rims and the edge go opaque with Reduce Transparency or Increase Contrast, or where
+   the browser can't blur what's behind glass */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .token {
+    --glass-edge-alpha: 1;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .token {
+    --glass-edge-alpha: 1;
+  }
+}
+
+/* The diagonal shine across the face, inside the glass rim: this is the circle it stays in, and
+   the sweep moves across inside it */
 .token__shine {
+  position: absolute;
+  inset: var(--glass-edge-width);
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.token__shine::before {
+  content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 48%, transparent 60%);
   transform: translateX(-120%);
   animation: shine 4s ease-in-out 2s infinite;
+}
+
+/* A tap's glint on a face's rim: a bright spike of a conic gradient at the top, cut to the rim with
+   the same mask as the glass ring and over it (it's light off the glass, not seen through it),
+   turned once round the rim. A ✨ twinkle turns with it, at its brightest point. Turning and
+   fading only, so it runs off the main thread. The back face is turned round, so it goes the other
+   way in its own terms, to stay with the same point round the coin. */
+.token__glint,
+.token__twinkle {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  opacity: 0;
   pointer-events: none;
+}
+
+.token__glint {
+  z-index: 1;
+  box-sizing: border-box;
+  padding: var(--glass-edge-width);
+  /* A white-hot core in a softer halo, added to the light already there (plain white barely shows
+     on the bright green) */
+  background: conic-gradient(
+    from -45deg,
+    transparent,
+    rgb(255 255 255 / 0.5) 30deg,
+    #fff 42deg,
+    #fff 48deg,
+    rgb(255 255 255 / 0.5) 60deg,
+    transparent 90deg
+  );
+  mix-blend-mode: plus-lighter;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+
+.token__twinkle {
+  z-index: 2;
+}
+
+/* The twinkle: a four-pointed star on the rim, at the top until it turns */
+.token__twinkle::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--glass-edge-width) / 2);
+  left: 50%;
+  width: calc(var(--glass-edge-width) * 4);
+  height: calc(var(--glass-edge-width) * 4);
+  margin: calc(var(--glass-edge-width) * -2) 0 0 calc(var(--glass-edge-width) * -2);
+  background: #fff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+
+.token.is-shining .token__face--front :is(.token__glint, .token__twinkle) {
+  animation: glint-round 900ms linear;
+}
+
+.token.is-shining .token__face--back :is(.token__glint, .token__twinkle) {
+  animation: glint-round-back 900ms linear;
+}
+
+.token.is-shining .token__twinkle::before {
+  animation: twinkle 900ms ease-in-out;
+}
+
+@keyframes glint-round {
+  0% {
+    transform: rotate(-45deg);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(315deg);
+    opacity: 0;
+  }
+}
+
+@keyframes glint-round-back {
+  0% {
+    transform: rotate(45deg);
+    opacity: 0;
+  }
+  15%,
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(-315deg);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    transform: scale(0);
+  }
+  25%,
+  75% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.75) rotate(45deg);
+  }
 }
 
 @keyframes intro-flip {
@@ -578,7 +1062,7 @@ const release = () => {
 
 @media (prefers-reduced-motion: reduce) {
   .token.is-intro .token__coin,
-  .token__shine {
+  .token__shine::before {
     animation: none;
   }
 
