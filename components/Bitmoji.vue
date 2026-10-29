@@ -3,7 +3,7 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-landing': landing }"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -45,7 +45,10 @@
           <span v-else class="token__monogram">HW</span>
           <span class="token__caption">hanselwei.dev</span>
         </span>
-        <span class="token__edge" />
+        <!-- The coin's edge: a ring of reeded slats between the faces, so it has thickness edge-on -->
+        <span class="token__rim">
+          <span v-for="slat in RIM_SLATS" :key="slat.turn" class="token__slat" :style="{ '--turn': `${slat.turn}deg`, '--light': `${slat.light}%` }" />
+        </span>
       </span>
     </button>
     <span
@@ -95,6 +98,14 @@ useHead({ link: [{ rel: 'preload', as: 'image', href: bitmojiUrl, fetchpriority:
 const photosReady = ref(false)
 
 const MAX_SPEED = 24 // degrees per frame
+// It's a heavy coin: it takes a while to get going, coasts a long way, and lands with a thud
+const SPIN_UP = 0.45 // degrees per frame gained each frame while held
+const LANDING_MS = 280
+// The edge, lit from above: brighter at the top of the rim, darker underneath
+const RIM_SLATS = Array.from({ length: 48 }, (_, i) => ({
+  turn: i * 7.5,
+  light: Math.round(30 + 14 * Math.cos((i * 7.5 * Math.PI) / 180))
+}))
 const angle = ref(0)
 // The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
 // reset), otherwise an index into COIN_FACES. A photo that can't load drops out of the rotation.
@@ -112,6 +123,7 @@ watch(resetAt, () => {
   angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
 })
 const pressed = ref(false)
+const landing = ref(false)
 const intro = ref(true)
 const transition = ref('none')
 const pops = ref([])
@@ -124,6 +136,7 @@ let pressStartAngle = 0
 let spinsThisHold = 0
 let pressStartTime = 0
 let popId = 0
+let landingTimer = null
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -136,6 +149,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
+  clearTimeout(landingTimer)
   hideBubble()
 })
 
@@ -187,7 +201,7 @@ const countSpin = () => {
 }
 
 const spin = () => {
-  speed = Math.min(MAX_SPEED, speed + 0.6)
+  speed = Math.min(MAX_SPEED, speed + SPIN_UP)
   angle.value += speed
   if (Math.floor((angle.value - pressStartAngle) / 360) > spinsThisHold) countSpin()
   frame = requestAnimationFrame(spin)
@@ -199,6 +213,8 @@ const press = event => {
   if (pressed.value || !event?.isTrusted) return
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
+  landing.value = false
+  clearTimeout(landingTimer)
   intro.value = false
   photosReady.value = true // held before the page finished loading
   hideBubble()
@@ -233,12 +249,13 @@ const release = () => {
 
   // Coast to the next face, taking longer the faster it was spinning. Like a SwiftUI spring
   // after a fling, it starts at the speed the coin was turning (degrees per frame at 60fps, as
-  // whole distances per second) instead of jolting to a fixed curve, and settles with a little wobble.
-  const target = Math.ceil((angle.value + speed * 6) / 180) * 180
-  const coastSeconds = 0.5 + speed / 30
+  // whole distances per second) instead of jolting to a fixed curve. Being heavy, it carries on
+  // further, takes longer to stop and barely wobbles, then lands with a thud.
+  const target = Math.ceil((angle.value + speed * 8) / 180) * 180
+  const coastSeconds = 0.6 + speed / 24
   const velocity = (speed * 60) / Math.max(target - angle.value, 1)
   if (springs) {
-    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0.2, velocity })
+    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0.1, velocity })
     transition.value = `transform ${seconds}s ${easing}`
   } else {
     transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
@@ -249,7 +266,12 @@ const release = () => {
     showBubble(coastSeconds * 1000)
   }
   speed = 0
-  navigator.vibrate?.([8, 40, 8])
+  navigator.vibrate?.(8)
+  landingTimer = setTimeout(() => {
+    landing.value = true
+    navigator.vibrate?.(20)
+    landingTimer = setTimeout(() => (landing.value = false), LANDING_MS)
+  }, coastSeconds * 1000 * 0.8)
 }
 </script>
 
@@ -296,18 +318,27 @@ const release = () => {
   -webkit-touch-callout: none;
   user-select: none;
   cursor: grab;
+  /* How thick the coin is, front face to back */
+  --thickness: calc(var(--size) * 0.085);
   transition: transform 0.2s ease, filter 0.2s ease;
-  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45));
+  /* A heavy coin's shadow: a tight, dark one where it sits and a soft one around it */
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
 
   &:focus-visible {
     outline: 3px dashed #7cfc00;
     outline-offset: 6px;
   }
 
+  /* Picked up: it lifts, so its shadow drops further and spreads */
   &.is-pressed {
     cursor: grabbing;
-    transform: scale(1.06);
-    filter: drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
+    transform: scale(1.06) translateY(-4px);
+    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
+  }
+
+  /* Set down: a short squash as the weight lands */
+  &.is-landing {
+    animation: land 280ms cubic-bezier(0.3, 0.7, 0.4, 1);
   }
 
   &.is-intro .token__coin {
@@ -350,7 +381,7 @@ const release = () => {
 }
 
 .token__face--front {
-  transform: translateZ(2px);
+  transform: translateZ(calc(var(--thickness) / 2));
   /* The original bitmoji backdrop pattern */
   background-color: #653496;
   background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
@@ -373,7 +404,7 @@ const release = () => {
 }
 
 .token__face--back {
-  transform: rotateY(180deg) translateZ(2px);
+  transform: rotateY(180deg) translateZ(calc(var(--thickness) / 2));
   background: radial-gradient(circle at 70% 30%, #9dff5c, #41b883 55%, #1d5c3f);
   color: #2c2f33;
 }
@@ -392,12 +423,41 @@ const release = () => {
   margin-top: 0.4em;
 }
 
-/* Core between the two faces so the coin has some thickness when edge-on */
-.token__edge {
+/* The edge: slats stood up around the rim, each as thick as the coin, so turned edge-on it's a
+   solid reeded band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
+   (translateY) and turned to its place around it (rotateZ). */
+.token__rim {
   position: absolute;
-  inset: 1%;
-  border-radius: 50%;
-  background: #4c8f1f;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.token__slat {
+  --width: calc(var(--size) * 3.1416 / 48 + 1px); /* a 48th of the way round, overlapping a hair */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--width);
+  height: var(--thickness);
+  margin: calc(var(--thickness) / -2) 0 0 calc(var(--width) / -2);
+  /* Reeding across the edge, the corners bevelled light and dark, over green lit from above */
+  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
+    linear-gradient(rgba(255, 255, 255, 0.25), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.3)),
+    hsl(96 64% var(--light));
+  transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
+}
+
+@keyframes land {
+  40% {
+    transform: scale(1.015, 0.975) translateY(1px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token.is-landing {
+    animation: none;
+  }
 }
 
 .token__shine {
