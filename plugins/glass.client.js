@@ -1,5 +1,6 @@
-// Liquid Glass refraction for the header's `liquid-glass` class (packages/tailwind-ios-glass): adds the
-// SVG filter in browsers that can draw it; everywhere else the header is frosted glass without it
+// Liquid Glass refraction for the `liquid-glass` classes (packages/tailwind-ios-glass): the header's
+// and contact card button's edges bend what's behind them like a lens, in browsers that can draw
+// it; everywhere else they're frosted glass without it
 import { installRefraction } from 'tailwind-ios-glass/refraction'
 
 export default defineNuxtPlugin(() => {

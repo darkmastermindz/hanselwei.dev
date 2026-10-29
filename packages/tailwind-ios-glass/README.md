@@ -62,10 +62,22 @@ The surface classes draw the glass on a `::before` layer behind the element's co
 `position: fixed` children, which is why the glass is a layer instead. `liquid-glass-edge` draws its
 ring on `::after`, above the content, cut out with a mask.
 
-With `installRefraction()`, Chromium browsers also refract what's behind `liquid-glass` and `liquid-glass-clear`
-through an SVG filter (`feTurbulence` + `feDisplacementMap` in `backdrop-filter: url(#liquid-glass)`).
-Safari and Firefox don't draw SVG filters in `backdrop-filter` (they would drop the whole blur), so
-they keep the frosted blur. It marks `<html data-glass-refract>`.
+With `installRefraction()`, the edge of `liquid-glass` and `liquid-glass-clear` bends what's behind it
+like the rim of a lens, and the middle stays clear. Each element gets its own SVG filter, a
+`feDisplacementMap` whose map is drawn at the element's size and corner radius and redrawn when it
+resizes. Elements added later are picked up, and removed ones let go. Each pixel in the bezel samples
+from further out along the edge's normal, so content just beyond the edge bends into the rim. The
+bend is strongest at the very edge and fades out across the bezel.
+
+| Variable (on the element) | Default | |
+| --- | --- | --- |
+| `--glass-lens-width` | `16px` | How far in from the edge the glass bends |
+| `--glass-lens-strength` | `18px` | How far the very edge reaches out |
+
+Only Chromium browsers draw SVG filters in `backdrop-filter`; Safari and Firefox would drop the whole
+blur, so they keep the frosted blur. `navigator.userAgentData`, which the check reads, only exists on
+secure pages (HTTPS or localhost). It marks `<html data-glass-refract>`, and sets each element's
+`--glass-lens` to its filter.
 
 ## Accessibility
 
@@ -86,11 +98,6 @@ Everything else is a CSS variable on `:root`: `--material-filter`, `--material-a
 
 Apple doesn't publish the blur radii or tints. These are matched by eye. The 180% saturation is what
 UIKit's blur is commonly reported to use.
-
-## Limits
-
-The refraction is a noise texture. Real Liquid Glass bends light most at its edges (lensing), which
-would need a displacement map sized to each element.
 
 ## Tests
 

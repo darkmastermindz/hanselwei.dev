@@ -4,7 +4,8 @@
 //   content: headers, tab bars, toolbars. The regular variant blurs and darkens what's behind it so
 //   text stays legible, and its edge catches the light. The clear variant is for floating over
 //   photos and video; add `liquid-glass-dim` (35% black, as Apple suggests) over bright content.
-//   With refraction installed (./refraction.mjs) it also bends what's behind it, where the browser can.
+//   With refraction installed (./refraction.mjs) its edge bends what's behind it like the rim of a
+//   lens (--glass-lens), where the browser can.
 //   For controls: `liquid-glass-prominent` tints the glass with an accent colour (SwiftUI's
 //   `.glassProminent` button style) and `liquid-glass-interactive` responds to a press (`.interactive()`).
 // - `liquid-glass-edge` is a glass bezel: a ring of glass around the element's own edge, over its
@@ -22,8 +23,6 @@
 // The glass is a ::before layer behind the element's content rather than a backdrop-filter on the
 // element itself, which would pin the element's fixed-position children to it. The element gets
 // `position: relative` and `isolation: isolate`; a position of its own (`sticky`, `fixed`) wins.
-
-const FILTER_ID = 'liquid-glass'
 
 const DEFAULTS = {
   // Tints, as space-separated RGB channels. The defaults suit a dark page.
@@ -44,10 +43,8 @@ const opaque = {
   '--glass-edge-alpha': '1'
 }
 
-// Set on <html> by ./refraction.mjs in browsers that draw an SVG filter in backdrop-filter. An
-// attribute rather than a class, which Tailwind would drop from the base styles unless it saw the
-// class in a template.
-const REFRACT = ':root[data-glass-refract]'
+const REDUCED = '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)'
+const NO_BACKDROP = '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))'
 
 const surface = (filter, background, rim = 'none') => ({
   '--glass-layer-filter': filter,
@@ -66,7 +63,9 @@ const surface = (filter, background, rim = 'none') => ({
     backdropFilter: 'var(--glass-layer-filter)',
     boxShadow: 'var(--glass-layer-rim)',
     pointerEvents: 'none'
-  }
+  },
+  // No blur or lens at all, on the element itself so its own variables can't undo it
+  [REDUCED]: { '--glass-layer-filter': 'none' }
 })
 
 function iosGlass(options = {}) {
@@ -102,12 +101,8 @@ function iosGlass(options = {}) {
           '--glass-edge-alpha': '0.35',
           '--glass-edge-filter': 'blur(4px) saturate(180%)'
         },
-        [REFRACT]: {
-          '--glass-filter': `url(#${FILTER_ID}) blur(10px) saturate(180%) brightness(0.9)`,
-          '--glass-clear-filter': `url(#${FILTER_ID}) blur(3px) saturate(150%)`
-        },
-        '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
-          [`:root, ${REFRACT}`]: {
+        [REDUCED]: {
+          ':root': {
             ...opaque,
             '--material-ultra-thin-filter': 'none',
             '--material-thin-filter': 'none',
@@ -118,15 +113,16 @@ function iosGlass(options = {}) {
             '--glass-edge-filter': 'none'
           }
         },
-        '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))': {
-          [`:root, ${REFRACT}`]: opaque
+        [NO_BACKDROP]: {
+          ':root': opaque
         }
       })
 
       addComponents({
-        '.liquid-glass': surface('var(--glass-filter)', 'rgb(var(--glass-tint) / var(--glass-alpha))', 'var(--glass-specular)'),
+        // --glass-lens: the element's own lens filter, from ./refraction.mjs
+        '.liquid-glass': surface('var(--glass-lens,) var(--glass-filter)', 'rgb(var(--glass-tint) / var(--glass-alpha))', 'var(--glass-specular)'),
         '.liquid-glass-clear': surface(
-          'var(--glass-clear-filter)',
+          'var(--glass-lens,) var(--glass-clear-filter)',
           'rgb(var(--glass-tint) / var(--glass-clear-alpha))',
           'var(--glass-specular)'
         ),
@@ -160,10 +156,10 @@ function iosGlass(options = {}) {
             pointerEvents: 'none'
           },
           // Opaque on the ring itself, so an element's own --glass-edge-alpha can't undo it
-          '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
+          [REDUCED]: {
             '&::after': { '--glass-edge-alpha': '1', '--glass-edge-filter': 'none' }
           },
-          '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))': {
+          [NO_BACKDROP]: {
             '&::after': { '--glass-edge-alpha': '1' }
           }
         }
@@ -210,4 +206,3 @@ function iosGlass(options = {}) {
 }
 
 module.exports = iosGlass
-module.exports.FILTER_ID = FILTER_ID
