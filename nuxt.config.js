@@ -83,7 +83,9 @@ export default defineNuxtConfig({
   css: [
     'tachyons/css/tachyons.css',
     // SwiftUI's spring presets as CSS easings (utils/spring.mjs)
-    '~/assets/css/springs.css'
+    '~/assets/css/springs.css',
+    // Apple's Liquid Glass and standard materials, as backdrop filters and tints
+    '~/assets/css/materials.css'
   ],
   // Nuxt 4's CSS minifier (Lightning CSS) stops at old Internet Explorer hacks such as tachyons'
   // `*zoom: 1`; with error recovery it drops them instead (no modern browser reads them anyway)

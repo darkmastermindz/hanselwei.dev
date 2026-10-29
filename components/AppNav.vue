@@ -1,5 +1,5 @@
 <template>
-  <nav :class="['app-nav bg-neutral text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
+  <nav :class="['app-nav text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
     <div class="app-nav__links">
       <NuxtLink
         v-for="link in links"
@@ -48,9 +48,41 @@ const links = [
   position: sticky;
   top: 0;
   z-index: 20;
+  box-shadow: var(--glass-specular);
   /* Keep clear of the notch / status bar when installed as an app */
   padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
     max(env(safe-area-inset-left), 0.5rem);
+}
+
+/* Liquid Glass (assets/css/materials.css): the page scrolls under the header and shows through,
+   blurred and darkened. The glass is a layer behind the links rather than on the nav itself, since
+   a backdrop-filter there would pin the nav's own fixed-position children to the nav. */
+.app-nav::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--glass-regular-tint);
+  -webkit-backdrop-filter: var(--glass-regular-filter);
+  backdrop-filter: var(--glass-regular-filter);
+  pointer-events: none;
+}
+
+/* The scroll edge effect: instead of a hard line, the page fades and blurs as it slides under the
+   header. Not when the menu sits on a foldable's lower half or left page (below). */
+:root:not([data-fold='tabletop']):not([data-fold='book']) .app-nav::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  height: 0.75rem;
+  background: linear-gradient(var(--glass-regular-tint), transparent);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  -webkit-mask-image: linear-gradient(#000, transparent);
+  mask-image: linear-gradient(#000, transparent);
+  pointer-events: none;
 }
 
 /* Installed as an app: a little more room around the nav and between its rows. The media query

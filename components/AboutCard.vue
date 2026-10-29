@@ -639,11 +639,27 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   scroll-margin-top: 1rem; /* /#xp lands with a little room above the card */
   padding: 0.9rem 1.1rem 1.1rem;
   border-radius: 0.9rem;
-  background: #23262a;
   border: 1px solid #653496;
-  box-shadow: 4px 4px #7cfc00;
+  /* The site's green offset shadow, plus the lit top edge of the glass */
+  box-shadow: 4px 4px #7cfc00, inset 0 1px 0 rgb(255 255 255 / 0.12);
   text-align: left;
   color: #eee;
+  /* Frosted glass: Apple's regular material, the content layer's default (assets/css/materials.css).
+     A layer behind the content, so nothing inside gets pinned to the card by the backdrop-filter. */
+  position: relative;
+  isolation: isolate;
+}
+
+.about-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--material-regular-tint);
+  -webkit-backdrop-filter: var(--material-regular-filter);
+  backdrop-filter: var(--material-regular-filter);
+  pointer-events: none;
 }
 
 @media (max-width: 480px) {
