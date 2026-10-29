@@ -1,5 +1,5 @@
 <template>
-  <nav :class="['app-nav bg-neutral text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
+  <nav :class="['app-nav liquid-glass liquid-glass-scroll-edge text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
     <div class="app-nav__links">
       <NuxtLink
         v-for="link in links"
@@ -51,6 +51,14 @@ const links = [
   /* Keep clear of the notch / status bar when installed as an app */
   padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
     max(env(safe-area-inset-left), 0.5rem);
+}
+
+/* Liquid Glass and its scroll edge effect come from the `liquid-glass` classes
+   (packages/tailwind-ios-glass). The scroll edge is for a bar at the top: not when the menu sits
+   on a foldable's lower half or left page (below). */
+:root[data-fold='tabletop'] .app-nav::after,
+:root[data-fold='book'] .app-nav::after {
+  display: none;
 }
 
 /* Installed as an app: a little more room around the nav and between its rows. The media query

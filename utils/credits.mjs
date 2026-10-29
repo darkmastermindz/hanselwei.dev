@@ -87,7 +87,8 @@ export const plainText = (text, max = 160) => {
 
 // What to credit: package.json dependencies ("site": the site runs on them) and devDependencies
 // ("build": the site is built with them), plus INCLUDED, each at its installed version and
-// license from package-lock.json
+// license from package-lock.json. Local packages (`file:` links, such as packages/*) are the site's
+// own code, so they aren't credited.
 export const creditTargets = (pkg, lock) => {
   const seen = new Set()
   const targets = []
@@ -95,6 +96,7 @@ export const creditTargets = (pkg, lock) => {
     if (seen.has(name) || !NPM_NAME.test(name)) return
     seen.add(name)
     const entry = lock?.packages?.[`node_modules/${name}`]
+    if (entry?.link) return
     targets.push({
       name,
       group,
