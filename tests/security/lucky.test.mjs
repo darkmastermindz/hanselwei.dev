@@ -4,7 +4,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { luckyConfig, luckyPool, googleSearchUrl } from '../../utils/lucky.mjs'
-import { buildCsp } from '../../scripts/lib/csp.mjs'
+import { GOOGLE_SEARCH_FRAMES, buildCsp } from '../../scripts/lib/csp.mjs'
 import { BAD_SEARCH_ENGINE_IDS, LUCKY_SLUGS, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
 
 test('hostile slugs never become a path', () => {
@@ -55,7 +55,9 @@ test('a hostile search engine ID fails the build and is never used', () => {
 
 test("Google's search is only allowed by the CSP when a search engine is set", () => {
   const off = buildCsp()
-  assert.ok(!off.includes('google.com'))
+  // Every source the policy names, as exact entries (never a substring match on the text)
+  const sources = new Set(off.split(';').flatMap(d => d.trim().split(/\s+/).slice(1)))
+  for (const host of GOOGLE_SEARCH_FRAMES) assert.ok(!sources.has(host), host)
   assert.match(off, /frame-src 'none'/)
   const on = buildCsp({ googleSearch: true })
   assert.match(on, /script-src 'self' https:\/\/scripts\.simpleanalyticscdn\.com https:\/\/cse\.google\.com https:\/\/www\.google\.com/)
