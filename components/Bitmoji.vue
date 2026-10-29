@@ -3,7 +3,7 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-landing': landing }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -98,9 +98,8 @@ useHead({ link: [{ rel: 'preload', as: 'image', href: bitmojiUrl, fetchpriority:
 const photosReady = ref(false)
 
 const MAX_SPEED = 24 // degrees per frame
-// It's a heavy coin: it takes a while to get going, coasts a long way, and lands with a thud
+// It's a heavy coin: it takes a while to get going and coasts a long way when let go
 const SPIN_UP = 0.45 // degrees per frame gained each frame while held
-const LANDING_MS = 280
 // The edge, lit from above: brighter at the top of the rim, darker underneath
 const RIM_SLATS = Array.from({ length: 48 }, (_, i) => ({
   turn: i * 7.5,
@@ -123,7 +122,6 @@ watch(resetAt, () => {
   angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
 })
 const pressed = ref(false)
-const landing = ref(false)
 const intro = ref(true)
 const transition = ref('none')
 const pops = ref([])
@@ -213,7 +211,6 @@ const press = event => {
   if (pressed.value || !event?.isTrusted) return
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
-  landing.value = false
   clearTimeout(landingTimer)
   intro.value = false
   photosReady.value = true // held before the page finished loading
@@ -249,13 +246,15 @@ const release = () => {
 
   // Coast to the next face, taking longer the faster it was spinning. Like a SwiftUI spring
   // after a fling, it starts at the speed the coin was turning (degrees per frame at 60fps, as
-  // whole distances per second) instead of jolting to a fixed curve. Being heavy, it carries on
-  // further, takes longer to stop and barely wobbles, then lands with a thud.
-  const target = Math.ceil((angle.value + speed * 8) / 180) * 180
-  const coastSeconds = 0.6 + speed / 24
+  // whole distances per second) instead of jolting to a fixed curve. Being heavy, it carries on a
+  // long way (up to two turns, over about three and a half seconds) and glides to a stop on the
+  // face. The distance is what a spring of that length covers from that speed, so it never
+  // overshoots and swings back.
+  const coastSeconds = 1 + speed / 12
+  const target = Math.ceil((angle.value + (speed * 60 * coastSeconds) / (2 * Math.PI)) / 180) * 180
   const velocity = (speed * 60) / Math.max(target - angle.value, 1)
   if (springs) {
-    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0.1, velocity })
+    const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0, velocity })
     transition.value = `transform ${seconds}s ${easing}`
   } else {
     transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
@@ -267,11 +266,8 @@ const release = () => {
   }
   speed = 0
   navigator.vibrate?.(8)
-  landingTimer = setTimeout(() => {
-    landing.value = true
-    navigator.vibrate?.(20)
-    landingTimer = setTimeout(() => (landing.value = false), LANDING_MS)
-  }, coastSeconds * 1000 * 0.8)
+  // A tap as it comes to rest
+  landingTimer = setTimeout(() => navigator.vibrate?.(20), coastSeconds * 1000 * 0.8)
 }
 </script>
 
@@ -319,7 +315,7 @@ const release = () => {
   user-select: none;
   cursor: grab;
   /* How thick the coin is, front face to back */
-  --thickness: calc(var(--size) * 0.085);
+  --thickness: calc(var(--size) * 0.045);
   transition: transform 0.2s ease, filter 0.2s ease;
   /* A heavy coin's shadow: a tight, dark one where it sits and a soft one around it */
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
@@ -336,10 +332,6 @@ const release = () => {
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
   }
 
-  /* Set down: a short squash as the weight lands */
-  &.is-landing {
-    animation: land 280ms cubic-bezier(0.3, 0.7, 0.4, 1);
-  }
 
   &.is-intro .token__coin {
     animation: intro-flip 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) both;
@@ -448,17 +440,6 @@ const release = () => {
   transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
 }
 
-@keyframes land {
-  40% {
-    transform: scale(1.015, 0.975) translateY(1px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .token.is-landing {
-    animation: none;
-  }
-}
 
 .token__shine {
   position: absolute;
