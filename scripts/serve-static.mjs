@@ -52,7 +52,7 @@ createServer(async (req, res) => {
     const file = await resolve(pathname)
     const status = file ? 200 : 404
     const body = await readFile(file ?? join(root, '404.html'))
-    const type = TYPES[extname(file ?? '.html')] ?? 'application/octet-stream'
+    const type = TYPES[extname(file ?? '404.html')] ?? 'application/octet-stream'
     const csp = type.startsWith('text/html') ? await readCsp() : null
     res.writeHead(status, { 'Content-Type': type, ...(csp && { 'Content-Security-Policy': csp }) })
     res.end(body)

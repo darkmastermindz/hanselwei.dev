@@ -4,6 +4,7 @@
 #   Accessibility: axe on every page (tests/e2e/a11y.spec.mjs)
 #   Touch: scrolling with a finger and a phantom controller (tests/e2e/android-touch.spec.mjs)
 #   Foldables: fold layouts, page turns, iPhone Duo (tests/e2e/foldable.spec.mjs)
+#   404 page: the way home and the arcade games (tests/e2e/not-found.spec.mjs)
 name: Browser tests
 on:
   pull_request:
@@ -18,6 +19,7 @@ on:
       - 'public/**'
       - 'scripts/**'
       - 'app.vue'
+      - 'error.vue'
       - 'nuxt.config.js'
       - 'tailwind.config.js'
       - 'config.toml'
@@ -85,6 +87,8 @@ jobs:
           # Most foldable tests only run on the foldables, so two runners are plenty
           - { category: Foldables, spec: foldable, shard: 1, of: 2 }
           - { category: Foldables, spec: foldable, shard: 2, of: 2 }
+          # Four tests on one phone
+          - { category: 404 page, spec: not-found, shard: 1, of: 1 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
