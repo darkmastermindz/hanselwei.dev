@@ -3,7 +3,7 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-shining': shining }"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -34,6 +34,7 @@
             @error="dropFace(i)"
           />
           <span class="token__shine" />
+          <span class="token__glint" aria-hidden="true" />
         </span>
         <span class="token__face token__face--back liquid-glass-edge" aria-hidden="true">
           <!-- During an event, once the bubble has shown, tails carries an engraved QR to the site -->
@@ -44,6 +45,7 @@
           </span>
           <span v-else class="token__monogram">HW</span>
           <span class="token__caption">hanselwei.dev</span>
+          <span class="token__glint" aria-hidden="true" />
         </span>
         <!-- The coin's edge: a ring of reeded slats between the faces, so it has thickness edge-on -->
         <span class="token__rim">
@@ -137,15 +139,19 @@ let spinsThisHold = 0
 let pressStartTime = 0
 let popId = 0
 let landingTimer = null
+let shineTimer = null
 
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
   if (CSS.registerProperty) {
-    try {
-      CSS.registerProperty({ name: '--spin', syntax: '<angle>', inherits: true, initialValue: '0deg' })
-    } catch {
-      // Already registered (another coin, or a hot reload)
+    // --sweep and --shine drive the tap's glint round the glass edges
+    for (const [name, syntax, initialValue] of [['--spin', '<angle>', '0deg'], ['--sweep', '<angle>', '0deg'], ['--shine', '<number>', '0']]) {
+      try {
+        CSS.registerProperty({ name, syntax, inherits: true, initialValue })
+      } catch {
+        // Already registered (another coin, or a hot reload)
+      }
     }
     spinBy = '--spin'
   }
@@ -158,6 +164,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
   clearTimeout(landingTimer)
+  clearTimeout(shineTimer)
   hideBubble()
 })
 
@@ -240,12 +247,30 @@ const press = event => {
   frame = requestAnimationFrame(spin)
 }
 
+// A tap (not a hold) sends a glint of light round the coin's glass edges: the rims on the faces,
+// with a twinkle where it's brightest, and the edge between them. It needs --sweep and --shine to
+// animate (registered above), and skips reduced motion.
+const TAP_MS = 250
+const SHINE_MS = 900
+const shining = ref(false)
+const shine = () => {
+  if (reducedMotion || spinBy !== '--spin') return
+  clearTimeout(shineTimer)
+  shining.value = false
+  requestAnimationFrame(() => {
+    shining.value = true // a fresh class each tap, so the glint starts over
+    shineTimer = setTimeout(() => (shining.value = false), SHINE_MS)
+  })
+}
+
 const release = () => {
   if (!pressed.value) return
   pressed.value = false
   cancelAnimationFrame(frame)
   if (!spinsThisHold) countSpin()
-  emit('release', spinsThisHold, performance.now() - pressStartTime)
+  const heldMs = performance.now() - pressStartTime
+  emit('release', spinsThisHold, heldMs)
+  if (heldMs < TAP_MS) shine()
   if (reducedMotion) {
     if (landsHeads(angle.value)) {
       advanceFace()
@@ -349,6 +374,12 @@ const release = () => {
     filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
   }
 
+
+  /* A tap's glint: --sweep carries it once round the rim, clockwise from the top left, and --shine
+     fades it in and out */
+  &.is-shining {
+    animation: glint 900ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   &.is-intro .token__coin {
     animation: intro-flip 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) both;
@@ -476,6 +507,7 @@ const release = () => {
       rgb(255 255 255 / 0.15) calc(100% - 1.5px),
       rgb(255 255 255 / calc(0.2 + 0.75 * var(--glint)))
     ),
+    linear-gradient(transparent 10%, rgb(255 255 255 / calc(0.9 * var(--passing))) 50%, transparent 90%),
     linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / calc(0.15 + 0.75 * var(--piped))) 50%, transparent 85%),
     linear-gradient(rgb(0 0 0 / calc(0.5 * (1 - var(--lit)))), rgb(0 0 0 / calc(0.5 * (1 - var(--lit))))),
     color-mix(
@@ -499,6 +531,8 @@ const release = () => {
   --lit: max(0, -0.45 * sin(var(--turn)) * cos(var(--spin)) + 0.6 * cos(var(--turn)) - 0.66 * sin(var(--turn)) * sin(var(--spin)));
   --glint: pow(max(0, (-0.247 * sin(var(--turn)) * cos(var(--spin)) + 0.329 * cos(var(--turn)) - 0.911 * sin(var(--turn)) * sin(var(--spin)) - 0.5) / 0.5), 2);
   --piped: max(-0.45 * sin(var(--spin)) + 0.66 * cos(var(--spin)), 0.45 * sin(var(--spin)) - 0.66 * cos(var(--spin)));
+  /* A tap's glint (--sweep, --shine) flashing this slat white as it goes past */
+  --passing: calc(pow(max(0, cos(var(--turn) - var(--sweep, 0deg))), 24) * var(--shine, 0));
 }
 
 
@@ -524,6 +558,80 @@ const release = () => {
   transform: translateX(-120%);
   animation: shine 4s ease-in-out 2s infinite;
   pointer-events: none;
+}
+
+@keyframes glint {
+  0% {
+    --sweep: -45deg;
+    --shine: 0;
+  }
+  15% {
+    --shine: 1;
+  }
+  80% {
+    --shine: 1;
+  }
+  100% {
+    --sweep: 315deg;
+    --shine: 0;
+  }
+}
+
+/* The glint on a face's rim: a bright spike of a conic gradient pointing at --sweep, cut to the rim
+   with the same mask as the glass ring, over it (it's light off the glass, not seen through it).
+   A ✨ twinkle rides at its brightest point. The back face is turned round, so the same point
+   round the coin is at −sweep in its own terms. */
+.token__glint {
+  --at: var(--sweep, 0deg);
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  box-sizing: border-box;
+  padding: var(--glass-edge-width);
+  border-radius: 50%;
+  /* A white-hot core in a softer halo, added to the light already there (plain white barely shows
+     on the bright green) */
+  background: conic-gradient(
+    from calc(var(--at) - 45deg),
+    transparent,
+    rgb(255 255 255 / 0.5) 30deg,
+    #fff 42deg,
+    #fff 48deg,
+    rgb(255 255 255 / 0.5) 60deg,
+    transparent 90deg
+  );
+  mix-blend-mode: plus-lighter;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: var(--shine, 0);
+  pointer-events: none;
+}
+
+.token__face--back .token__glint {
+  --at: calc(-1 * var(--sweep, 0deg));
+}
+
+/* The twinkle: a four-pointed star on the rim at the glint, outside the ring's mask */
+.token__face::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: calc(var(--glass-edge-width) * 4);
+  height: calc(var(--glass-edge-width) * 4);
+  margin: calc(var(--glass-edge-width) * -2) 0 0 calc(var(--glass-edge-width) * -2);
+  background: #fff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  transform: rotate(var(--sweep, 0deg)) translateY(calc(var(--size) / -2 + var(--glass-edge-width) / 2))
+    rotate(calc(-1 * var(--sweep, 0deg))) scale(var(--shine, 0));
+  pointer-events: none;
+}
+
+.token__face--back::before {
+  transform: rotate(calc(-1 * var(--sweep, 0deg))) translateY(calc(var(--size) / -2 + var(--glass-edge-width) / 2))
+    rotate(var(--sweep, 0deg)) scale(var(--shine, 0));
 }
 
 @keyframes intro-flip {
