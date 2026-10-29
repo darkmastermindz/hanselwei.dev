@@ -701,13 +701,23 @@ const release = () => {
   }
 }
 
+/* The diagonal shine across the face, inside the glass rim: this is the circle it stays in, and
+   the sweep moves across inside it */
 .token__shine {
+  position: absolute;
+  inset: var(--glass-edge-width);
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.token__shine::before {
+  content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.45) 48%, transparent 60%);
   transform: translateX(-120%);
   animation: shine 4s ease-in-out 2s infinite;
-  pointer-events: none;
 }
 
 /* A tap's glint on a face's rim: a bright spike of a conic gradient at the top, cut to the rim with
@@ -992,7 +1002,7 @@ const release = () => {
 
 @media (prefers-reduced-motion: reduce) {
   .token.is-intro .token__coin,
-  .token__shine {
+  .token__shine::before {
     animation: none;
   }
 
