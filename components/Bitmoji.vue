@@ -92,6 +92,7 @@ import bubbleSettings from '~/data/coinBubble.generated.mjs'
 import { COIN_FACES, nextFace, photoSources } from '~/utils/coinFaces.mjs'
 import { bubbleActive, bubbleParts, landsHeads } from '~/utils/coinBubble.mjs'
 import { springEasing } from '~/utils/spring.mjs'
+import { HINT_BUSY_MS, HINT_FIRST_MS, HINT_IDLE_MS, hintSteps, nextHintWait } from '~/utils/coinHint.mjs'
 
 const emit = defineEmits(['spin', 'release'])
 // Photos through Netlify's Image CDN on Netlify builds (utils/coinFaces.mjs)
@@ -116,6 +117,7 @@ const dropFace = i => {
 }
 const resetAt = useState('token:resetAt', () => 0)
 watch(resetAt, () => {
+  stopHint()
   face.value = -1
   transition.value = turning('var(--spring-smooth-duration) var(--spring-smooth)')
   angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
@@ -141,6 +143,42 @@ let popId = 0
 let landingTimer = null
 let shineTimer = null
 
+// The "you can tap me" nudge (utils/coinHint.mjs). It holds off while the coin is pressed, still
+// coasting, off screen, in a hidden tab or showing its bubble, and never plays with reduced motion.
+let hintTimers = []
+let idleTimer = null
+let idleWait = HINT_IDLE_MS
+let busyUntil = 0 // the coin is still coasting or nudging until then
+let onScreen = true
+let screenWatch = null
+const stopHint = () => {
+  hintTimers.forEach(clearTimeout)
+  hintTimers = []
+  clearTimeout(idleTimer)
+}
+const waitForIdle = (ms = idleWait) => {
+  clearTimeout(idleTimer)
+  if (!reducedMotion) idleTimer = setTimeout(nudge, ms)
+}
+const nudge = () => {
+  if (pressed.value || document.hidden || !onScreen || bubble.value || performance.now() < busyUntil) {
+    waitForIdle() // not now: try again after another wait
+    return
+  }
+  const rest = angle.value
+  for (const step of hintSteps(rest)) {
+    hintTimers.push(
+      setTimeout(() => {
+        transition.value = turning(step.timing)
+        angle.value = step.angle
+      }, step.at)
+    )
+  }
+  busyUntil = performance.now() + HINT_BUSY_MS
+  idleWait = nextHintWait(idleWait)
+  waitForIdle()
+}
+
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
@@ -156,6 +194,19 @@ onMounted(() => {
     spinBy = '--spin'
   }
   setTimeout(() => (intro.value = false), 1600)
+  // The nudge: once a visit just after the intro, then whenever the coin is left alone
+  if ('IntersectionObserver' in window) {
+    screenWatch = new IntersectionObserver(([entry]) => (onScreen = entry.isIntersecting))
+    screenWatch.observe(document.querySelector('.token'))
+  }
+  let firstVisit = false
+  try {
+    firstVisit = !sessionStorage.getItem('coin:nudged')
+    sessionStorage.setItem('coin:nudged', '1')
+  } catch {
+    // Storage blocked: just the idle nudges
+  }
+  waitForIdle(firstVisit ? 1600 + HINT_FIRST_MS : HINT_IDLE_MS)
   const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
   if (document.readyState === 'complete') loadPhotos()
   else addEventListener('load', loadPhotos, { once: true })
@@ -165,6 +216,8 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
   clearTimeout(landingTimer)
   clearTimeout(shineTimer)
+  stopHint()
+  screenWatch?.disconnect()
   hideBubble()
 })
 
@@ -229,6 +282,8 @@ const press = event => {
   if (event?.pointerId !== undefined) event.currentTarget.setPointerCapture(event.pointerId)
   pressed.value = true
   clearTimeout(landingTimer)
+  stopHint() // a press takes over from a nudge
+  idleWait = HINT_IDLE_MS
   intro.value = false
   photosReady.value = true // held before the page finished loading
   hideBubble()
@@ -288,9 +343,11 @@ const release = () => {
   const coastSeconds = 1 + speed / 12
   const target = Math.ceil((angle.value + (speed * 60 * coastSeconds) / (2 * Math.PI)) / 180) * 180
   const velocity = (speed * 60) / Math.max(target - angle.value, 1)
+  let settleSeconds = coastSeconds
   if (springs) {
     const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0, velocity })
     transition.value = turning(`${seconds}s ${easing}`)
+    settleSeconds = seconds
   } else {
     // Browsers without CSS linear(): a fixed curve that slows to a stop without overshooting, like
     // the spring
@@ -305,6 +362,9 @@ const release = () => {
   navigator.vibrate?.(8)
   // A tap as it comes to rest
   landingTimer = setTimeout(() => navigator.vibrate?.(20), coastSeconds * 1000 * 0.8)
+  // No nudges until it's settled and been left alone a while
+  busyUntil = performance.now() + settleSeconds * 1000
+  waitForIdle(settleSeconds * 1000 + HINT_IDLE_MS)
 }
 </script>
 
