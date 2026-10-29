@@ -3,7 +3,7 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-shining': shining }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'is-shining': shining, 'is-moving': moving }"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -13,6 +13,10 @@
       @keyup.space.enter.prevent="release"
       @contextmenu.prevent
     >
+      <!-- The coin's shadow and, while it's held, a green glow: their own layers behind the coin, so
+           neither has to be redrawn from the turning coin each frame -->
+      <span class="token__shadow" aria-hidden="true" />
+      <span class="token__halo" aria-hidden="true" />
       <span ref="coinEl" class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
         <span ref="frontEl" class="token__face token__face--front liquid-glass-edge" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
           <!-- The first thing anyone sees (the page's largest paint), so it loads first (preloaded below) -->
@@ -117,8 +121,9 @@ const SHINE_MS = 900
 const FLASH_MS = 180 // how long each slat of the edge flashes as the glint passes it
 // Where each slat of the edge sits around the rim, in degrees from the top (lit in CSS), and when
 // the glint passes it
-const RIM_SLATS = Array.from({ length: 48 }, (_, i) => {
-  const turn = i * 7.5
+const RIM_SLAT_COUNT = 24 // a 24-sided rim strays under 1% of the radius from a true circle
+const RIM_SLATS = Array.from({ length: RIM_SLAT_COUNT }, (_, i) => {
+  const turn = (i * 360) / RIM_SLAT_COUNT
   return { turn, flashAt: Math.round((((turn + 45) % 360) / 360) * SHINE_MS - FLASH_MS / 2) }
 })
 const angle = ref(0)
@@ -164,34 +169,46 @@ let lights = null // the elements: { front, back, glows }
 let lightFrame = null
 let lightUntil = 0
 let litAt = null
-const setOpacity = (el, value) => {
-  const v = value.toFixed(2)
-  if (el.style.opacity !== v) el.style.opacity = v
+// Changes too small to see are skipped (each write repaints a little), except the last, at rest
+const setOpacity = (el, value, exact) => {
+  const was = parseFloat(el.style.opacity)
+  if (exact ? el.style.opacity !== value.toFixed(2) : !(Math.abs(value - was) < 0.03)) el.style.opacity = value.toFixed(2)
 }
+// While the coin moves, its rims stop blurring what's under them: re-blurring a turning rim every
+// frame is about the costliest thing a phone's GPU can be asked to do, and frosting can't be seen in
+// motion anyway. It comes back when the coin settles.
+const moving = ref(false)
 const light = () => {
   lights ??= {
+    shadow: coinEl.value?.parentElement.querySelector('.token__shadow'),
     front: frontEl.value?.querySelector('.token__rimlight'),
     back: backEl.value?.querySelector('.token__rimlight'),
     glows: [...(rimEl.value?.querySelectorAll('.token__glow') ?? [])]
   }
+  const last = performance.now() >= lightUntil
   const m = new DOMMatrixReadOnly(getComputedStyle(coinEl.value).transform)
   const φ = Math.atan2(-m.m13, m.m11)
   const spin = Math.round((φ * 180) / Math.PI)
-  if (spin !== litAt) {
+  if (spin !== litAt || last) {
     litAt = spin
     const facing = -0.247 * Math.sin(φ) + 0.911 * Math.cos(φ) // front face · H
-    if (lights.front) setOpacity(lights.front, Math.min(1, 0.25 + 1.5 * Math.max(0, facing - 0.4)))
-    if (lights.back) setOpacity(lights.back, Math.min(1, 0.25 + 1.5 * Math.max(0, -facing - 0.4)))
+    if (lights.front) setOpacity(lights.front, Math.min(1, 0.25 + 1.5 * Math.max(0, facing - 0.4)), last)
+    if (lights.back) setOpacity(lights.back, Math.min(1, 0.25 + 1.5 * Math.max(0, -facing - 0.4)), last)
     const piped = Math.abs(-0.45 * Math.sin(φ) + 0.66 * Math.cos(φ))
-    for (const glow of lights.glows) setOpacity(glow, 0.15 + 0.85 * piped)
+    for (const glow of lights.glows) setOpacity(glow, 0.15 + 0.85 * piped, last)
+    // The shadow narrows as the coin turns edge-on, like the coin's own outline
+    const narrow = `scaleX(${Math.max(0.08, Math.abs(Math.cos(φ))).toFixed(2)})`
+    if (lights.shadow && lights.shadow.style.transform !== narrow) lights.shadow.style.transform = narrow
   }
-  lightFrame = performance.now() < lightUntil ? requestAnimationFrame(light) : null
+  lightFrame = last ? null : requestAnimationFrame(light)
+  if (last) moving.value = false
 }
 // Keep the light following for (at least) the next `ms`
 const lightFor = ms => {
   if (!coinEl.value) return
   lightUntil = Math.max(lightUntil, performance.now() + ms)
   if (!lightFrame) lightFrame = requestAnimationFrame(light)
+  moving.value = true
 }
 const pops = ref([])
 
@@ -476,26 +493,65 @@ const release = () => {
      Increase Contrast, or without backdrop-filter. */
   --glass-edge-tint: 124 252 0;
   --glass-edge-alpha: 0.45;
-  transition: transform 0.2s ease, filter 0.2s ease;
-  /* A heavy coin's shadow: a tight, dark one where it sits and a soft one around it */
-  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
+  position: relative;
+  transition: transform 0.2s ease;
 
   &:focus-visible {
     outline: 3px dashed #7cfc00;
     outline-offset: 6px;
   }
 
-  /* Picked up: it lifts, so its shadow drops further and spreads */
+  /* Picked up: it lifts, so its shadow drops further, spreads and fades, and it glows green */
   &.is-pressed {
     cursor: grabbing;
     transform: scale(1.06) translateY(-4px);
-    filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.35)) drop-shadow(0 0 22px rgba(124, 252, 0, 0.55));
+
+    .token__shadow {
+      translate: 0 10px;
+      scale: 1.08;
+      opacity: 0.6;
+    }
+
+    .token__halo {
+      opacity: 1;
+    }
   }
 
 
   &.is-intro .token__coin {
     animation: intro-flip 1.4s cubic-bezier(0.3, 0.7, 0.4, 1) both;
   }
+}
+
+/* No frosting under the rims while the coin moves (see `moving` in the script) */
+.token.is-moving .liquid-glass-edge::after {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* A heavy coin's shadow: dark where it sits and soft around it, a gradient rather than a filter.
+   light() narrows it (its transform) as the coin turns edge-on. Moving and fading it are all the
+   compositor's work. */
+.token__shadow,
+.token__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: translate 0.2s ease, scale 0.2s ease, opacity 0.2s ease;
+}
+
+.token__shadow {
+  inset: 2% -4% -10%;
+  translate: 0 6px;
+  background: radial-gradient(closest-side, rgb(0 0 0 / 0.55) 72%, rgb(0 0 0 / 0.25) 86%, transparent);
+}
+
+.token__halo {
+  inset: -14%;
+  background: radial-gradient(closest-side, rgb(124 252 0 / 0.45) 62%, transparent);
+  opacity: 0;
 }
 
 .token__coin {
@@ -600,7 +656,10 @@ const release = () => {
 }
 
 .token__slat {
-  --width: calc(var(--size) * 3.1416 / 48 + 0.5px); /* a 48th of the way round, overlapping a hair */
+  --width: calc(var(--size) * 3.1416 / 24 + 0.5px); /* a 24th of the way round, overlapping a hair */
+  /* Only the slats facing you are drawn; the far side of the rim is behind the faces anyway */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -646,6 +705,7 @@ const release = () => {
    face turns towards and away from the light. The back face is turned round, so its top left is
    at the top right of its own. */
 .token__rimlight {
+  will-change: opacity; /* its own layer: light() changes it every frame without repainting the face */
   position: absolute;
   inset: 0;
   z-index: 1;
