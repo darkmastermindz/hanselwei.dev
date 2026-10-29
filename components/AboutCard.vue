@@ -1,5 +1,5 @@
 <template>
-  <section id="xp" ref="cardEl" class="about-card" @keydown="onCardKey">
+  <section id="xp" ref="cardEl" class="about-card material" @keydown="onCardKey">
     <div class="about-card__tabs" role="tablist" aria-label="About Hansel" @keydown="onTabsKey">
       <button
         v-for="tab in tabs"
@@ -633,6 +633,8 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
 </script>
 
 <style scoped>
+/* Frosted glass comes from the `material` class: Apple's regular material
+   (packages/tailwind-ios-glass) */
 .about-card {
   max-width: 40rem;
   margin: 1.75rem auto 2.25rem;
@@ -644,22 +646,6 @@ watch(() => props.revealCount, () => (view.value = 'fact'))
   box-shadow: 4px 4px #7cfc00, inset 0 1px 0 rgb(255 255 255 / 0.12);
   text-align: left;
   color: #eee;
-  /* Frosted glass: Apple's regular material, the content layer's default (assets/css/materials.css).
-     A layer behind the content, so nothing inside gets pinned to the card by the backdrop-filter. */
-  position: relative;
-  isolation: isolate;
-}
-
-.about-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: var(--material-regular-tint);
-  -webkit-backdrop-filter: var(--material-regular-filter);
-  backdrop-filter: var(--material-regular-filter);
-  pointer-events: none;
 }
 
 @media (max-width: 480px) {

@@ -7,7 +7,6 @@
     <SiteFooter />
     <BookPager />
     <TermTip />
-    <GlassFilter />
   </div>
 </template>
 
