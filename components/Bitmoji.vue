@@ -47,7 +47,7 @@
         </span>
         <!-- The coin's edge: a ring of reeded slats between the faces, so it has thickness edge-on -->
         <span class="token__rim">
-          <span v-for="slat in RIM_SLATS" :key="slat.turn" class="token__slat" :style="{ '--turn': `${slat.turn}deg`, '--light': `${slat.light}%` }" />
+          <span v-for="slat in RIM_SLATS" :key="slat.turn" class="token__slat" :style="{ '--turn': `${slat.turn}deg`, '--sheen': slat.sheen }" />
         </span>
       </span>
     </button>
@@ -100,10 +100,10 @@ const photosReady = ref(false)
 const MAX_SPEED = 24 // degrees per frame
 // It's a heavy coin: it takes a while to get going and coasts a long way when let go
 const SPIN_UP = 0.45 // degrees per frame gained each frame while held
-// The edge, lit from above: brighter at the top of the rim, darker underneath
+// The edge, lit from above: 1 at the top of the rim, 0 underneath
 const RIM_SLATS = Array.from({ length: 48 }, (_, i) => ({
   turn: i * 7.5,
-  light: Math.round(30 + 14 * Math.cos((i * 7.5 * Math.PI) / 180))
+  sheen: Math.round(50 + 50 * Math.cos((i * 7.5 * Math.PI) / 180)) / 100
 }))
 const angle = ref(0)
 // The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
@@ -316,6 +316,9 @@ const release = () => {
   cursor: grab;
   /* How thick the coin is, front face to back */
   --thickness: calc(var(--size) * 0.045);
+  /* Green glass, for the rims on the faces (`liquid-glass-edge`) and the edge between them */
+  --glass-edge-tint: 124 252 0;
+  --glass-edge-alpha: 0.45;
   transition: transform 0.2s ease, filter 0.2s ease;
   /* A heavy coin's shadow: a tight, dark one where it sits and a soft one around it */
   filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.55)) drop-shadow(0 14px 22px rgba(0, 0, 0, 0.45));
@@ -361,8 +364,6 @@ const release = () => {
      it, frosted, and it catches the light. The padding keeps the face's content inside it. */
   padding: 7px;
   --glass-edge-width: 7px;
-  --glass-edge-tint: 124 252 0;
-  --glass-edge-alpha: 0.45;
   box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.35);
 
   img {
@@ -416,8 +417,14 @@ const release = () => {
 }
 
 /* The edge: slats stood up around the rim, each as thick as the coin, so turned edge-on it's a
-   solid reeded band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
-   (translateY) and turned to its place around it (rotateZ). */
+   solid band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
+   (translateY) and turned to its place around it (rotateZ).
+   It's the side of a slab of green glass, the same glass as the rims on the faces: the two
+   corners where it meets the faces catch the light in thin bright lines, light bouncing inside
+   it makes a soft bright band down the middle (brightest at the top, nearest the light), it
+   darkens underneath. What shows through it is the page's dark background, so the glass is
+   mixed over that colour here rather than drawn see-through: see-through slats show seams where
+   they meet (doubled glass where they overlap, hairline gaps where they don't). */
 .token__rim {
   position: absolute;
   inset: 0;
@@ -426,20 +433,35 @@ const release = () => {
 }
 
 .token__slat {
-  --width: calc(var(--size) * 3.1416 / 48 + 1px); /* a 48th of the way round, overlapping a hair */
+  --width: calc(var(--size) * 3.1416 / 48 + 0.5px); /* a 48th of the way round, overlapping a hair */
   position: absolute;
   top: 50%;
   left: 50%;
   width: var(--width);
   height: var(--thickness);
   margin: calc(var(--thickness) / -2) 0 0 calc(var(--width) / -2);
-  /* Reeding across the edge, the corners bevelled light and dark, over green lit from above */
-  background: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 1px, transparent 1px 3px),
-    linear-gradient(rgba(255, 255, 255, 0.25), transparent 30%, transparent 70%, rgba(0, 0, 0, 0.3)),
-    hsl(96 64% var(--light));
+  background:
+    linear-gradient(
+      rgb(255 255 255 / 0.9),
+      rgb(255 255 255 / 0.15) 1.5px,
+      transparent 25%,
+      transparent 75%,
+      rgb(255 255 255 / 0.15) calc(100% - 1.5px),
+      rgb(255 255 255 / 0.9)
+    ),
+    linear-gradient(transparent 30%, rgb(255 255 255 / calc(0.1 + 0.4 * var(--sheen))) 50%, transparent 70%),
+    linear-gradient(rgb(0 0 0 / calc(0.4 * (1 - var(--sheen)))), rgb(0 0 0 / calc(0.4 * (1 - var(--sheen))))),
+    color-mix(in srgb, rgb(var(--glass-edge-tint)) calc(var(--glass-edge-alpha) * 100%), #1d232a); /* the page behind it */
   transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
 }
 
+
+/* Reduce Transparency and Increase Contrast: solid green, as the face rims become */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .token__slat {
+    --glass-edge-alpha: 1;
+  }
+}
 
 .token__shine {
   position: absolute;
