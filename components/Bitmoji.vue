@@ -14,7 +14,7 @@
       @contextmenu.prevent
     >
       <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
-        <span class="token__face token__face--front" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
+        <span class="token__face token__face--front liquid-glass-edge" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
           <!-- The first thing anyone sees (the page's largest paint), so it loads first (preloaded below) -->
           <img :src="bitmojiUrl" alt="" draggable="false" fetchpriority="high" />
           <!-- Each heads landing shows the next photo (utils/coinFaces.mjs). They load once the page
@@ -35,7 +35,7 @@
           />
           <span class="token__shine" />
         </span>
-        <span class="token__face token__face--back" aria-hidden="true">
+        <span class="token__face token__face--back liquid-glass-edge" aria-hidden="true">
           <!-- During an event, once the bubble has shown, tails carries an engraved QR to the site -->
           <span v-if="showQr" class="token__qr">
             <svg :viewBox="`0 0 ${bubbleSettings.qrSize} ${bubbleSettings.qrSize}`" shape-rendering="crispEdges">
@@ -334,8 +334,13 @@ const release = () => {
   border-radius: 50%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border: 7px solid #7cfc00;
-  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.25), inset 0 -10px 30px rgba(0, 0, 0, 0.35);
+  /* The rim is green glass (`liquid-glass-edge`, packages/tailwind-ios-glass): the face runs under
+     it, frosted, and it catches the light. The padding keeps the face's content inside it. */
+  padding: 7px;
+  --glass-edge-width: 7px;
+  --glass-edge-tint: 124 252 0;
+  --glass-edge-alpha: 0.45;
+  box-shadow: inset 0 -10px 30px rgba(0, 0, 0, 0.35);
 
   img {
     width: 96%;

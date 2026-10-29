@@ -5,6 +5,10 @@
 //   text stays legible, and its edge catches the light. The clear variant is for floating over
 //   photos and video; add `liquid-glass-dim` (35% black, as Apple suggests) over bright content.
 //   With refraction installed (./refraction.mjs) it also bends what's behind it, where the browser can.
+//   For controls: `liquid-glass-prominent` tints the glass with an accent colour (SwiftUI's
+//   `.glassProminent` button style) and `liquid-glass-interactive` responds to a press (`.interactive()`).
+// - `liquid-glass-edge` is a glass bezel: a ring of glass around the element's own edge, over its
+//   content (a photo, an avatar, a coin), which shows through frosted and catches the light.
 // - Standard materials (`material-ultra-thin`, `material-thin`, `material`, `material-thick`) are
 //   frosted glass for the content layer. Apple says not to use Liquid Glass there. Thicker is more
 //   opaque: better for text.
@@ -24,7 +28,9 @@ const FILTER_ID = 'liquid-glass'
 const DEFAULTS = {
   // Tints, as space-separated RGB channels. The defaults suit a dark page.
   materialTint: '28 28 30',
-  glassTint: '42 50 60'
+  glassTint: '42 50 60',
+  // iOS's systemBlue, for `liquid-glass-prominent`; set --glass-accent on an element to change it
+  accent: '0 122 255'
 }
 
 const opaque = {
@@ -33,7 +39,9 @@ const opaque = {
   '--material-alpha': '1',
   '--material-thick-alpha': '1',
   '--glass-alpha': '1',
-  '--glass-clear-alpha': '1'
+  '--glass-clear-alpha': '1',
+  '--glass-prominent-alpha': '1',
+  '--glass-edge-alpha': '1'
 }
 
 // Set on <html> by ./refraction.mjs in browsers that draw an SVG filter in backdrop-filter. An
@@ -62,7 +70,7 @@ const surface = (filter, background, rim = 'none') => ({
 })
 
 function iosGlass(options = {}) {
-  const { materialTint, glassTint } = { ...DEFAULTS, ...options }
+  const { materialTint, glassTint, accent } = { ...DEFAULTS, ...options }
 
   return {
     handler({ addBase, addComponents, addUtilities }) {
@@ -84,7 +92,15 @@ function iosGlass(options = {}) {
           '--glass-clear-filter': 'blur(3px) saturate(150%)',
           '--glass-clear-alpha': '0.12',
           // The lit rim: a bright top edge and a faint bottom one
-          '--glass-specular': 'inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -1px 0 rgb(255 255 255 / 0.06)'
+          '--glass-specular': 'inset 0 1px 0 rgb(255 255 255 / 0.22), inset 0 -1px 0 rgb(255 255 255 / 0.06)',
+          '--glass-accent': accent,
+          '--glass-prominent-alpha': '0.7',
+
+          // The bezel: its width, tint and how much of the content under it shows
+          '--glass-edge-width': '6px',
+          '--glass-edge-tint': glassTint,
+          '--glass-edge-alpha': '0.35',
+          '--glass-edge-filter': 'blur(4px) saturate(180%)'
         },
         [REFRACT]: {
           '--glass-filter': `url(#${FILTER_ID}) blur(10px) saturate(180%) brightness(0.9)`,
@@ -98,7 +114,8 @@ function iosGlass(options = {}) {
             '--material-filter': 'none',
             '--material-thick-filter': 'none',
             '--glass-filter': 'none',
-            '--glass-clear-filter': 'none'
+            '--glass-clear-filter': 'none',
+            '--glass-edge-filter': 'none'
           }
         },
         '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))': {
@@ -119,10 +136,53 @@ function iosGlass(options = {}) {
         ),
         '.material-thin': surface('var(--material-thin-filter)', 'rgb(var(--material-tint) / var(--material-thin-alpha))'),
         '.material': surface('var(--material-filter)', 'rgb(var(--material-tint) / var(--material-alpha))'),
-        '.material-thick': surface('var(--material-thick-filter)', 'rgb(var(--material-tint) / var(--material-thick-alpha))')
+        '.material-thick': surface('var(--material-thick-filter)', 'rgb(var(--material-tint) / var(--material-thick-alpha))'),
+        '.liquid-glass-edge': {
+          position: 'relative',
+          isolation: 'isolate',
+          // A ring, cut from a full layer with a mask, over the content (and under nothing)
+          '&::after': {
+            content: "''",
+            position: 'absolute',
+            inset: '0',
+            boxSizing: 'border-box',
+            padding: 'var(--glass-edge-width)',
+            borderRadius: 'inherit',
+            // Light catches the top left and, more faintly, the bottom right
+            background:
+              'linear-gradient(150deg, rgb(255 255 255 / 0.5), transparent 30%, transparent 70%, rgb(255 255 255 / 0.22)), rgb(var(--glass-edge-tint) / var(--glass-edge-alpha))',
+            '-webkit-backdrop-filter': 'var(--glass-edge-filter)',
+            backdropFilter: 'var(--glass-edge-filter)',
+            boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.3)',
+            '-webkit-mask': 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+            '-webkit-mask-composite': 'xor',
+            mask: 'linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)',
+            pointerEvents: 'none'
+          },
+          // Opaque on the ring itself, so an element's own --glass-edge-alpha can't undo it
+          '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
+            '&::after': { '--glass-edge-alpha': '1', '--glass-edge-filter': 'none' }
+          },
+          '@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))': {
+            '&::after': { '--glass-edge-alpha': '1' }
+          }
+        }
       })
 
       addUtilities({
+        // Add to `liquid-glass`: the glass takes the accent colour, like a prominent glass button
+        '.liquid-glass-prominent': {
+          '--glass-layer-bg': 'rgb(var(--glass-accent) / var(--glass-prominent-alpha))'
+        },
+        // Add to a `liquid-glass` control: it swells a little and lights up while pressed
+        '.liquid-glass-interactive': {
+          transition: 'transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1.2), filter 0.25s ease',
+          '&:active': { transform: 'scale(1.04)', filter: 'brightness(1.15)' },
+          '@media (prefers-reduced-motion: reduce)': {
+            transition: 'filter 0.25s ease',
+            '&:active': { transform: 'none' }
+          }
+        },
         // Clear glass over bright content: Apple's 35% dimming layer under the glass
         '.liquid-glass-dim': {
           '--glass-layer-bg':

@@ -31,6 +31,9 @@ installRefraction()
 | `liquid-glass-clear` | `.glassEffect(.clear)` | Controls floating over photos and video |
 | `liquid-glass-dim` | — | Add to `liquid-glass-clear` over bright content: Apple's 35% dimming layer |
 | `liquid-glass-scroll-edge` | scroll edge effect | Under a top bar: content fades and blurs as it slides under, instead of a hard line |
+| `liquid-glass-prominent` | `.buttonStyle(.glassProminent)` | Add to `liquid-glass` on a primary button: the glass takes the accent colour (`--glass-accent`) |
+| `liquid-glass-interactive` | `.glassEffect(.regular.interactive())` | Add to a `liquid-glass` control: it swells a little and lights up while pressed |
+| `liquid-glass-edge` | — | A glass bezel: a ring of glass around the element's edge, over its own content (a photo, an avatar, a coin) |
 | `material-ultra-thin` | `.ultraThinMaterial` | Content-layer surfaces where the background should stay visible |
 | `material-thin` | `.thinMaterial` | |
 | `material` | `.regularMaterial` | The default for content: cards, sheets |
@@ -42,15 +45,22 @@ glass on glass. Thicker materials are more opaque, which helps text.
 ```html
 <nav class="liquid-glass liquid-glass-scroll-edge sticky top-0">…</nav>
 <section class="material rounded-2xl p-4">…</section>
+<a class="liquid-glass liquid-glass-prominent liquid-glass-interactive rounded-full px-5 py-2">Add contact</a>
+<!-- The image runs under the ring; padding keeps anything else inside it -->
+<div class="liquid-glass-edge rounded-full overflow-hidden [--glass-edge-width:8px]"><img src="avatar.jpg" alt=""></div>
 ```
+
+The bezel's width, tint and opacity are `--glass-edge-width`, `--glass-edge-tint` (RGB channels) and
+`--glass-edge-alpha`. Set them on the element.
 
 ## How it works
 
-Each class draws the glass on a `::before` layer behind the element's content: a tint plus
+The surface classes draw the glass on a `::before` layer behind the element's content: a tint plus
 `backdrop-filter: blur() saturate()`. Liquid Glass also gets a lit rim. The element gets
 `position: relative` and `isolation: isolate`; give it `sticky` or `fixed` and that wins. A
 `backdrop-filter` on the element itself would turn it into the containing block for its own
-`position: fixed` children, which is why the glass is a layer instead.
+`position: fixed` children, which is why the glass is a layer instead. `liquid-glass-edge` draws its
+ring on `::after`, above the content, cut out with a mask.
 
 With `installRefraction()`, Chromium browsers also refract what's behind `liquid-glass` and `liquid-glass-clear`
 through an SVG filter (`feTurbulence` + `feDisplacementMap` in `backdrop-filter: url(#liquid-glass)`).
@@ -68,7 +78,7 @@ browsers without `backdrop-filter`.
 Options set the tints, as space-separated RGB channels (the defaults suit a dark page):
 
 ```js
-require('tailwind-ios-glass')({ materialTint: '28 28 30', glassTint: '42 50 60' })
+require('tailwind-ios-glass')({ materialTint: '28 28 30', glassTint: '42 50 60', accent: '0 122 255' })
 ```
 
 Everything else is a CSS variable on `:root`: `--material-filter`, `--material-alpha`,

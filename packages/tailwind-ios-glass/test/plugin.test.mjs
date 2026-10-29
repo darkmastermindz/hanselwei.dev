@@ -42,3 +42,19 @@ test('the dimming layer and scroll edge are utilities', async () => {
   assert.match(css, /\.liquid-glass-dim \{[^}]*rgb\(0 0 0 \/ 0\.35\)/)
   assert.match(css, /\.liquid-glass-scroll-edge::after \{[^}]*mask-image/)
 })
+
+test('the edge is a masked ring of glass over the content', async () => {
+  const css = await build('<div class="liquid-glass-edge"></div>')
+  assert.match(css, /\.liquid-glass-edge::after \{[^}]*padding: var\(--glass-edge-width\)[^}]*backdrop-filter: var\(--glass-edge-filter\)/)
+  assert.match(css, /mask: linear-gradient\(#000 0 0\) content-box exclude/)
+  // On the ring itself, so an element's own alpha can't undo it
+  assert.match(css, /prefers-contrast: more\) \{\s*\.liquid-glass-edge::after \{[^}]*--glass-edge-alpha: 1/)
+})
+
+test('prominent glass takes the accent, and interactive glass responds to a press', async () => {
+  const css = await build('<a class="liquid-glass liquid-glass-prominent liquid-glass-interactive"></a>', { accent: '0 180 137' })
+  assert.match(css, /--glass-accent: 0 180 137/)
+  assert.match(css, /\.liquid-glass-prominent \{[^}]*--glass-layer-bg: rgb\(var\(--glass-accent\)/)
+  assert.match(css, /\.liquid-glass-interactive:active \{[^}]*transform: scale\(1\.04\)/)
+  assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.liquid-glass-interactive:active \{[^}]*transform: none/)
+})
