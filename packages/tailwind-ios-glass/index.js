@@ -150,9 +150,12 @@ function iosGlass(options = {}) {
             boxSizing: 'border-box',
             padding: 'var(--glass-edge-width)',
             borderRadius: 'inherit',
-            // Light catches the top left and, more faintly, the bottom right
+            // Light catches the top left and, more faintly, the bottom right. Where the light comes
+            // from (--glass-edge-light-angle) and how strongly it glints (--glass-edge-shine, 1 face-on
+            // to the light) can follow an element that turns, such as a spinning coin.
             background:
-              'linear-gradient(150deg, rgb(255 255 255 / 0.5), transparent 30%, transparent 70%, rgb(255 255 255 / 0.22)), rgb(var(--glass-edge-tint) / var(--glass-edge-alpha))',
+              'linear-gradient(var(--glass-edge-light-angle, 150deg), rgb(255 255 255 / calc(0.5 * var(--glass-edge-shine, 1))), transparent 30%, ' +
+              'transparent 70%, rgb(255 255 255 / calc(0.22 * var(--glass-edge-shine, 1)))), rgb(var(--glass-edge-tint) / var(--glass-edge-alpha))',
             '-webkit-backdrop-filter': 'var(--glass-edge-filter)',
             backdropFilter: 'var(--glass-edge-filter)',
             // The edge's own glow, in its colour, then the colour deepening inwards from it

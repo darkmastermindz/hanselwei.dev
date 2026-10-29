@@ -57,7 +57,9 @@ reduced motion it only lights up.
 The bezel's width, tint and opacity are `--glass-edge-width`, `--glass-edge-tint` (RGB channels) and
 `--glass-edge-alpha`. Set them on the element. Like tinted or stained glass, its colour deepens
 towards the outer edge, where light passes through more glass (`--glass-edge-depth`, 0 to 1, default
-0.45), and the very edge glows in the glass's own colour. Reflections off the surface stay white.
+0.45), and the very edge glows in the glass's own colour. Reflections off the surface stay white. For
+something that turns (a spinning coin), `--glass-edge-light-angle` (default `150deg`, light from the
+top left) and `--glass-edge-shine` (default `1`, how strongly the light glints) let the glint follow it.
 
 ## How it works
 

@@ -13,7 +13,7 @@
       @keyup.space.enter.prevent="release"
       @contextmenu.prevent
     >
-      <span class="token__coin" :style="{ transform: `rotateY(${angle}deg)`, transition }">
+      <span class="token__coin" :style="{ '--spin': `${angle}deg`, transition }">
         <span class="token__face token__face--front liquid-glass-edge" :data-face="face < 0 ? 'bitmoji' : COIN_FACES[face].id">
           <!-- The first thing anyone sees (the page's largest paint), so it loads first (preloaded below) -->
           <img :src="bitmojiUrl" alt="" draggable="false" fetchpriority="high" />
@@ -47,7 +47,7 @@
         </span>
         <!-- The coin's edge: a ring of reeded slats between the faces, so it has thickness edge-on -->
         <span class="token__rim">
-          <span v-for="slat in RIM_SLATS" :key="slat.turn" class="token__slat" :style="{ '--turn': `${slat.turn}deg`, '--sheen': slat.sheen }" />
+          <span v-for="slat in RIM_SLATS" :key="slat" class="token__slat" :style="{ '--turn': `${slat}deg` }" />
         </span>
       </span>
     </button>
@@ -100,11 +100,8 @@ const photosReady = ref(false)
 const MAX_SPEED = 24 // degrees per frame
 // It's a heavy coin: it takes a while to get going and coasts a long way when let go
 const SPIN_UP = 0.45 // degrees per frame gained each frame while held
-// The edge, lit from above: 1 at the top of the rim, 0 underneath
-const RIM_SLATS = Array.from({ length: 48 }, (_, i) => ({
-  turn: i * 7.5,
-  sheen: Math.round(50 + 50 * Math.cos((i * 7.5 * Math.PI) / 180)) / 100
-}))
+// Where each slat of the edge sits around the rim, in degrees from the top (lit in CSS)
+const RIM_SLATS = Array.from({ length: 48 }, (_, i) => i * 7.5)
 const angle = ref(0)
 // The heads-side picture: -1 is the Bitmoji (the opening face, and again after the pull-down
 // reset), otherwise an index into COIN_FACES. A photo that can't load drops out of the rotation.
@@ -118,12 +115,17 @@ const dropFace = i => {
 const resetAt = useState('token:resetAt', () => 0)
 watch(resetAt, () => {
   face.value = -1
-  transition.value = 'transform var(--spring-smooth-duration) var(--spring-smooth)'
+  transition.value = turning('var(--spring-smooth-duration) var(--spring-smooth)')
   angle.value = Math.round(angle.value / 360) * 360 // back to heads up, on the Bitmoji
 })
 const pressed = ref(false)
 const intro = ref(true)
 const transition = ref('none')
+// The coin turns by --spin (rotateY(var(--spin))), and its lighting is worked out from --spin too.
+// Registered as an angle, it animates, so the light follows the coin through every turn and coast;
+// a browser that can't register it animates the transform instead, and the light catches up at rest.
+let spinBy = 'transform'
+const turning = timing => `${spinBy} ${timing}`
 const pops = ref([])
 
 let speed = 0
@@ -139,6 +141,14 @@ let landingTimer = null
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
+  if (CSS.registerProperty) {
+    try {
+      CSS.registerProperty({ name: '--spin', syntax: '<angle>', inherits: true, initialValue: '0deg' })
+    } catch {
+      // Already registered (another coin, or a hot reload)
+    }
+    spinBy = '--spin'
+  }
   setTimeout(() => (intro.value = false), 1600)
   const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
   if (document.readyState === 'complete') loadPhotos()
@@ -221,7 +231,7 @@ const press = event => {
   navigator.vibrate?.(12)
 
   if (reducedMotion) {
-    transition.value = 'transform 0.4s ease'
+    transition.value = turning('0.4s ease')
     angle.value += 180
     return
   }
@@ -255,11 +265,11 @@ const release = () => {
   const velocity = (speed * 60) / Math.max(target - angle.value, 1)
   if (springs) {
     const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0, velocity })
-    transition.value = `transform ${seconds}s ${easing}`
+    transition.value = turning(`${seconds}s ${easing}`)
   } else {
     // Browsers without CSS linear(): a fixed curve that slows to a stop without overshooting, like
     // the spring
-    transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1)`
+    transition.value = turning(`${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1)`)
   }
   angle.value = target
   if (landsHeads(target)) {
@@ -346,6 +356,8 @@ const release = () => {
 }
 
 .token__coin {
+  --spin: 0deg;
+  transform: rotateY(var(--spin));
   position: relative;
   display: block;
   width: 100%;
@@ -379,6 +391,8 @@ const release = () => {
 
 .token__face--front {
   transform: translateZ(calc(var(--thickness) / 2));
+  /* The rim glints when the face mirrors the light towards you (see the lighting, on the edge) */
+  --glass-edge-shine: calc(0.25 + 1.5 * max(0, -0.247 * sin(var(--spin)) + 0.911 * cos(var(--spin)) - 0.4));
   /* The original bitmoji backdrop pattern */
   background-color: #653496;
   background-image: linear-gradient(11893deg, #fff 22%, #653496, 23%, #7cfc00 77%, #fff 50.5%, #fff 77%, #653496 77%, #7b52ae);
@@ -402,6 +416,9 @@ const release = () => {
 
 .token__face--back {
   transform: rotateY(180deg) translateZ(calc(var(--thickness) / 2));
+  /* Turned round, so the light's top left is its top right */
+  --glass-edge-light-angle: 210deg;
+  --glass-edge-shine: calc(0.25 + 1.5 * max(0, 0.247 * sin(var(--spin)) - 0.911 * cos(var(--spin)) - 0.4));
   background: radial-gradient(circle at 70% 30%, #9dff5c, #41b883 55%, #1d5c3f);
   color: #2c2f33;
 }
@@ -428,9 +445,10 @@ const release = () => {
    and the less shows through. Looking into its side, light crosses about three times as much
    glass as through a rim, so the edge is deep green and only a little see-through: opacity
    1 − (1 − alpha)³ for the rims' alpha (0.83 for 0.45), and opaque wherever the rims are (the
-   transparency rules below). Light that enters through the faces bounces along inside and comes
-   out at the edge, so it glows, in green, brightest at the top, nearest the light. Only light
-   reflected off the surface stays white: thin lines at the two corners where it meets the faces.
+   transparency rules below). Light that enters through a face bounces along inside and comes
+   out at the edge, so the edge glows green, more the more squarely a face is turned to the light.
+   Only light reflected off the surface stays white: thin lines at the two corners where it meets
+   the faces, which flash as they turn to mirror the light towards you. See the lighting, below.
    What shows through it is the page's dark background, so the glass is mixed over that colour
    rather than drawn see-through: see-through slats show seams where they meet (doubled glass
    where they overlap, hairline gaps where they don't). */
@@ -451,15 +469,15 @@ const release = () => {
   margin: calc(var(--thickness) / -2) 0 0 calc(var(--width) / -2);
   background:
     linear-gradient(
-      rgb(255 255 255 / 0.9),
+      rgb(255 255 255 / calc(0.2 + 0.75 * var(--glint))),
       rgb(255 255 255 / 0.15) 1.5px,
       transparent 25%,
       transparent 75%,
       rgb(255 255 255 / 0.15) calc(100% - 1.5px),
-      rgb(255 255 255 / 0.9)
+      rgb(255 255 255 / calc(0.2 + 0.75 * var(--glint)))
     ),
-    linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / calc(0.3 + 0.6 * var(--sheen))) 50%, transparent 85%),
-    linear-gradient(rgb(0 0 0 / calc(0.35 * (1 - var(--sheen)))), rgb(0 0 0 / calc(0.35 * (1 - var(--sheen))))),
+    linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / calc(0.15 + 0.75 * var(--piped))) 50%, transparent 85%),
+    linear-gradient(rgb(0 0 0 / calc(0.5 * (1 - var(--lit)))), rgb(0 0 0 / calc(0.5 * (1 - var(--lit))))),
     color-mix(
       in srgb,
       color-mix(in srgb, rgb(var(--glass-edge-tint)), black 55%)
@@ -467,6 +485,20 @@ const release = () => {
       #1d232a /* the page behind it */
     );
   transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
+
+  /* The lighting. One light, fixed in front of the coin, up and to the left, where the rims'
+     glints and the shadow put it: L = (-0.45, -0.6, 0.66), with x to the right, y down and z
+     towards you. The coin turns by --spin (φ) about the vertical; this slat sits --turn (θ) round
+     the rim from the top, so it faces n = (sin θ cos φ, −cos θ, −sin θ sin φ), and a face faces
+     ±(sin φ, 0, cos φ).
+     - lit: how squarely the slat faces the light (n · L), shading it as it turns away
+     - glint: how nearly it mirrors the light towards you (n · H, H halfway between the light and
+       you: (-0.247, -0.329, 0.911)), sharpened, for the white corner lines
+     - piped: how much light gets in through whichever face is turned towards it (|face · L|) to
+       come out at the edge as the green glow */
+  --lit: max(0, -0.45 * sin(var(--turn)) * cos(var(--spin)) + 0.6 * cos(var(--turn)) - 0.66 * sin(var(--turn)) * sin(var(--spin)));
+  --glint: pow(max(0, (-0.247 * sin(var(--turn)) * cos(var(--spin)) + 0.329 * cos(var(--turn)) - 0.911 * sin(var(--turn)) * sin(var(--spin)) - 0.5) / 0.5), 2);
+  --piped: max(-0.45 * sin(var(--spin)) + 0.66 * cos(var(--spin)), 0.45 * sin(var(--spin)) - 0.66 * cos(var(--spin)));
 }
 
 
@@ -496,9 +528,11 @@ const release = () => {
 
 @keyframes intro-flip {
   from {
+    --spin: -720deg; /* so the light follows the intro too */
     transform: rotateY(-720deg) scale(0.6);
   }
   to {
+    --spin: 0deg;
     transform: rotateY(0) scale(1);
   }
 }
