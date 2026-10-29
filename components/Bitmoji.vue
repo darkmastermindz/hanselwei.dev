@@ -419,12 +419,13 @@ const release = () => {
 /* The edge: slats stood up around the rim, each as thick as the coin, so turned edge-on it's a
    solid band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
    (translateY) and turned to its place around it (rotateZ).
-   It's the side of a slab of green glass, the same glass as the rims on the faces: the two
-   corners where it meets the faces catch the light in thin bright lines, light bouncing inside
-   it makes a soft bright band down the middle (brightest at the top, nearest the light), it
-   darkens underneath. What shows through it is the page's dark background, so the glass is
-   mixed over that colour here rather than drawn see-through: see-through slats show seams where
-   they meet (doubled glass where they overlap, hairline gaps where they don't). */
+   It's the side of a slab of the same green glass as the rims on the faces, and coloured glass
+   is coloured by what it absorbs on the way through: the longer the path, the deeper the colour.
+   Looking into its side, the path runs the length of the glass, so the edge is deep, dense green
+   (the edge of a green bottle or a stained glass pane) rather than see-through. Light that enters
+   through the faces bounces along inside and comes out at the edge, so the edge glows, in green,
+   brightest at the top, nearest the light. Only light reflected off the surface stays white: thin
+   lines at the two corners where it meets the faces. */
 .token__rim {
   position: absolute;
   inset: 0;
@@ -449,19 +450,12 @@ const release = () => {
       rgb(255 255 255 / 0.15) calc(100% - 1.5px),
       rgb(255 255 255 / 0.9)
     ),
-    linear-gradient(transparent 30%, rgb(255 255 255 / calc(0.1 + 0.4 * var(--sheen))) 50%, transparent 70%),
-    linear-gradient(rgb(0 0 0 / calc(0.4 * (1 - var(--sheen)))), rgb(0 0 0 / calc(0.4 * (1 - var(--sheen))))),
-    color-mix(in srgb, rgb(var(--glass-edge-tint)) calc(var(--glass-edge-alpha) * 100%), #1d232a); /* the page behind it */
+    linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / calc(0.3 + 0.6 * var(--sheen))) 50%, transparent 85%),
+    linear-gradient(rgb(0 0 0 / calc(0.35 * (1 - var(--sheen)))), rgb(0 0 0 / calc(0.35 * (1 - var(--sheen))))),
+    color-mix(in srgb, rgb(var(--glass-edge-tint)), black 55%);
   transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
 }
 
-
-/* Reduce Transparency and Increase Contrast: solid green, as the face rims become */
-@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
-  .token__slat {
-    --glass-edge-alpha: 1;
-  }
-}
 
 .token__shine {
   position: absolute;

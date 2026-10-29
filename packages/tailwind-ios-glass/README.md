@@ -51,7 +51,9 @@ glass on glass. Thicker materials are more opaque, which helps text.
 ```
 
 The bezel's width, tint and opacity are `--glass-edge-width`, `--glass-edge-tint` (RGB channels) and
-`--glass-edge-alpha`. Set them on the element.
+`--glass-edge-alpha`. Set them on the element. Like tinted or stained glass, its colour deepens
+towards the outer edge, where light passes through more glass (`--glass-edge-depth`, 0 to 1, default
+0.45), and the very edge glows in the glass's own colour. Reflections off the surface stay white.
 
 ## How it works
 

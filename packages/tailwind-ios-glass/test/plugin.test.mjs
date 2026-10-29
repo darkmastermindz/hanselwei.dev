@@ -48,6 +48,10 @@ test('the edge is a masked ring of glass over the content', async () => {
   const css = await build('<div class="liquid-glass-edge"></div>')
   assert.match(css, /\.liquid-glass-edge::after \{[^}]*padding: var\(--glass-edge-width\)[^}]*backdrop-filter: var\(--glass-edge-filter\)/)
   assert.match(css, /mask: linear-gradient\(#000 0 0\) content-box exclude/)
+  // Coloured glass: deeper at the edge, which glows in the glass's own colour
+  assert.match(css, /--glass-edge-depth: 0\.45/)
+  assert.match(css, /inset 0 0 0 1px color-mix\(in srgb, rgb\(var\(--glass-edge-tint\)\) 60%, white\)/)
+  assert.match(css, /black calc\(var\(--glass-edge-depth\) \* 100%\)/)
   // On the ring itself, so an element's own alpha can't undo it
   assert.match(css, /prefers-contrast: more\) \{\s*\.liquid-glass-edge::after \{[^}]*--glass-edge-alpha: 1/)
 })

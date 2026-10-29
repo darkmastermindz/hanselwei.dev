@@ -9,7 +9,11 @@
 //   For controls: `liquid-glass-prominent` tints the glass with an accent colour (SwiftUI's
 //   `.glassProminent` button style) and `liquid-glass-interactive` responds to a press (`.interactive()`).
 // - `liquid-glass-edge` is a glass bezel: a ring of glass around the element's own edge, over its
-//   content (a photo, an avatar, a coin), which shows through frosted and catches the light.
+//   content (a photo, an avatar, a coin), which shows through frosted and catches the light. Like
+//   tinted or stained glass, its colour deepens towards the outer edge, where the bevel makes the
+//   glass thicker and light passes through more of it, and the very edge glows in the glass's own
+//   colour (light caught inside the glass comes out there). Reflections off the surface stay white:
+//   that light never goes through the glass.
 // - Standard materials (`material-ultra-thin`, `material-thin`, `material`, `material-thick`) are
 //   frosted glass for the content layer. Apple says not to use Liquid Glass there. Thicker is more
 //   opaque: better for text.
@@ -99,7 +103,9 @@ function iosGlass(options = {}) {
           '--glass-edge-width': '6px',
           '--glass-edge-tint': glassTint,
           '--glass-edge-alpha': '0.35',
-          '--glass-edge-filter': 'blur(4px) saturate(180%)'
+          '--glass-edge-filter': 'blur(4px) saturate(180%)',
+          // How much the colour deepens at the outer edge (0: not at all, 1: to black)
+          '--glass-edge-depth': '0.45'
         },
         [REDUCED]: {
           ':root': {
@@ -149,7 +155,10 @@ function iosGlass(options = {}) {
               'linear-gradient(150deg, rgb(255 255 255 / 0.5), transparent 30%, transparent 70%, rgb(255 255 255 / 0.22)), rgb(var(--glass-edge-tint) / var(--glass-edge-alpha))',
             '-webkit-backdrop-filter': 'var(--glass-edge-filter)',
             backdropFilter: 'var(--glass-edge-filter)',
-            boxShadow: 'inset 0 0 0 1px rgb(255 255 255 / 0.3)',
+            // The edge's own glow, in its colour, then the colour deepening inwards from it
+            boxShadow:
+              'inset 0 0 0 1px color-mix(in srgb, rgb(var(--glass-edge-tint)) 60%, white), ' +
+              'inset 0 0 calc(var(--glass-edge-width) * 0.9) color-mix(in srgb, rgb(var(--glass-edge-tint)), black calc(var(--glass-edge-depth) * 100%))',
             '-webkit-mask': 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
             '-webkit-mask-composite': 'xor',
             mask: 'linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)',
