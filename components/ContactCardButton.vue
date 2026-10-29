@@ -54,6 +54,9 @@ onMounted(() => {
    to a press, like SwiftUI's .glassProminent; locked, plain glass */
 .contact-card__button--unlocked {
   --glass-accent: 0 180 137;
+  /* Pressing it swells on SwiftUI's .bouncy spring, like the unlock below (assets/css/springs.css) */
+  --glass-press-easing: var(--spring-bouncy);
+  --glass-press-duration: var(--spring-bouncy-duration);
   border: 0;
   animation: unlock var(--spring-bouncy-duration) var(--spring-bouncy);
 }

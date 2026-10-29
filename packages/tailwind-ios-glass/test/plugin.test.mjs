@@ -61,5 +61,6 @@ test('prominent glass takes the accent, and interactive glass responds to a pres
   assert.match(css, /--glass-accent: 0 180 137/)
   assert.match(css, /\.liquid-glass-prominent \{[^}]*--glass-layer-bg: rgb\(var\(--glass-accent\)/)
   assert.match(css, /\.liquid-glass-interactive:active \{[^}]*transform: scale\(1\.04\)/)
+  assert.match(css, /transform var\(--glass-press-duration, 0\.25s\) var\(--glass-press-easing, cubic-bezier/)
   assert.match(css, /prefers-reduced-motion: reduce[\s\S]*\.liquid-glass-interactive:active \{[^}]*transform: none/)
 })

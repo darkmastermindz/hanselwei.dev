@@ -179,12 +179,16 @@ function iosGlass(options = {}) {
         '.liquid-glass-prominent': {
           '--glass-layer-bg': 'rgb(var(--glass-accent) / var(--glass-prominent-alpha))'
         },
-        // Add to a `liquid-glass` control: it swells a little and lights up while pressed
+        // Add to a `liquid-glass` control: it swells a little and lights up while pressed, on a
+        // springy curve (--glass-press-easing and --glass-press-duration: a site with its own
+        // springs sets them to those)
         '.liquid-glass-interactive': {
-          transition: 'transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1.2), filter 0.25s ease',
+          transition:
+            'transform var(--glass-press-duration, 0.25s) var(--glass-press-easing, cubic-bezier(0.2, 0.8, 0.3, 1.2)), ' +
+            'filter var(--glass-press-duration, 0.25s) ease',
           '&:active': { transform: 'scale(1.04)', filter: 'brightness(1.15)' },
           '@media (prefers-reduced-motion: reduce)': {
-            transition: 'filter 0.25s ease',
+            transition: 'filter var(--glass-press-duration, 0.25s) ease',
             '&:active': { transform: 'none' }
           }
         },

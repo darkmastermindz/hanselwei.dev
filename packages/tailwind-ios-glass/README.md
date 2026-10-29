@@ -50,6 +50,10 @@ glass on glass. Thicker materials are more opaque, which helps text.
 <div class="liquid-glass-edge rounded-full overflow-hidden [--glass-edge-width:8px]"><img src="avatar.jpg" alt=""></div>
 ```
 
+`liquid-glass-interactive` springs on `--glass-press-easing` over `--glass-press-duration` (a
+springy `cubic-bezier` over 0.25s by default); point them at your own springs if you have them. With
+reduced motion it only lights up.
+
 The bezel's width, tint and opacity are `--glass-edge-width`, `--glass-edge-tint` (RGB channels) and
 `--glass-edge-alpha`. Set them on the element. Like tinted or stained glass, its colour deepens
 towards the outer edge, where light passes through more glass (`--glass-edge-depth`, 0 to 1, default

@@ -257,7 +257,9 @@ const release = () => {
     const { easing, seconds } = springEasing({ duration: coastSeconds, bounce: 0, velocity })
     transition.value = `transform ${seconds}s ${easing}`
   } else {
-    transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1.2)`
+    // Browsers without CSS linear(): a fixed curve that slows to a stop without overshooting, like
+    // the spring
+    transition.value = `transform ${coastSeconds}s cubic-bezier(0.2, 0.8, 0.3, 1)`
   }
   angle.value = target
   if (landsHeads(target)) {
@@ -316,7 +318,9 @@ const release = () => {
   cursor: grab;
   /* How thick the coin is, front face to back */
   --thickness: calc(var(--size) * 0.045);
-  /* Green glass, for the rims on the faces (`liquid-glass-edge`) and the edge between them */
+  /* Green glass, for the rims on the faces (`liquid-glass-edge`) and the edge between them. Its
+     alpha follows Liquid Glass's transparency rules (below): opaque with Reduce Transparency or
+     Increase Contrast, or without backdrop-filter. */
   --glass-edge-tint: 124 252 0;
   --glass-edge-alpha: 0.45;
   transition: transform 0.2s ease, filter 0.2s ease;
@@ -420,12 +424,16 @@ const release = () => {
    solid band. Each slat lies flat, is stood up on its side (rotateX), moved out to the rim
    (translateY) and turned to its place around it (rotateZ).
    It's the side of a slab of the same green glass as the rims on the faces, and coloured glass
-   is coloured by what it absorbs on the way through: the longer the path, the deeper the colour.
-   Looking into its side, the path runs the length of the glass, so the edge is deep, dense green
-   (the edge of a green bottle or a stained glass pane) rather than see-through. Light that enters
-   through the faces bounces along inside and comes out at the edge, so the edge glows, in green,
-   brightest at the top, nearest the light. Only light reflected off the surface stays white: thin
-   lines at the two corners where it meets the faces. */
+   is coloured by what it absorbs on the way through: the longer the path, the deeper the colour
+   and the less shows through. Looking into its side, light crosses about three times as much
+   glass as through a rim, so the edge is deep green and only a little see-through: opacity
+   1 − (1 − alpha)³ for the rims' alpha (0.83 for 0.45), and opaque wherever the rims are (the
+   transparency rules below). Light that enters through the faces bounces along inside and comes
+   out at the edge, so it glows, in green, brightest at the top, nearest the light. Only light
+   reflected off the surface stays white: thin lines at the two corners where it meets the faces.
+   What shows through it is the page's dark background, so the glass is mixed over that colour
+   rather than drawn see-through: see-through slats show seams where they meet (doubled glass
+   where they overlap, hairline gaps where they don't). */
 .token__rim {
   position: absolute;
   inset: 0;
@@ -452,10 +460,30 @@ const release = () => {
     ),
     linear-gradient(transparent 15%, rgb(var(--glass-edge-tint) / calc(0.3 + 0.6 * var(--sheen))) 50%, transparent 85%),
     linear-gradient(rgb(0 0 0 / calc(0.35 * (1 - var(--sheen)))), rgb(0 0 0 / calc(0.35 * (1 - var(--sheen))))),
-    color-mix(in srgb, rgb(var(--glass-edge-tint)), black 55%);
+    color-mix(
+      in srgb,
+      color-mix(in srgb, rgb(var(--glass-edge-tint)), black 55%)
+        calc((1 - (1 - var(--glass-edge-alpha)) * (1 - var(--glass-edge-alpha)) * (1 - var(--glass-edge-alpha))) * 100%),
+      #1d232a /* the page behind it */
+    );
   transform: rotateZ(var(--turn)) translateY(calc(var(--size) / -2)) rotateX(90deg);
 }
 
+
+/* Liquid Glass's transparency rules (packages/tailwind-ios-glass), for the coin's glass as a
+   whole: the rims and the edge go opaque with Reduce Transparency or Increase Contrast, or where
+   the browser can't blur what's behind glass */
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .token {
+    --glass-edge-alpha: 1;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .token {
+    --glass-edge-alpha: 1;
+  }
+}
 
 .token__shine {
   position: absolute;
