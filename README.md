@@ -71,6 +71,7 @@ Every week of the year has a theme: a few themed emoji drift down (or float up) 
   - `particles` (0–40): how many emoji at once. Phones show at most 8.
   - `[[seasons.week]]`: one per week, in order from `from = "01-01"`. Each runs until the next one starts. Each has a `name`, up to 8 `emoji`, two `colors` (`"#rrggbb"`) and a `motion` (`"fall"`, the default, or `"rise"`).
   - `[[seasons.event]]`: the same, with `from` and `to` dates (like `2026-10-19`). Events take over from the weekly theme for those days.
+  - `[seasons.spooky]`: Halloween, every year, from `from` to `to` (`"10-30 12:00"` to `"10-31 23:59"`: Eastern time, `"month-day hour:minute"`, the half day before through the end of Halloween). The home page coin is cut into a jack-o'-lantern, bat or ghost (`components/Bitmoji.vue`): it starts on one at random and turns into the next on each heads landing, with the shape's emoji on tails. It glows like a neon sign that flickers now and then. Mist and fog drift low across the background on every page (`components/SpookyFog.vue`). With reduced motion the glow stays steady and the fog stands still. Leave the table out to skip it.
 - The theme is picked in the visitor's browser from today's date (Eastern time), so it changes on its own with no redeploy (`composables/useSeason.js`).
 - The emoji are CSS animations only (`components/SeasonalParticles.vue`), behind the page content and never in the way of a tap. They're hidden for visitors who prefer reduced motion or are saving data; the colours still change.
 

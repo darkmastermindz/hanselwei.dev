@@ -152,3 +152,14 @@ test("the 404 page has none while Surprise me counts down to leaving", async ({ 
   await page.getByRole('dialog', { name: 'Leaving this page' }).waitFor()
   await check(page, "Surprise me's countdown")
 })
+
+// Halloween (config.toml [seasons.spooky]): the neon coin and the fog over the background must
+// leave every page as readable as ever. Only the date is set; timers still run.
+for (const path of ['/', '/blog']) {
+  test(`${path} has none on Halloween, with the neon coin and the fog`, async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-31T20:00:00Z'))
+    await open(page, path)
+    await expect(page.locator('.fog')).toHaveCount(1)
+    await check(page, `${path} on Halloween`)
+  })
+}

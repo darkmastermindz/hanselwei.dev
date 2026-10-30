@@ -9,7 +9,8 @@ export const SEASONS_DEFAULTS = {
   enabled: false,
   particles: 12,
   weeks: [],
-  events: []
+  events: [],
+  spooky: null // { from, to }: "MM-DD HH:MM" Eastern, every year (see spookyAt)
 }
 
 export const MOTIONS = ['fall', 'rise'] // drift down (leaves, snow) or float up (bubbles, ghosts)
@@ -60,6 +61,14 @@ const checkTheme = (theme, where, problems) => {
   return problems.length === before ? out : null
 }
 
+// "MM-DD HH:MM" for a real day of the year and time of day (24-hour), or null
+const MOMENT = /^(\d{2}-\d{2}) (\d{2}):(\d{2})$/
+export const monthDayTime = value => {
+  const match = typeof value === 'string' ? MOMENT.exec(value) : null
+  if (!match || !monthDay(match[1])) return null
+  return Number(match[2]) <= 23 && Number(match[3]) <= 59 ? value : null
+}
+
 const THEME_KEYS = new Set(['name', 'emoji', 'colors', 'motion'])
 const unknownKeys = (table, allowed, where, problems) => {
   if (typeof table !== 'object' || table === null) return
@@ -108,6 +117,18 @@ export const buildSeasonsConfig = (toml = {}) => {
         if (!from || !to || from > to) problems.push(`${where} from and to must be dates like 2026-10-19, from first`)
         else if (theme) config.events.push({ from, to, ...theme })
       })
+    } else if (key === 'spooky') {
+      // Halloween's neon coin and mist (components/Bitmoji.vue, components/SpookyFog.vue)
+      const where = '[seasons.spooky]'
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        problems.push(`${where} must be a table with from and to`)
+        continue
+      }
+      unknownKeys(value, new Set(['from', 'to']), where, problems)
+      const from = monthDayTime(value.from)
+      const to = monthDayTime(value.to)
+      if (!from || !to || from >= to) problems.push(`${where} from and to must be times like "10-30 12:00" (month-day hour:minute, Eastern), from first, within the year`)
+      else config.spooky = { from, to }
     } else {
       problems.push(`[seasons] ${JSON.stringify(key)} isn't a setting`)
     }
@@ -133,6 +154,24 @@ export const themeFor = (config, day) => {
   let week = null
   for (const w of config.weeks) if (w.from <= md) week = w
   return week
+}
+
+// "MM-DD HH:MM" for a moment in a time zone (Eastern, like the rest of the seasons)
+export const momentIn = (now, timeZone = 'America/New_York') => {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', { timeZone, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+      .formatToParts(now)
+      .map(p => [p.type, p.value])
+  )
+  return `${parts.month}-${parts.day} ${parts.hour}:${parts.minute}`
+}
+
+// Whether it's spooky time (config.toml [seasons.spooky], every year): from `from` up to and
+// including the minute `to`, Eastern time. Off when seasons are off.
+export const spookyAt = (config, now) => {
+  if (!config?.enabled || !config.spooky || !(now instanceof Date) || Number.isNaN(now.getTime())) return false
+  const moment = momentIn(now)
+  return config.spooky.from <= moment && moment <= config.spooky.to
 }
 
 // Where each particle starts and how it moves, picked at random for every page load. `random`

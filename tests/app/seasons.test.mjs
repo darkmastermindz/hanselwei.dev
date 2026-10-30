@@ -82,3 +82,41 @@ test('particles cycle through the emoji and stay on screen', () => {
   }
   assert.deepEqual(particleLayout(null, 12), [])
 })
+
+// Halloween's neon coin and mist (config.toml [seasons.spooky]): from noon Eastern the day before
+// through the end of Halloween, every year
+test('spooky from noon on Oct 30 through Halloween, Eastern time, every year', async () => {
+  const { spookyAt, momentIn } = await import('../../utils/seasons.mjs')
+  assert.deepEqual(config.spooky, { from: '10-30 12:00', to: '10-31 23:59' })
+  // EDT is UTC-4 in late October
+  assert.equal(momentIn(new Date('2026-10-30T16:00:00Z')), '10-30 12:00')
+  assert.equal(spookyAt(config, new Date('2026-10-30T15:59:00Z')), false) // 11:59 am the day before
+  assert.equal(spookyAt(config, new Date('2026-10-30T16:00:00Z')), true) // noon
+  assert.equal(spookyAt(config, new Date('2026-10-31T12:00:00Z')), true)
+  assert.equal(spookyAt(config, new Date('2026-11-01T03:59:00Z')), true) // 11:59 pm on Halloween
+  assert.equal(spookyAt(config, new Date('2026-11-01T04:00:00Z')), false) // midnight: over
+  assert.equal(spookyAt(config, new Date('2027-10-31T20:00:00Z')), true) // every year
+  assert.equal(spookyAt(config, new Date('2026-07-04T16:00:00Z')), false)
+  assert.equal(spookyAt({ ...config, enabled: false }, new Date('2026-10-31T16:00:00Z')), false)
+  assert.equal(spookyAt(config, new Date('nope')), false)
+})
+
+test('the spooky window has to be real times, in order, within the year', () => {
+  const build = spooky => buildSeasonsConfig({ seasons: { spooky } })
+  assert.deepEqual(build({ from: '10-30 12:00', to: '10-31 23:59' }).config.spooky, { from: '10-30 12:00', to: '10-31 23:59' })
+  for (const spooky of [
+    { from: '10-31 12:00', to: '10-30 12:00' },
+    { from: '10-31 12:00', to: '10-31 12:00' },
+    { from: '10-30 24:00', to: '10-31 23:59' },
+    { from: '10-30 12:60', to: '10-31 23:59' },
+    { from: '02-29 12:00', to: '03-01 00:00' },
+    { from: '10-30T12:00', to: '10-31 23:59' },
+    { from: '10-30 12:00' },
+    '10-30',
+    ['10-30 12:00', '10-31 23:59']
+  ]) {
+    const { config: built, problems } = build(spooky)
+    assert.ok(problems.length >= 1, JSON.stringify(spooky))
+    assert.equal(built.spooky, null)
+  }
+})
