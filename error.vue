@@ -1,7 +1,7 @@
 <template>
   <!-- Nuxt's error page: a page that isn't here (prerendered as 404.html, which Netlify serves for
        unknown paths), or one that failed. Lost? Feel lucky (components/FeelingLucky.vue), or slide
-       to unlock a classic game (components/SwipeToUnlock.vue, components/LostArcade.vue). -->
+       to unlock the classic games (components/SwipeToUnlock.vue, components/LostArcade.vue). -->
   <NuxtLayout>
     <main class="page lost">
       <h1 class="page-title text-[#c084fc]">{{ notFound ? '404 · Page not found' : 'Something went wrong' }}</h1>

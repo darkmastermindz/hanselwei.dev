@@ -1,13 +1,13 @@
 // The 404 page (error.vue): a way home, I'm Feeling Lucky (components/FeelingLucky.vue,
-// utils/lucky.mjs), and a classic game picked at random (components/LostArcade.vue, utils/arcade.mjs)
-// behind slide to unlock (components/SwipeToUnlock.vue). Each pick is made here by pinning
-// Math.random. A phone is enough.
+// utils/lucky.mjs), and the classic games (components/LostArcade.vue, utils/arcade.mjs)
+// behind slide to unlock (components/SwipeToUnlock.vue), which shows every game. Lucky picks are
+// made here by pinning Math.random. A phone is enough.
 import { expect, test } from '@playwright/test'
 
 const GAMES = [
-  ['Pong', 0, 'You 0 – 0 Computer'],
-  ['Block Breaker', 0.5, 'Score 0 · 3 lives'],
-  ['Space Invaders', 0.9, 'Score 0 · 3 lives']
+  ['Pong', 'You 0 – 0 Computer'],
+  ['Block Breaker', 'Score 0 · 3 lives'],
+  ['Space Invaders', 'Score 0 · 3 lives']
 ]
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -37,13 +37,19 @@ test('an unknown address gets the 404 page, with a way home', async ({ page }) =
   await expect(page).toHaveURL(/\/$/)
 })
 
-for (const [name, random, startScore] of GAMES) {
-  test(`the 404 page can pick ${name}, and it plays`, async ({ page }) => {
-    await page.addInitScript(value => (Math.random = () => value), random)
+test('unlocking shows every game, with focus on the first', async ({ page }) => {
+  await page.goto('/no-such-page', { waitUntil: 'networkidle' })
+  await slideOpen(page)
+  const buttons = page.locator('.lost-arcade__play')
+  await expect(buttons).toHaveText(GAMES.map(([name]) => new RegExp(`Play ${name}$`)))
+  await expect(buttons.first()).toBeFocused()
+})
+
+for (const [name, startScore] of GAMES) {
+  test(`${name} plays`, async ({ page }) => {
     await page.goto('/no-such-page', { waitUntil: 'networkidle' })
     await slideOpen(page)
     const play = page.getByRole('button', { name: `Play ${name}` })
-    await expect(play, 'focus moves to the game once it is unlocked').toBeFocused()
     await play.click()
     const court = page.getByRole('dialog', { name })
     await expect(court.locator('canvas')).toBeVisible()
@@ -79,7 +85,7 @@ test('let go of the knob early and it springs back; the keyboard unlocks it too'
   await page.keyboard.press('ArrowRight')
   await expect(knob).toHaveAttribute('aria-valuenow', '25')
   await page.keyboard.press('End')
-  await expect(page.locator('.lost-arcade__play')).toBeFocused()
+  await expect(page.locator('.lost-arcade__play').first()).toBeFocused()
 })
 
 test("I'm Feeling Lucky: a blog post opens", async ({ page }) => {

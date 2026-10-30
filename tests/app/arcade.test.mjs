@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { GAMES, pickGame } from '../../utils/arcade.mjs'
+import { GAMES } from '../../utils/arcade.mjs'
 import * as blocks from '../../utils/blockBreaker.mjs'
 import * as invaders from '../../utils/spaceInvaders.mjs'
 
@@ -10,12 +10,9 @@ const run = (rules, state, seconds, input) => {
   return state
 }
 
-test('the 404 page picks one of the three games, whatever the random number', () => {
+test('the arcade offers all three games, each with a name and how to play', () => {
   assert.deepEqual(GAMES.map(g => g.id), ['pong', 'blocks', 'invaders'])
-  assert.equal(pickGame(() => 0).id, 'pong')
-  assert.equal(pickGame(() => 0.5).id, 'blocks')
-  assert.equal(pickGame(() => 0.999).id, 'invaders')
-  assert.equal(pickGame(() => 1).id, 'invaders', 'never past the end')
+  for (const g of GAMES) assert.ok(g.name && g.emoji && g.howTo, g.id)
 })
 
 test('Block Breaker: a new game, the ball on the paddle until it goes', () => {

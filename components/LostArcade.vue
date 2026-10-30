@@ -1,10 +1,16 @@
 <template>
-  <!-- The 404 page's easter egg: a classic game, picked at random on each visit (utils/arcade.mjs),
-       in the same style as Fold Pong (components/FoldPong.vue) -->
+  <!-- The 404 page's easter egg: every classic game in the arcade (utils/arcade.mjs), in the same
+       style as Fold Pong (components/FoldPong.vue) -->
   <div class="lost-arcade">
-    <!-- Picked once the page is running, so the prerendered page and the visit can differ -->
-    <button v-if="game" ref="playButton" type="button" class="lost-arcade__play" @click="start">
-      {{ game.emoji }} Play {{ game.name }}
+    <button
+      v-for="g in GAMES"
+      :key="g.id"
+      :ref="el => (playButtons[g.id] = el)"
+      type="button"
+      class="lost-arcade__play"
+      @click="start(g)"
+    >
+      {{ g.emoji }} Play {{ g.name }}
     </button>
     <Teleport to="body">
       <div v-if="playing" class="lost-arcade__court" role="dialog" aria-modal="true" :aria-label="game.name">
@@ -28,18 +34,18 @@
 </template>
 
 <script setup>
-import { pickGame } from '~/utils/arcade.mjs'
-
-// autofocus: put focus on the Play button once it shows (after the 404 page's slide to unlock)
-const props = defineProps({ autofocus: { type: Boolean, default: false } })
+import { GAMES } from '~/utils/arcade.mjs'
 import * as pong from '~/utils/foldPong.mjs'
 import * as blocks from '~/utils/blockBreaker.mjs'
 import * as invaders from '~/utils/spaceInvaders.mjs'
 
 const RULES = { pong, blocks, invaders }
 
+// autofocus: put focus on the first Play button once they show (after the 404 page's slide to unlock)
+const props = defineProps({ autofocus: { type: Boolean, default: false } })
+
 const game = ref(null)
-const playButton = ref(null)
+const playButtons = {} // by game id (refs in a v-for don't promise their order)
 const closeButton = ref(null)
 const canvas = ref(null)
 const playing = ref(false)
@@ -176,7 +182,8 @@ const begin = () => {
   frame = requestAnimationFrame(tick)
 }
 
-const start = async () => {
+const start = async g => {
+  game.value = g
   playing.value = true
   document.documentElement.classList.add('lost-arcade-open')
   // Keys anywhere (focus can leave the buttons when you tap the court)
@@ -198,7 +205,8 @@ const stop = () => {
   playing.value = false
   state = null
   document.documentElement.classList.remove('lost-arcade-open')
-  nextTick(() => playButton.value?.focus())
+  // Back on the button for the game just played
+  nextTick(() => playButtons[game.value?.id]?.focus())
 }
 
 // A finger (or mouse) anywhere aims at the same spot across the screen; held down, it shoots
@@ -241,8 +249,7 @@ const onVisibility = () => {
 }
 
 onMounted(() => {
-  game.value = pickGame()
-  if (props.autofocus) nextTick(() => playButton.value?.focus())
+  if (props.autofocus) nextTick(() => playButtons[GAMES[0].id]?.focus())
   addEventListener('resize', onResize)
   document.addEventListener('visibilitychange', onVisibility)
 })
@@ -259,8 +266,9 @@ onBeforeUnmount(() => {
 <style scoped>
 .lost-arcade {
   display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   justify-content: center;
-  min-height: 2.5rem; /* the button arrives once the page is running: no jump when it does */
   margin-top: 1.5rem;
 }
 
