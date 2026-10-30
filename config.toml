@@ -61,6 +61,13 @@ footer_code = "WKZBHNUJRETD"  # up to 40 characters
 enabled = true
 particles = 12  # how many emoji at once (0–40; phones show at most 8)
 
+[seasons.spooky]
+# Halloween, every year: the home page coin turns into a blinking neon jack-o'-lantern, bat or
+# ghost (a new one on each heads landing), and mist and fog drift over the background on every
+# page. Eastern time, "month-day hour:minute"; `to` is the last minute. Leave it out to skip it.
+from = "10-30 12:00"  # the half day before
+to = "10-31 23:59"
+
 # A theme for every week of the year, in order from Jan 1. Each runs from its `from` day
 # (month-day) until the next one starts. emoji: up to 8; colors: the topographic lines'
 # gradient; motion: "fall" (drift down) or "rise" (float up).

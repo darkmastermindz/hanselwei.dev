@@ -2,6 +2,7 @@
   <div class="app-shell">
     <TopoBackground />
     <SeasonalParticles />
+    <SpookyFog />
     <AppNav />
     <slot />
     <SiteFooter />

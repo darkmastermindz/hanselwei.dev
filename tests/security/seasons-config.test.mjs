@@ -58,3 +58,18 @@ test('hostile names stay strings in the generated module: nothing runs', async (
     assert.equal(globalThis.pwned, undefined)
   }
 })
+
+test('[seasons.spooky] takes only from and to, as plain times', () => {
+  for (const key of [...PROTOTYPE_KEYS, ...JS_BREAKOUTS, 'shape', 'mask']) {
+    const { config, problems } = build({ week: [week()], spooky: { from: '10-30 12:00', to: '10-31 23:59', [key]: 1 } })
+    assert.ok(problems.length >= 1, key)
+    assert.ok(!Object.hasOwn(config.spooky ?? {}, key), key)
+  }
+  for (const value of [...XSS_HTML, ...JS_BREAKOUTS, ...HOSTILE_COLORS]) {
+    for (const spooky of [{ from: value, to: '10-31 23:59' }, { from: '10-30 12:00', to: value }]) {
+      const { config, problems } = build({ week: [week()], spooky })
+      assert.ok(problems.length >= 1, value)
+      assert.equal(config.spooky, null, value)
+    }
+  }
+})

@@ -3,7 +3,8 @@
     <button
       type="button"
       class="token"
-      :class="{ 'is-pressed': pressed, 'is-intro': intro }"
+      :class="{ 'is-pressed': pressed, 'is-intro': intro, 'token--spooky': spooky }"
+      :data-shape="spooky ? SPOOKY_SHAPES[shape].id : undefined"
       aria-label="Hansel's profile picture. Press and hold to spin the token."
       @pointerdown="press"
       @pointerup="release"
@@ -42,6 +43,8 @@
               <path :d="bubbleSettings.qrPath" />
             </svg>
           </span>
+          <!-- Halloween: the shape's own emoji where the monogram goes -->
+          <span v-else-if="spooky" class="token__spook">{{ SPOOKY_SHAPES[shape].emoji }}</span>
           <span v-else class="token__monogram">HW</span>
           <span class="token__caption">hanselwei.dev</span>
         </span>
@@ -105,6 +108,19 @@ const dropFace = i => {
   brokenFaces = [...brokenFaces, i]
   if (face.value === i) face.value = nextFace(i, COIN_FACES.length, brokenFaces)
 }
+// Halloween (config.toml [seasons.spooky]): the coin is cut into a blinking neon jack-o'-lantern,
+// bat or ghost, starting on one at random and turning into the next on each heads landing
+const SPOOKY_SHAPES = [
+  { id: 'pumpkin', emoji: '🎃' },
+  { id: 'bat', emoji: '🦇' },
+  { id: 'ghost', emoji: '👻' }
+]
+const spooky = useSpooky()
+const shape = ref(0)
+const nextShape = () => {
+  if (spooky.value) shape.value = (shape.value + 1) % SPOOKY_SHAPES.length
+}
+
 const resetAt = useState('token:resetAt', () => 0)
 watch(resetAt, () => {
   face.value = -1
@@ -128,6 +144,7 @@ let popId = 0
 onMounted(() => {
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   springs = CSS.supports('transition-timing-function', 'linear(0, 1)')
+  shape.value = Math.floor(Math.random() * SPOOKY_SHAPES.length)
   setTimeout(() => (intro.value = false), 1600)
   const loadPhotos = () => setTimeout(() => (photosReady.value = true), 0)
   if (document.readyState === 'complete') loadPhotos()
@@ -226,6 +243,7 @@ const release = () => {
   if (reducedMotion) {
     if (landsHeads(angle.value)) {
       advanceFace()
+      nextShape()
       showBubble(400)
     }
     return
@@ -246,6 +264,7 @@ const release = () => {
   angle.value = target
   if (landsHeads(target)) {
     advanceFace() // swapped mid-spin, so it never pops on a still coin
+    nextShape()
     showBubble(coastSeconds * 1000)
   }
   speed = 0
@@ -595,6 +614,115 @@ const release = () => {
   to {
     transform: translate(-50%, 0);
     opacity: 0;
+  }
+}
+
+/* Halloween (config.toml [seasons.spooky]): the coin is cut into a shape by a mask on each face
+   and on its core, and glows like a neon sign that flickers now and then. The glow is on the
+   button, so it traces the shape and doesn't flatten the coin's 3D turn. */
+.token[data-shape='pumpkin'] {
+  --neon: #ff7a18;
+  --spook-front: radial-gradient(circle at 50% 40%, #ffb347, #f97316 55%, #9a3412);
+  --spook-back: radial-gradient(circle at 50% 35%, #fdba74, #ea580c 60%, #7c2d12);
+  --spook-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cellipse cx='30' cy='60' rx='26' ry='35'/%3E%3Cellipse cx='70' cy='60' rx='26' ry='35'/%3E%3Cellipse cx='50' cy='59' rx='30' ry='38'/%3E%3Crect x='45' y='5' width='10' height='20' rx='3' transform='rotate(12 50 15)'/%3E%3C/svg%3E");
+}
+
+.token[data-shape='bat'] {
+  --neon: #c026ff;
+  --spook-front: radial-gradient(circle at 50% 45%, #a855f7, #581c87 60%, #1e0533);
+  --spook-back: radial-gradient(circle at 50% 40%, #7e22ce, #3b0764 60%, #12001f);
+  --spook-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='54' r='31'/%3E%3Cpath d='M30 34 L33 10 L45 27 Z M70 34 L67 10 L55 27 Z M26 42 L0 26 L7 46 L0 64 L13 59 L17 75 L28 64 Z M74 42 L100 26 L93 46 L100 64 L87 59 L83 75 L72 64 Z'/%3E%3C/svg%3E");
+}
+
+.token[data-shape='ghost'] {
+  --neon: #67e8f9;
+  --spook-front: radial-gradient(circle at 50% 35%, #f8fafc, #cbd5e1 60%, #64748b);
+  --spook-back: radial-gradient(circle at 50% 35%, #ffffff, #e2e8f0 55%, #94a3b8);
+  --spook-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M14 97 L14 47 A36 36 0 0 1 86 47 L86 97 L74 86 L62 97 L50 86 L38 97 L26 86 Z'/%3E%3C/svg%3E");
+}
+
+.token--spooky {
+  filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 6px var(--neon)) drop-shadow(0 0 16px var(--neon));
+  animation: neon-flicker 5s linear infinite;
+
+  &.is-pressed {
+    animation: none;
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 10px var(--neon)) drop-shadow(0 0 28px var(--neon));
+  }
+
+  .token__face,
+  .token__edge {
+    -webkit-mask: var(--spook-mask) center / 100% 100% no-repeat;
+    mask: var(--spook-mask) center / 100% 100% no-repeat;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .token__face {
+    box-shadow: inset 0 -12px 30px rgba(0, 0, 0, 0.45);
+  }
+
+  .token__face--front {
+    background: var(--spook-front);
+  }
+
+  .token__face--back {
+    background: var(--spook-back);
+  }
+
+  .token__edge {
+    inset: 0;
+    background: var(--neon);
+  }
+
+  .token__photo {
+    border-radius: 0;
+  }
+}
+
+/* The jack-o'-lantern's ribs and an orange cast, over the Bitmoji or photo */
+.token[data-shape='pumpkin'] .token__face--front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 20% 46% at 50% 60%, transparent 86%, rgba(124, 45, 18, 0.55) 93%, transparent 99%),
+    radial-gradient(ellipse 40% 45% at 50% 60%, transparent 88%, rgba(124, 45, 18, 0.5) 94%, transparent 99%),
+    rgba(249, 115, 22, 0.2);
+}
+
+/* The shape's emoji on tails, glowing in the same neon */
+.token__spook {
+  font-size: calc(var(--size) * 0.42);
+  line-height: 1;
+  filter: drop-shadow(0 0 6px var(--neon));
+}
+
+/* A neon sign: steady, with a quick stutter now and then */
+@keyframes neon-flicker {
+  0%,
+  17%,
+  21%,
+  24%,
+  61%,
+  64%,
+  100% {
+    filter: drop-shadow(0 0 1px #fff) drop-shadow(0 0 6px var(--neon)) drop-shadow(0 0 16px var(--neon));
+  }
+  19%,
+  22.5%,
+  62.5% {
+    filter: drop-shadow(0 0 0 transparent) drop-shadow(0 0 2px var(--neon)) drop-shadow(0 0 0 transparent);
+  }
+  40% {
+    filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 9px var(--neon)) drop-shadow(0 0 24px var(--neon));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .token--spooky {
+    animation: none;
   }
 }
 </style>
