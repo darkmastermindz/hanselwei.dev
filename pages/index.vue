@@ -1,7 +1,7 @@
 <template>
   <main class="outer home">
-    <!-- Pull down from the top, at or above the name, to start the coin over -->
-    <PullToRefresh zone=".home__name" />
+    <!-- Pull down around the coin (between the nav bar and the name) to start it over -->
+    <PullToRefresh from=".home__hero" to=".home__name" />
     <!-- Two plain groups (no change to the usual layout) that foldables split across the fold:
          the hero and, below it, the deck (see the "Foldables" styles) -->
     <div class="home__hero">
