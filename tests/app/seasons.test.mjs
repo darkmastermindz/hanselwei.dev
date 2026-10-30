@@ -33,6 +33,18 @@ test('October is spooky, and All Things Open takes over during the event', () =>
   assert.notEqual(themeFor(config, '2027-10-20').name, 'All Things Open') // dated: one year only
 })
 
+test('GitHub Universe takes over Oct 28–30, 2026, and Halloween is still Halloween', () => {
+  for (const day of ['2026-10-28', '2026-10-29', '2026-10-30']) {
+    const theme = themeFor(config, day)
+    assert.equal(theme.name, 'GitHub Universe', day)
+    assert.ok(theme.emoji.includes('🐙'))
+    assert.deepEqual(theme.colors, ['#a371f7', '#3fb950'])
+  }
+  assert.notEqual(themeFor(config, '2026-10-27').name, 'GitHub Universe')
+  assert.match(themeFor(config, '2026-10-31').name, /Halloween/)
+  assert.notEqual(themeFor(config, '2027-10-29').name, 'GitHub Universe') // dated: one year only
+})
+
 test('a few holidays land in their week', () => {
   assert.match(themeFor(config, '2026-01-01').name, /New Year/)
   assert.match(themeFor(config, '2026-02-14').name, /Valentine/)

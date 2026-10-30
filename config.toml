@@ -400,6 +400,14 @@ emoji = ["💻", "🐧", "🌰", "🎤", "⭐", "🔓"]  # 🌰 Raleigh is the C
 colors = ["#f97316", "#22d3ee"]
 motion = "rise"
 
+[[seasons.event]]
+name = "GitHub Universe"
+from = 2026-10-28
+to = 2026-10-30  # GitHub Universe 2026, San Francisco (October 28–29), plus a day of cooldown
+emoji = ["🐙", "🐱", "🚀", "🌌", "🤖", "🌉", "✨"]  # 🐙🐱 the Octocat, 🤖 Copilot, 🌉 San Francisco
+colors = ["#a371f7", "#3fb950"]  # GitHub's purple and green
+motion = "rise"
+
 [lucky]
 # I'm Feeling Lucky on the 404 page (utils/lucky.mjs): a random blog post opens, or a home page
 # fact or a definition is searched for you, Let Me Google That For You style, in the page.

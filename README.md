@@ -65,7 +65,7 @@ Faint purple-to-green contour lines (in the season's colours while a seasonal th
 - `draw_seconds` (0–600): time on the page to draw everything. `0` shows it all at once. Reduced-motion settings also show it all at once.
 
 ## Seasonal themes
-Every week of the year has a theme: a few themed emoji drift down (or float up) over the background on every page, and the topographic lines take the theme's two colours. October is spooky (Hacktoberfest, pumpkins, bats, Halloween), December has the winter holidays, and so on. Dated events take over while they run, like All Things Open in Raleigh with laptops, Linux penguins and Raleigh's acorns.
+Every week of the year has a theme: a few themed emoji drift down (or float up) over the background on every page, and the topographic lines take the theme's two colours. October is spooky (Hacktoberfest, pumpkins, bats, Halloween), December has the winter holidays, and so on. Dated events take over while they run, like All Things Open in Raleigh with laptops, Linux penguins and Raleigh's acorns, and GitHub Universe in San Francisco with the Octocat 🐙🐱, rockets, Copilot 🤖 and the Golden Gate 🌉 in GitHub's purple and green.
 - The themes live in `config.toml` under `[seasons]`, checked by `utils/seasons.mjs`; the build fails on a bad value.
   - `enabled`: `true` or `false`.
   - `particles` (0–40): how many emoji at once. Phones show at most 8.
