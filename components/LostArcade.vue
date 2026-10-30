@@ -74,14 +74,24 @@ const setUp = () => {
   el.width = Math.round(innerWidth * dpr)
   el.height = Math.round(innerHeight * dpr)
   el.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
+  // The play starts below the score and how to play, however many lines they take on this screen
+  courtTop = hudBottom()
   // Paddle Ball's court runs along `u` (utils/foldPaddleBall.mjs): here up the screen, with you at the bottom,
   // the computer's end below the score and how to play
-  return game.value.id === 'paddle' ? { length: innerHeight - PADDLE_TOP - PADDLE_BOTTOM, breadth: innerWidth } : { width: innerWidth, height: innerHeight }
+  return game.value.id === 'paddle'
+    ? { length: innerHeight - courtTop - PADDLE_BOTTOM, breadth: innerWidth }
+    : { width: innerWidth, height: innerHeight, top: courtTop }
 }
 
-// Where Paddle Ball's court ends, from the top and bottom of the screen
-const PADDLE_TOP = 64
+// Where the score and how to play end (with a little room), so nothing is drawn under them
+const hudBottom = () => {
+  const lines = [...document.querySelectorAll('.lost-arcade__score, .lost-arcade__how')]
+  return Math.ceil(Math.max(48, ...lines.map(el => el.getBoundingClientRect().bottom))) + 12
+}
+
+// Where Paddle Ball's court ends at the bottom of the screen (its top is courtTop)
 const PADDLE_BOTTOM = 24
+let courtTop = 64
 
 const drawPaddle = ctx => {
   const w = innerWidth
@@ -99,7 +109,7 @@ const drawPaddle = ctx => {
   ctx.fillStyle = YOU
   ctx.fillRect(state.you.v - state.you.size / 2, end - 4 - thick, state.you.size, thick)
   ctx.fillStyle = THEM
-  ctx.fillRect(state.cpu.v - state.cpu.size / 2, PADDLE_TOP + 4, state.cpu.size, thick)
+  ctx.fillRect(state.cpu.v - state.cpu.size / 2, courtTop + 4, state.cpu.size, thick)
   coin(ctx, state.ball.v, end - state.ball.u, state.ball.r)
 }
 
@@ -302,11 +312,17 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   margin: 0;
-  padding: 0 5.5rem; /* clear of the buttons */
+  padding: 0 5rem; /* clear of the buttons */
   text-align: center;
   color: #eee;
   font-family: "Nova Mono", monospace;
-  font-size: 1.1rem;
+  /* One line, smaller on narrow phones, so it never runs into how to play or the game */
+  font-size: clamp(0.8rem, 3.6vw, 1.1rem);
+  line-height: 1.4;
+  min-height: 1.4em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
 

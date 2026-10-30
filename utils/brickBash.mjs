@@ -6,7 +6,7 @@
 
 export const LIVES = 3
 const ROWS = 5
-const TOP = 64 // room for the score above the bricks
+const TOP = 64 // room for the score above the bricks, unless the court says how much (newGame's top)
 const GAP = 4
 const LAUNCH_DELAY = 0.8 // seconds the ball sits on the paddle before it goes
 const START_SPEED = 0.55 // court heights per second
@@ -24,14 +24,14 @@ const onPaddle = state => ({
   wait: LAUNCH_DELAY
 })
 
-export function newGame({ width, height }) {
+export function newGame({ width, height, top = TOP }) {
   const cols = clamp(Math.floor(width / 72), 5, 12)
   const brickW = (width - GAP * (cols + 1)) / cols
   const brickH = clamp(height * 0.035, 14, 24)
   const bricks = []
   for (let row = 0; row < ROWS; row++) {
     for (let col = 0; col < cols; col++) {
-      bricks.push({ x: GAP + col * (brickW + GAP), y: TOP + row * (brickH + GAP), w: brickW, h: brickH, row })
+      bricks.push({ x: GAP + col * (brickW + GAP), y: top + row * (brickH + GAP), w: brickW, h: brickH, row })
     }
   }
   return onPaddle({

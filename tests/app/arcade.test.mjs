@@ -118,3 +118,12 @@ test('a long frame (a hidden tab) never moves things more than a short one would
   const i = { ...aliens.newGame(court), wait: 0 }
   assert.ok(aliens.step(i, 5).block.x - i.block.x <= 800 * 0.06 * 0.05 + 1e-9)
 })
+
+test('the court can start lower, below however much text sits above it', () => {
+  const b = bricks.newGame({ ...court, top: 120 })
+  assert.equal(Math.min(...b.bricks.map(x => x.y)), 120)
+  assert.equal(Math.min(...bricks.newGame(court).bricks.map(x => x.y)), 64, 'the default')
+  const a = aliens.newGame({ ...court, top: 120 })
+  assert.equal(a.block.y, 120)
+  assert.ok(Math.min(...a.invaders.map(i => aliens.invaderBox(a, i).y)) >= 120)
+})

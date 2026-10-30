@@ -7,7 +7,7 @@
 
 export const LIVES = 3
 const ROWS = 4
-const TOP = 64 // room for the score above the invaders
+const TOP = 64 // room for the score above the invaders, unless the court says how much (newGame's top)
 const START_DELAY = 0.8 // seconds before anything moves, at the start and after a hit
 const MARCH_SPEED = 0.06 // court widths per second with all of them left...
 const MARCH_SPEED_LAST = 0.45 // ...and with the last one
@@ -25,7 +25,7 @@ const random = seed => {
   return [next / 2 ** 32, next]
 }
 
-export function newGame({ width, height }, seed = 1) {
+export function newGame({ width, height, top = TOP }, seed = 1) {
   const cols = clamp(Math.floor(width / 56), 5, 10)
   const cell = Math.min(52, (width * 0.72) / cols)
   const invaders = []
@@ -37,7 +37,7 @@ export function newGame({ width, height }, seed = 1) {
     total: invaders.length,
     invaders,
     // The block's top-left corner, and which way it's marching
-    block: { x: (width - cols * cell) / 2, y: TOP, dir: 1 },
+    block: { x: (width - cols * cell) / 2, y: top, dir: 1 },
     ship: { x: width / 2, y: height - 44, w: clamp(width * 0.08, 30, 48), h: 16 },
     shot: null,
     bombs: [],

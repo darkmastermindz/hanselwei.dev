@@ -130,7 +130,7 @@ Any address that isn't on the site gets the 404 page (`error.vue`, Nuxt's error 
 - **Brick Bash**: knock out every brick, with three lives (`utils/brickBash.mjs`).
 - **Alien Attack**: shoot the marching block before it lands or its bombs cost your three lives (`utils/alienAttack.mjs`).
 
-Drag anywhere (held down, that also shoots) or use ← → (and Space to shoot); Escape closes. Each game's rules are pure, like Fold Paddle Ball's, and tested in `tests/app/arcade.test.mjs`. `tests/app/lucky.test.mjs` and `tests/security/lucky.test.mjs` cover Surprise me, and `tests/e2e/not-found.spec.mjs` unlocks the arcade, checks every game shows, plays each one and tries each kind of lucky pick in the browser.
+Drag anywhere (held down, that also shoots) or use ← → (and Space to shoot); Escape closes. The score stays on one line, and each game starts below the score and how to play, however many lines they take on the screen. Each game's rules are pure, like Fold Paddle Ball's, and tested in `tests/app/arcade.test.mjs`. `tests/app/lucky.test.mjs` and `tests/security/lucky.test.mjs` cover Surprise me, and `tests/e2e/not-found.spec.mjs` unlocks the arcade, checks every game shows, plays each one and tries each kind of lucky pick in the browser.
 
 ## Foldables and iPhone Duo
 
