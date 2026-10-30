@@ -1,5 +1,5 @@
 <template>
-  <nav :class="['app-nav bg-neutral text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
+  <nav :class="['app-nav liquid-glass liquid-glass-scroll-edge text-neutral-content', { 'app-nav--home': route.path === '/' }]" aria-label="Main">
     <div class="app-nav__links">
       <NuxtLink
         v-for="link in links"
@@ -15,6 +15,8 @@
       <Transition name="reveal">
         <AuthButton v-if="showSignIn" />
       </Transition>
+      <!-- iPad held sideways: read the site as a book -->
+      <BookToggle />
     </div>
   </nav>
 </template>
@@ -49,6 +51,14 @@ const links = [
   /* Keep clear of the notch / status bar when installed as an app */
   padding: calc(env(safe-area-inset-top) + 0.5rem) max(env(safe-area-inset-right), 0.5rem) 0.5rem
     max(env(safe-area-inset-left), 0.5rem);
+}
+
+/* Liquid Glass and its scroll edge effect come from the `liquid-glass` classes
+   (packages/tailwind-ios-glass). The scroll edge is for a bar at the top: not when the menu sits
+   on a foldable's lower half or left page (below). */
+:root[data-fold='tabletop'] .app-nav::after,
+:root[data-fold='book'] .app-nav::after {
+  display: none;
 }
 
 /* Installed as an app: a little more room around the nav and between its rows. The media query
@@ -179,7 +189,8 @@ const links = [
 
 /* Sign in appears in line with the other buttons with a little shimmer */
 .reveal-enter-active {
-  animation: reveal-in 0.7s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+  /* The pop is SwiftUI's .bouncy spring (it overshoots on its own); the glow fades on its own curve */
+  animation: reveal-in var(--spring-bouncy-duration) var(--spring-bouncy), reveal-glow 0.7s ease;
 }
 
 .reveal-leave-active {
@@ -191,18 +202,23 @@ const links = [
 }
 
 @keyframes reveal-in {
-  0% {
+  from {
     opacity: 0;
     transform: scale(0.6) rotate(-8deg);
+  }
+  to {
+    transform: none;
+  }
+}
+
+@keyframes reveal-glow {
+  0% {
     filter: drop-shadow(0 0 0 #fbbf24);
   }
   60% {
-    opacity: 1;
-    transform: scale(1.12) rotate(2deg);
     filter: drop-shadow(0 0 10px #fbbf24);
   }
   100% {
-    transform: none;
     filter: none;
   }
 }

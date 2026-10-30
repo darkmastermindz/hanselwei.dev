@@ -4,5 +4,6 @@ export default defineEventHandler(async event => {
   if (!post) throw createError({ statusCode: 404, statusMessage: 'Post not found' })
 
   const { content, ...meta } = post
-  return { ...meta, html: renderMarkdown(content) }
+  const html = renderMarkdown(content)
+  return { ...meta, html: meta.glossary ? glossaryHtml(html, { idPrefix: `${slug}-term` }) : html }
 })

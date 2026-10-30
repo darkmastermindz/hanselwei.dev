@@ -2,7 +2,7 @@
 // - Build assets (/_nuxt/*, icons) are cache-first: their names are content-hashed.
 // - Pages are network-first, falling back to the last cached copy when offline.
 // - API responses (/api/*) are network-first so the gear inventory stays fresh. Sign-in, /api/me
-//   and the Bio photo bypass the worker entirely (never cached).
+//   the Bio photo and the live kudos counts bypass the worker entirely (never cached).
 const VERSION = 'v8'
 const STATIC_CACHE = `static-${VERSION}`
 const RUNTIME_CACHE = `runtime-${VERSION}`
@@ -62,6 +62,8 @@ self.addEventListener('fetch', event => {
   // Never cache sign-in traffic or who's signed in, or the Bio photo (served no-store, only to the page)
   if (url.pathname.startsWith('/.netlify/') || url.pathname.startsWith('/api/auth/') || url.pathname === '/api/me') return
   if (url.pathname === '/api/bio-photo') return
+  // Live kudos counts: always the network's, never an old copy
+  if (url.pathname === '/api/kudos') return
 
   if (url.pathname.startsWith('/_nuxt/') || url.pathname.startsWith('/icons/')) {
     event.respondWith(cacheFirst(request))

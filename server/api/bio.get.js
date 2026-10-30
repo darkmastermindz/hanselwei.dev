@@ -10,7 +10,8 @@ export default defineEventHandler(async () => {
   return {
     title: data.title || 'Bio',
     description: data.description || '',
-    html: renderMarkdown(content),
+    // Acronyms and jargon get their definitions (README "Glossary terms")
+    html: glossaryHtml(renderMarkdown(content), { idPrefix: 'bio-term' }),
     readme: readme ? renderMarkdown(readme) : ''
   }
 })

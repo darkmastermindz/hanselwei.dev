@@ -1,0 +1,49 @@
+# Gear list edits from the site (README "Editing gear lists"): the editor on /gear/<list> keeps
+# them on Netlify (/api/gear/submit); this workflow signs in to the site with GitHub's own token for
+# this run (no stored secret), has the site check each edit was signed by a signed-in owner,
+# applies them to data/gear/*.json on the gear-updates branch, and opens or updates the one "Gear
+# updates" pull request (scripts/gear-updates.mjs). Runs weekly, whenever main changes (a merged
+# pull request), and on demand from main.
+name: Gear updates
+on:
+  schedule:
+    - cron: '23 13 * * 1' # Mondays, 13:23 UTC
+  # A merged pull request is a push to main. (Not pull_request: the site only answers this
+  # workflow's runs on main, and a pull request's run is on its merge ref.)
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  # GitHub's sign-in token for this run, which the site checks (netlify/lib/githubOidc.mjs)
+  id-token: write
+
+# One run at a time; a run that's waiting picks up everything the one before it left
+concurrency:
+  group: gear-updates
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply gear edits
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Third-party actions are pinned to full commit SHAs (Dependabot keeps them current).
+      # Always main's code and data, whatever triggered the run.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # No secrets: the site reads GitHub's token for this run, and checks the edits' signatures
+      # itself (/api/gear/verify)
+      - run: node scripts/gear-updates.mjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

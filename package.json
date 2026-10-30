@@ -16,7 +16,7 @@
     "sync:contributions": "node scripts/sync-contributions.mjs",
     "sync:readme": "node scripts/sync-readme.mjs",
     "pretest": "npm run build:access && npm run build:projects && npm run build:background && npm run build:coin-bubble && npm run build:seasons && npm run build:credits && npm run sync:contributions && npm run sync:readme",
-    "test": "node --test \"tests/**/*.test.mjs\"",
+    "test": "node --test \"tests/**/*.test.mjs\" \"packages/*/test/*.test.mjs\"",
     "test:android": "playwright test",
     "predev": "npm run build:access && npm run build:projects && npm run build:background && npm run build:coin-bubble && npm run build:seasons && npm run build:credits && npm run sync:contributions && npm run sync:readme",
     "prebuild": "npm test && npm run sync:devto",
@@ -31,6 +31,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@netlify/blobs": "^11.1.6",
     "@pinia/nuxt": "^1.0.3",
     "daisyui": "^3.9.4",
     "marked": "^14.1.4",
@@ -56,6 +57,7 @@
     "postcss": "^8.5.28",
     "sass": "^1.104.0",
     "smol-toml": "^1.9.1",
+    "tailwind-ios-glass": "file:packages/tailwind-ios-glass",
     "uqr": "0.1.3"
   }
 }

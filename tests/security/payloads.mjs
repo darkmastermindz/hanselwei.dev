@@ -148,3 +148,151 @@ export const OUTBOUND_IDS = [
   '%6Dastodon',
   ''
 ]
+
+// Gear list edits (README "Editing gear lists"): text from the editor that ends up in a JSON
+// file, a commit message and a pull request on GitHub
+export const GEAR_TEXT = [
+  'Rope\n\nSigned-off-by: Mallory <m@evil.example>',
+  'Rope\r\nCo-Authored-By: evil',
+  '@everyone please merge',
+  '`rm -rf /`',
+  'Rope‮epoR', // right-to-left override
+  'Rope​‍', // zero-width characters
+  '\u0000\u0007\u001b[31mred',
+  '<img src=x onerror=alert(1)>',
+  '{{ constructor.constructor("alert(1)")() }}',
+  'x'.repeat(10_000)
+]
+
+// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a known XP entry id counts
+export const KUDOS_BODIES = [
+  '',
+  'null',
+  '[]',
+  '"education-ytt200"',
+  '{"id":null}',
+  '{"id":1}',
+  '{"id":["education-ytt200"]}',
+  '{"id":{"toString":"education-ytt200"}}',
+  '{"id":"__proto__"}',
+  '{"__proto__":{"id":"education-ytt200"}}',
+  '{"id":"constructor"}',
+  '{"id":"education-ytt200 "}',
+  '{"id":"EDUCATION-YTT200"}',
+  '{"id":"../counts"}',
+  '{"id":"counts"}',
+  '{"id":"seen/2026-10-25/x"}',
+  '{"id":"<img src=x onerror=alert(1)>"}',
+  '{id:"education-ytt200"}'
+]
+
+// Post ids for kudos (`post-<slug>`): only a plain slug, and only for a post the site has
+export const KUDOS_POST_IDS = [
+  'post-',
+  'post--x',
+  'post-../counts',
+  'post-hello-world/../x',
+  'post-hello-world/',
+  'post-Hello-World',
+  'post-hello world',
+  'post-hello%2Fworld',
+  'post-hello.world',
+  'post-hello-world\u0000',
+  'post-__proto__',
+  `post-${'a'.repeat(300)}`,
+  'POST-hello-world',
+  'posthello-world'
+]
+
+// Bearer tokens for /api/gear/pending (GitHub Actions' sign-in, netlify/lib/githubOidc.mjs) that
+// aren't a token at all; the ones that look right but are signed or aimed wrong are made in
+// tests/security/github-oidc.test.mjs
+export const BAD_BEARER_TOKENS = [
+  '',
+  'null',
+  'Bearer',
+  'a.b',
+  'a.b.c.d',
+  '..',
+  'eyJhbGciOiJub25lIn0.eyJpc3MiOiJodHRwczovL3Rva2VuLmFjdGlvbnMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIn0.',
+  'not base64!.x.y',
+  '<script>alert(1)</script>',
+  'x'.repeat(10_000)
+]
+
+// Build-environment values that must never pass as a commit (utils/buildCommit.mjs)
+export const BAD_COMMITS = [
+  '',
+  'main',
+  'abc1234', // short hashes aren't accepted
+  'g'.repeat(40),
+  'a'.repeat(39),
+  'a'.repeat(41),
+  'a'.repeat(40) + '"><script>alert(1)</script>',
+  '"><script>alert(1)</script>' + 'a'.repeat(40),
+  'a'.repeat(40) + '\nX-Injected: 1',
+  '../../' + 'a'.repeat(34),
+  'javascript:alert(1)',
+  { toString: () => 'a'.repeat(40) },
+  ['a'.repeat(40)],
+  null,
+  undefined,
+  40
+]
+
+// Visitor addresses as the kudos function might see them (netlify/functions/kudos.mjs visitorNet):
+// odd, broken or hostile ones must never throw or grow the stored marker
+export const KUDOS_IPS = [
+  '',
+  ' ',
+  '::',
+  ':::',
+  '1::2::3',
+  '12345::1',
+  'g::1',
+  '1:2:3:4:5:6:7:8:9',
+  '999.999.999.999',
+  '1.2.3',
+  '::ffff:999.1.1.1',
+  '[::1',
+  'fe80::1%' + 'x'.repeat(500),
+  '__proto__',
+  '<script>alert(1)</script>',
+  '../../seen',
+  'x'.repeat(10_000)
+]
+
+// Blog slugs as I'm Feeling Lucky would turn them into a path (utils/lucky.mjs luckyPool): anything
+// that could leave the site, climb out of /blog or carry markup
+export const LUCKY_SLUGS = [
+  '//evil.example',
+  'https://evil.example',
+  'javascript:alert(1)',
+  '../../admin',
+  '..',
+  'a/b',
+  'hello world',
+  'x?redirect=https://evil.example',
+  'x#frag',
+  '%2F%2Fevil.example',
+  '<img src=x onerror=alert(1)>',
+  '\\\\evil.example',
+  '-leading-dash',
+  ''
+]
+
+// config.toml [lucky] search_engine_id goes into the cse.js script URL (components/LetMeSearch.vue)
+export const BAD_SEARCH_ENGINE_IDS = [
+  'abc&cx=other',
+  'abc"><script>alert(1)</script>',
+  'abc/../../evil.js',
+  'abc?x=1',
+  'abc#x',
+  'abc def',
+  'https://evil.example/x.js',
+  'a'.repeat(65),
+  42,
+  true,
+  ['abc'],
+  { id: 'abc' }
+]

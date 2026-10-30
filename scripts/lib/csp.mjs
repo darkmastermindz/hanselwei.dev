@@ -40,28 +40,36 @@ export const ANALYTICS_CONNECT = ['https://queue.simpleanalyticscdn.com']
 // The projects page lists repos from the GitHub API
 export const CONNECT = ['https://api.github.com', ...ANALYTICS_CONNECT]
 
+// Google's Programmable Search Element (I'm Feeling Lucky's in-page results, components/LetMeSearch.vue),
+// only allowed when config.toml [lucky] sets a search engine: its script, the scripts it loads,
+// its result requests, styles and the frames it draws ads and image results in
+export const GOOGLE_SEARCH = ['https://cse.google.com', 'https://www.google.com']
+export const GOOGLE_SEARCH_FRAMES = [...GOOGLE_SEARCH, 'https://syndicatedsearch.goog']
+
 // `reportOnly`: the policy deploy previews only report on (scripts/build-csp.mjs). Browsers ignore
 // upgrade-insecure-requests there and warn about it on every page, so it's left out.
-export const buildCsp = ({ scripts = [], handlers = [], reportOnly = false } = {}) => {
+export const buildCsp = ({ scripts = [], handlers = [], reportOnly = false, googleSearch = false } = {}) => {
   const handlerList = [...handlers].sort()
+  const search = googleSearch ? GOOGLE_SEARCH : []
   return [
     "default-src 'self'",
     [
       'script-src',
       "'self'",
       ...ANALYTICS_SCRIPTS,
+      ...search,
       ...[...scripts].sort(),
       ...(handlerList.length ? ["'unsafe-hashes'", ...handlerList] : [])
     ].join(' '),
     // Vue and the components set inline styles; styles can't run code
-    ['style-src', "'self'", "'unsafe-inline'", ...FONT_STYLES].join(' '),
+    ['style-src', "'self'", "'unsafe-inline'", ...FONT_STYLES, ...search].join(' '),
     ['font-src', "'self'", 'data:', ...FONT_FILES].join(' '),
     "img-src 'self' https: data:",
-    ['connect-src', "'self'", ...CONNECT].join(' '),
+    ['connect-src', "'self'", ...CONNECT, ...search].join(' '),
     "manifest-src 'self'",
     "worker-src 'self'",
     "media-src 'self' https:",
-    "frame-src 'none'",
+    googleSearch ? ['frame-src', ...GOOGLE_SEARCH_FRAMES].join(' ') : "frame-src 'none'",
     "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",

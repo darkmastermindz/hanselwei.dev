@@ -47,6 +47,10 @@
         <a v-if="entry.link" :href="entry.link" target="_blank" rel="noopener" class="entry__link">
           🔗 {{ hostname(entry.link) }}
         </a>
+        <p class="entry__actions">
+          <KudosButton :id="`post-${entry.slug}`" :name="entry.title" />
+          <ShareButton :path="`/blog/${entry.slug}`" :title="entry.title" />
+        </p>
       </article>
     </section>
   </main>
@@ -58,6 +62,9 @@ import { hashtag } from '~/utils/chips.js'
 useHead({ title: 'Curiosity Feed · Hansel Wei' })
 
 const { data: entries } = await useFetch('/api/blog/feed', { default: () => [] })
+// Kudos on each entry (components/KudosButton.vue), live while the feed is open
+const kudos = useKudos()
+kudos.watchActive(() => true)
 
 const activeTag = ref(null)
 const activeSeries = ref(null)
@@ -181,6 +188,14 @@ const hostname = url => {
 .entry__body :deep(img) {
   max-width: 100%;
   height: auto;
+}
+
+.entry__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
 }
 
 .entry__link {

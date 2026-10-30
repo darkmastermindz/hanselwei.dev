@@ -399,3 +399,12 @@ to = 2026-10-21  # All Things Open 2026, Raleigh (October 19–20), plus a day o
 emoji = ["💻", "🐧", "🌰", "🎤", "⭐", "🔓"]  # 🌰 Raleigh is the City of Oaks
 colors = ["#f97316", "#22d3ee"]
 motion = "rise"
+
+[lucky]
+# I'm Feeling Lucky on the 404 page (utils/lucky.mjs): a random blog post opens, or a home page
+# fact or a definition is searched for you, Let Me Google That For You style, in the page.
+# To show Google's results in the page, make a Programmable Search Engine set to search the whole
+# web (https://programmablesearchengine.google.com) and put its Search engine ID here. The site's
+# Content-Security-Policy then allows Google's search scripts and frames (scripts/lib/csp.mjs).
+# Empty: the search ends with a link to the same search on Google.
+search_engine_id = ""

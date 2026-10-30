@@ -1,6 +1,15 @@
+import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { buildCommit } from './utils/buildCommit.mjs'
 import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
 import { OUTBOUND } from './utils/outbound.js'
+import { parse } from 'smol-toml'
+import { luckyConfig } from './utils/lucky.mjs'
+
+// config.toml [lucky]: the Programmable Search Engine for I'm Feeling Lucky (a bad ID fails the build)
+const lucky = luckyConfig(parse(readFileSync(new URL('./config.toml', import.meta.url), 'utf8')))
+if (lucky.problems.length) throw new Error(`config.toml: ${lucky.problems.join('; ')}`)
 
 export default defineNuxtConfig({
   nitro: {
@@ -13,7 +22,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml'],
+      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml', '/lucky.json'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }
@@ -69,14 +78,21 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // Netlify builds send the coin photos through Netlify's Image CDN (utils/coinFaces.mjs)
-      imageCdn: process.env.NETLIFY === 'true'
+      imageCdn: process.env.NETLIFY === 'true',
+      // The commit this build was made from, shown in the footer to the signed-in owner only
+      // (components/SiteFooter.vue, utils/buildCommit.mjs)
+      // I'm Feeling Lucky's in-page Google results (config.toml [lucky], components/LetMeSearch.vue)
+      searchEngineId: lucky.config.searchEngineId,
+      commit: buildCommit(process.env, () => execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString()) || ''
     }
   },
   /*
    ** Global CSS
    */
   css: [
-    'tachyons/css/tachyons.css'
+    'tachyons/css/tachyons.css',
+    // SwiftUI's spring presets as CSS easings (utils/spring.mjs)
+    '~/assets/css/springs.css'
   ],
   // Nuxt 4's CSS minifier (Lightning CSS) stops at old Internet Explorer hacks such as tachyons'
   // `*zoom: 1`; with error recovery it drops them instead (no modern browser reads them anyway)

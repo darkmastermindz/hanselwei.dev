@@ -1,0 +1,20 @@
+{
+  "name": "tailwind-ios-glass",
+  "version": "0.1.0",
+  "description": "Apple's Liquid Glass and standard materials (frosted glass) as Tailwind CSS classes",
+  "license": "MIT",
+  "author": "Hansel Wei",
+  "type": "commonjs",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./refraction": "./refraction.mjs"
+  },
+  "files": ["index.js", "refraction.mjs", "README.md"],
+  "peerDependencies": {
+    "tailwindcss": "^3.0.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  }
+}
