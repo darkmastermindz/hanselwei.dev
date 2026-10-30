@@ -1,7 +1,7 @@
 // Alien Attack (components/LostArcade.vue, on the 404 page): a block of invaders marches side to
 // side, stepping down at each edge. Shoot them all before they land; their bombs cost a life.
 //
-// Like utils/foldPong.mjs, everything is in CSS pixels and seconds (x across, y down, the
+// Like utils/foldPaddleBall.mjs, everything is in CSS pixels and seconds (x across, y down, the
 // screen's own), and step() is pure: same state, same result. Which invader drops the next bomb
 // comes from a seeded random number kept in the state, so a game can be replayed exactly.
 

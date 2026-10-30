@@ -1,6 +1,6 @@
 <template>
   <!-- The 404 page's easter egg: every classic game in the arcade (utils/arcade.mjs), in the same
-       style as Fold Pong (components/FoldPong.vue) -->
+       style as Fold Paddle Ball (components/FoldPaddleBall.vue) -->
   <div class="lost-arcade">
     <button
       v-for="g in GAMES"
@@ -35,7 +35,7 @@
 
 <script setup>
 import { GAMES } from '~/utils/arcade.mjs'
-import * as paddle from '~/utils/foldPong.mjs' // Paddle Ball plays by Fold Pong's rules
+import * as paddle from '~/utils/foldPaddleBall.mjs' // the same rules as Fold Paddle Ball
 import * as bricks from '~/utils/brickBash.mjs'
 import * as aliens from '~/utils/alienAttack.mjs'
 
@@ -61,7 +61,7 @@ let last = 0
 
 const rules = () => RULES[game.value.id]
 
-// Colours from Fold Pong: you green, the other side purple, the ball a gold coin
+// Colours from Fold Paddle Ball: you green, the other side purple, the ball a gold coin
 const BG = '#1d232a'
 const YOU = '#7cfc00'
 const THEM = '#c084fc'
@@ -74,7 +74,7 @@ const setUp = () => {
   el.width = Math.round(innerWidth * dpr)
   el.height = Math.round(innerHeight * dpr)
   el.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
-  // Paddle Ball's court runs along `u` (utils/foldPong.mjs): here up the screen, with you at the bottom,
+  // Paddle Ball's court runs along `u` (utils/foldPaddleBall.mjs): here up the screen, with you at the bottom,
   // the computer's end below the score and how to play
   return game.value.id === 'paddle' ? { length: innerHeight - PADDLE_TOP - PADDLE_BOTTOM, breadth: innerWidth } : { width: innerWidth, height: innerHeight }
 }

@@ -22,7 +22,7 @@
           <strong>Hansel Wei</strong>
         </h1>
         <ContactCardButton :unlocked="humanVerified" />
-        <FoldPong />
+        <FoldPaddleBall />
       </div>
     </div>
 

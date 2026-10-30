@@ -1,23 +1,23 @@
 <template>
   <!-- Only on iPhone Duo's inner screen (<html data-device="iphone-duo">): a little game that uses
-       the room the fold gives, with the fold itself as the net (utils/foldPong.mjs) -->
-  <div class="fold-pong">
-    <button ref="playButton" type="button" class="fold-pong__play" @click="start">
-      🏓 Play Fold Pong
+       the room the fold gives, with the fold itself as the net (utils/foldPaddleBall.mjs) -->
+  <div class="fold-paddle-ball">
+    <button ref="playButton" type="button" class="fold-paddle-ball__play" @click="start">
+      🏓 Play Fold Paddle Ball
     </button>
     <Teleport to="body">
-      <div v-if="playing" class="fold-pong__court" role="dialog" aria-modal="true" aria-label="Fold Pong">
+      <div v-if="playing" class="fold-paddle-ball__court" role="dialog" aria-modal="true" aria-label="Fold Paddle Ball">
         <canvas
           ref="canvas"
-          class="fold-pong__canvas"
+          class="fold-paddle-ball__canvas"
           @pointerdown="aim"
           @pointermove="aim"
         />
-        <p class="fold-pong__score" aria-live="polite">{{ score }}</p>
-        <p class="fold-pong__how">{{ howTo }}</p>
-        <div class="fold-pong__buttons">
-          <button v-if="over" type="button" class="fold-pong__button" @click="restart">Play again</button>
-          <button ref="closeButton" type="button" class="fold-pong__button" @click="stop">Close</button>
+        <p class="fold-paddle-ball__score" aria-live="polite">{{ score }}</p>
+        <p class="fold-paddle-ball__how">{{ howTo }}</p>
+        <div class="fold-paddle-ball__buttons">
+          <button v-if="over" type="button" class="fold-paddle-ball__button" @click="restart">Play again</button>
+          <button ref="closeButton" type="button" class="fold-paddle-ball__button" @click="stop">Close</button>
         </div>
       </div>
     </Teleport>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { newGame, step, scoreText } from '~/utils/foldPong.mjs'
+import { newGame, step, scoreText } from '~/utils/foldPaddleBall.mjs'
 
 const playButton = ref(null)
 const closeButton = ref(null)
@@ -150,7 +150,7 @@ const begin = () => {
 
 const start = async () => {
   playing.value = true
-  document.documentElement.classList.add('fold-pong-open')
+  document.documentElement.classList.add('fold-paddle-ball-open')
   // Keys anywhere (focus can leave the buttons when you tap the court)
   addEventListener('keydown', onKey)
   await nextTick()
@@ -165,7 +165,7 @@ const stop = () => {
   removeEventListener('keydown', onKey)
   playing.value = false
   game = null
-  document.documentElement.classList.remove('fold-pong-open')
+  document.documentElement.classList.remove('fold-paddle-ball-open')
   nextTick(() => playButton.value?.focus())
 }
 
@@ -208,23 +208,23 @@ onBeforeUnmount(() => {
   removeEventListener('keydown', onKey)
   removeEventListener('resize', onResize)
   document.removeEventListener('visibilitychange', onVisibility)
-  document.documentElement.classList.remove('fold-pong-open')
+  document.documentElement.classList.remove('fold-paddle-ball-open')
 })
 </script>
 
 <style scoped>
-.fold-pong {
+.fold-paddle-ball {
   display: none;
 }
 
 /* Open, not part-folded: folded, the hero has only half the screen (pages/index.vue) */
-:root[data-device='iphone-duo']:not([data-fold='tabletop'], [data-fold='book']) .fold-pong {
+:root[data-device='iphone-duo']:not([data-fold='tabletop'], [data-fold='book']) .fold-paddle-ball {
   display: flex;
   justify-content: center;
   margin-top: 1rem;
 }
 
-.fold-pong__play {
+.fold-paddle-ball__play {
   padding: 0.5rem 1.1rem;
   border: 1px solid #c084fc;
   border-radius: 9999px;
@@ -234,21 +234,21 @@ onBeforeUnmount(() => {
   font-size: 0.95rem;
 }
 
-.fold-pong__court {
+.fold-paddle-ball__court {
   position: fixed;
   inset: 0;
   z-index: 100;
   touch-action: none; /* the finger plays, the page doesn't scroll */
 }
 
-.fold-pong__canvas {
+.fold-paddle-ball__canvas {
   display: block;
   width: 100vw;
   height: 100vh;
   height: 100dvh;
 }
 
-.fold-pong__score {
+.fold-paddle-ball__score {
   position: absolute;
   top: calc(env(safe-area-inset-top) + 0.75rem);
   left: 0;
@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.fold-pong__how {
+.fold-paddle-ball__how {
   position: absolute;
   bottom: calc(env(safe-area-inset-bottom) + 0.75rem);
   left: max(1rem, env(safe-area-inset-left));
@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
   pointer-events: none;
 }
 
-.fold-pong__buttons {
+.fold-paddle-ball__buttons {
   position: absolute;
   top: calc(env(safe-area-inset-top) + 0.5rem);
   right: max(0.75rem, env(safe-area-inset-right));
@@ -279,7 +279,7 @@ onBeforeUnmount(() => {
   gap: 0.5rem;
 }
 
-.fold-pong__button {
+.fold-paddle-ball__button {
   padding: 0.35rem 0.8rem;
   border: 1px solid #653496;
   border-radius: 9999px;
@@ -291,7 +291,7 @@ onBeforeUnmount(() => {
 
 <style>
 /* While the game is open the page behind it stays put */
-html.fold-pong-open {
+html.fold-paddle-ball-open {
   overflow: hidden;
 }
 </style>

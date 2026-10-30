@@ -1,7 +1,7 @@
 // Brick Bash (components/LostArcade.vue, on the 404 page): knock out every brick with the ball,
 // bouncing it off your paddle along the bottom. Three lives.
 //
-// Like utils/foldPong.mjs, everything is in CSS pixels and seconds on a plain court (x across,
+// Like utils/foldPaddleBall.mjs, everything is in CSS pixels and seconds on a plain court (x across,
 // y down, the screen's own), and step() is pure: same state, same result.
 
 export const LIVES = 3
