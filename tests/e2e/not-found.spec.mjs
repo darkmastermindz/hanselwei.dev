@@ -88,12 +88,38 @@ test('let go of the knob early and it springs back; the keyboard unlocks it too'
   await expect(page.locator('.lost-arcade__play').first()).toBeFocused()
 })
 
-test("I'm Feeling Lucky: a blog post opens", async ({ page }) => {
+test("I'm Feeling Lucky: a blog post opens, after time to cancel", async ({ page }) => {
   await page.addInitScript(() => (Math.random = () => 0))
   await page.goto('/no-such-page', { waitUntil: 'networkidle' })
   await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
-  await expect(page).toHaveURL(/\/blog\/[a-z0-9_-]+$/)
+  const leaving = page.getByRole('dialog', { name: 'Leaving this page' })
+  await expect(leaving).toContainText('Taking you to a blog post')
+  await expect(leaving.locator('.lucky-leave__fill')).toBeVisible()
+  await expect(leaving.getByRole('button', { name: 'Cancel' })).toBeFocused()
+  expect(page.url(), 'not yet').toMatch(/no-such-page$/)
+  // Left alone, it goes when the bar runs out
+  await expect(page).toHaveURL(/\/blog\/[a-z0-9_-]+$/, { timeout: 10_000 })
   await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('404 · Page not found')
+})
+
+test("I'm Feeling Lucky: Cancel stays on the page, and Go now goes straight away", async ({ page }) => {
+  await page.addInitScript(() => (Math.random = () => 0))
+  await page.goto('/no-such-page', { waitUntil: 'networkidle' })
+  const lucky = page.getByRole('button', { name: "🍀 I'm Feeling Lucky" })
+  await lucky.click()
+  const leaving = page.getByRole('dialog', { name: 'Leaving this page' })
+  await leaving.getByRole('button', { name: 'Cancel' }).click()
+  await expect(leaving).toBeHidden()
+  await expect(lucky).toBeFocused()
+  await page.waitForTimeout(6000)
+  expect(page.url(), 'still here once the time would have run out').toMatch(/no-such-page$/)
+  // Escape cancels too
+  await lucky.click()
+  await page.keyboard.press('Escape')
+  await expect(leaving).toBeHidden()
+  await lucky.click()
+  await leaving.getByRole('button', { name: 'Go now' }).click()
+  await expect(page).toHaveURL(/\/blog\/[a-z0-9_-]+$/, { timeout: 2000 })
 })
 
 for (const [what, random] of [['a home page fact', 0.5], ['a definition', 0.9]]) {

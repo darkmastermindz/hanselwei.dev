@@ -160,3 +160,12 @@ test("the 404 page has none with I'm Feeling Lucky's search open", async ({ page
   await page.getByRole('region', { name: 'Let me search that for you' }).waitFor()
   await check(page, "I'm Feeling Lucky's search")
 })
+
+test("the 404 page has none while I'm Feeling Lucky counts down to leaving", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.addInitScript(() => (Math.random = () => 0))
+  await open(page, '/no-such-page')
+  await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+  await page.getByRole('dialog', { name: 'Leaving this page' }).waitFor()
+  await check(page, "I'm Feeling Lucky's countdown")
+})
