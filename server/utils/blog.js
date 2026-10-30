@@ -83,7 +83,7 @@ export const toPost = (key, source) => {
     link: safeUrl(data.link), // feed entries can share an external link
     series: data.series || null, // recurring series => Curiosity Feed; none => one-shot post
     draft: data.draft === true,
-    glossary: data.glossary === true, // opt in to glossary terms (README "Glossary terms")
+    glossary: data.glossary !== false, // glossary terms, like the bio's; `glossary: false` opts out (README "Glossary terms")
     readingTime: readingTime(content),
     content
   }

@@ -136,3 +136,25 @@ test('a tap still works: the About card switches to XP', async ({ page }) => {
   await xp.tap()
   await expect(xp).toHaveAttribute('aria-selected', 'true')
 })
+
+// Definitions in blog posts, like the bio's: a tap on a term opens its bubble, which says a tap
+// dismisses it; a tap on the bubble then sends it off in a poof
+test('a definition in a blog post opens with a tap, and a tap on it poofs it away', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Pixel 7', 'one phone is enough')
+  await open(page, '/blog/hello-world')
+  const term = page.locator('abbr.term').first()
+  await expect(term).toBeVisible()
+  await term.tap()
+  const tip = page.locator('.term-tip')
+  await expect(tip).toBeVisible()
+  // A touch screen says "Tap"; the mouse wording stays hidden
+  await expect(tip.locator('.term-tip__hint--touch')).toHaveText('Tap to dismiss')
+  await expect(tip.locator('.term-tip__hint--touch')).toBeVisible()
+  await expect(tip.locator('.term-tip__hint--mouse')).toBeHidden()
+  const { x, y, width, height } = await tip.boundingBox()
+  // Not on its link: on the definition text
+  await page.touchscreen.tap(x + width / 2, y + Math.min(20, height / 3))
+  await expect(tip).toHaveClass(/term-tip--poof/)
+  await expect(tip).toBeHidden({ timeout: 2000 })
+  expect(await page.evaluate(() => location.pathname), 'the tap stayed on the page').toBe('/blog/hello-world')
+})

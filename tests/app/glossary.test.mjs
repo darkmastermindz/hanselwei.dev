@@ -4,7 +4,7 @@
 // said in plain words.
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { readFileSync, readdirSync } from 'node:fs'
 import { glossary } from '../../data/glossary.js'
 import { findTerms } from '../../utils/glossary.js'
 import { achievements, education, experience } from '../../data/xp.mjs'
@@ -15,12 +15,15 @@ const read = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'ut
 const EVERYDAY = new Set(['NC', 'SC', 'VA', 'GA', 'US', 'USA', 'MIT', 'AI', 'GPS', 'TV', 'CS', 'NET', 'T5', 'HW', 'BS'])
 
 // The display text the site writes itself: the About card's plain-English lines (the XP ones
-// live in data/xp.mjs), the gear lists' tags and notes, the hobby facts and the bio
+// live in data/xp.mjs), the gear lists' tags and notes, the hobby facts, the bio and the blog
+// posts written here (content/blog; the ones mirrored from dev.to get terms too, but are written
+// there)
 const displayText = () => {
   const card = [...read('components/AboutCard.vue').matchAll(/\b(?:readable|highlight):\s*'((?:[^'\\]|\\.)*)'/g)].map(m => m[1])
   const xp = [...education, ...experience, ...achievements].flatMap(entry => [entry.readable, entry.highlight].filter(Boolean))
   const gear = ['outdoor', 'camera'].flatMap(id => JSON.parse(read(`data/gear/${id}.json`)).items.flatMap(i => [...i.tags, i.notes ?? '']))
-  return [...card, ...xp, ...gear, read('data/hobbyFacts.mjs'), read('content/bio/bio.md')]
+  const posts = readdirSync(new URL('../../content/blog/', import.meta.url)).filter(f => f.endsWith('.md')).map(f => read(`content/blog/${f}`))
+  return [...card, ...xp, ...gear, read('data/hobbyFacts.mjs'), read('content/bio/bio.md'), ...posts]
 }
 
 test('every acronym in the display text is in the glossary (or everyday)', () => {
