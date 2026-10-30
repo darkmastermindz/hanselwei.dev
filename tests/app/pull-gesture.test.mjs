@@ -14,6 +14,13 @@ test('only starts at the top of the page, away from sideways strips and the toke
   assert.equal(canStartPull(0, null), true) // e.g. the document itself
 })
 
+test('only starts at or above the name, never from further down the page', () => {
+  assert.equal(canStartPull(0, target(false), 120, 300), true)
+  assert.equal(canStartPull(0, target(false), 300, 300), true)
+  assert.equal(canStartPull(0, target(false), 301, 300), false) // below the name: reading, not resetting
+  assert.equal(canStartPull(0, target(false), 10, -Infinity), false) // no name on the page: never
+})
+
 test('decides pull vs scroll vs swipe', () => {
   assert.equal(pullIntent(2, 3), 'undecided')
   assert.equal(pullIntent(0, 20), 'pull')

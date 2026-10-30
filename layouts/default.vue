@@ -3,7 +3,6 @@
     <TopoBackground />
     <SeasonalParticles />
     <AppNav />
-    <PullToRefresh />
     <slot />
     <SiteFooter />
     <BookPager />
@@ -27,9 +26,13 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   background-color: #2c2f33;
-  /* The in-app pull-down (components/PullToRefresh.vue) handles pulling at the top, instead of
-     the browser's own pull-to-refresh where it can be turned off. On html only: it's the page's
-     scroller, and a stop on anything else can trap a swipe there */
+}
+
+/* On the home page, the in-app pull-down (components/PullToRefresh.vue) handles pulling at the
+   top, instead of the browser's own pull-to-refresh where it can be turned off. Other pages keep
+   the browser's. On html only: it's the page's scroller, and a stop on anything else can trap a
+   swipe there */
+html:has(.ptr) {
   overscroll-behavior-y: contain;
 }
 

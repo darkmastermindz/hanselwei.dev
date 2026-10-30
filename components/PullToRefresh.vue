@@ -12,10 +12,15 @@
 </template>
 
 <script setup>
-// App-style pull-down "hard refresh" (touch only, no page reload): drag down from the
-// top of the page and let go past the threshold to start the token over and hide
-// Sign in (composables/useHardRefresh.js)
+// App-style pull-down "hard refresh" (touch only, no page reload), on the home page only: drag
+// down from the top of the page, starting at or above `zone` (the name), and let go past the
+// threshold to start the token over and hide Sign in (composables/useHardRefresh.js)
 import { canStartPull, isPullArmed, pullDistance, pullIntent, PULL_THRESHOLD } from '~/utils/pullGesture.js'
+
+const props = defineProps({
+  // A pull has to start at or above the bottom of this element (no element, no pull)
+  zone: { type: String, required: true }
+})
 
 const hardRefresh = useHardRefresh()
 const distance = ref(0)
@@ -49,7 +54,8 @@ const stop = () => {
 }
 
 const onStart = event => {
-  if (event.touches.length !== 1 || !canStartPull(window.scrollY, event.target)) return stop()
+  const zoneBottom = document.querySelector(props.zone)?.getBoundingClientRect().bottom ?? -Infinity
+  if (event.touches.length !== 1 || !canStartPull(window.scrollY, event.target, event.touches[0].clientY, zoneBottom)) return stop()
   start = { x: event.touches[0].clientX, y: event.touches[0].clientY }
   mode = 'undecided'
 }

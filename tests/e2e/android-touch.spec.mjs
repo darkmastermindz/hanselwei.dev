@@ -158,3 +158,27 @@ test('a definition in a blog post opens with a tap, and a tap on it poofs it awa
   await expect(tip).toBeHidden({ timeout: 2000 })
   expect(await page.evaluate(() => location.pathname), 'the tap stayed on the page').toBe('/blog/hello-world')
 })
+
+// Pull to reset, home page only: a pull down from the top, starting at or above the name, starts
+// the coin over; the same pull from further down the page (reading, scrolling back up) does not
+test('pull to reset: only from at or above the name, and only on the home page', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Pixel 7', 'one phone is enough')
+  await open(page, '/')
+  const hint = page.locator('.home__intro .hint')
+  const coin = page.locator('.token')
+  const box = await coin.boundingBox()
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+  await expect(hint).toContainText('1 spin')
+  await page.waitForTimeout(1500) // let the coin settle
+
+  const name = await page.locator('.home__name').boundingBox()
+  await swipe(page, 20, name.y + name.height + 40, 260)
+  expect(await scrollY(page)).toBe(0)
+  await expect(hint, 'a pull from below the name leaves the coin alone').toContainText('1 spin')
+
+  await swipe(page, 20, box.y + 10, 260)
+  await expect(hint, 'a pull from above the name starts it over').toContainText('the coin · discover a new fact')
+
+  await open(page, '/blog')
+  await expect(page.locator('.ptr')).toHaveCount(0)
+})

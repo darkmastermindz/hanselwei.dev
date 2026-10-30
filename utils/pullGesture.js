@@ -9,7 +9,10 @@ const DECIDE_PX = 8 // movement before we decide whether it's a pull or a scroll
 // and form fields
 export const NO_PULL = '.chip-strip.is-scroll, .socials.is-lens, .token, input, textarea, select, [data-no-pull]'
 
-export const canStartPull = (scrollY, target) => scrollY <= 0 && !target?.closest?.(NO_PULL)
+// A pull also has to start at or above `zoneBottom` (the bottom of the home page's name, in
+// viewport px): a drag further down is someone reading or scrolling, not reaching for the reset
+export const canStartPull = (scrollY, target, startY = 0, zoneBottom = Infinity) =>
+  scrollY <= 0 && startY <= zoneBottom && !target?.closest?.(NO_PULL)
 
 // 'undecided' until the finger has moved a little; then 'pull' only for a clearly
 // downward drag, 'ignore' for sideways swipes and upward scrolls
