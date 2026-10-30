@@ -1,7 +1,6 @@
-// GET  /api/kudos       -> { counts: { [id]: n } }: kudos for the About card's XP entries, blog
-//                           posts and Curiosity Feed entries
-// POST /api/kudos { id } -> { id, count, counted }: one kudos for one of them. An id is an XP
-//                           entry's (data/xp.mjs) or `post-<slug>` for a post on the site.
+// GET  /api/kudos       -> { counts: { [id]: n } }: kudos for blog posts and Curiosity Feed entries
+// POST /api/kudos { id } -> { id, count, counted }: one kudos for one of them. An id is
+//                           `post-<slug>` for a post on the site.
 //
 // Posts aren't a fixed list (dev.to posts are mirrored in at build time), so a post id has to
 // be a plain slug (the dev.to mirror's rule) for a page the deployed site really has: its
@@ -16,7 +15,6 @@
 // moment aren't lost.
 import { createHmac } from 'node:crypto'
 import { getStore } from '@netlify/blobs'
-import { XP_IDS } from '../../data/xp.mjs'
 import { SLUG } from '../../scripts/lib/devto.mjs'
 
 const MAX_BODY = 1024
@@ -29,9 +27,9 @@ const HEADERS = { 'content-type': 'application/json; charset=utf-8', 'cache-cont
 const json = (body, status = 200, extra = {}) => new Response(JSON.stringify(body), { status, headers: { ...HEADERS, ...extra } })
 
 const postSlug = id => (id.startsWith(POST) && SLUG.test(id.slice(POST.length)) ? id.slice(POST.length) : null)
-// The shape of an id we count: an XP entry, or a post id with a plain slug (whether that post
-// exists is checked before its first kudos, so only real posts' ids are ever stored)
-const knownShape = id => XP_IDS.has(id) || postSlug(id) !== null
+// The shape of an id we count: a post id with a plain slug (whether that post exists is checked
+// before its first kudos, so only real posts' ids are ever stored)
+const knownShape = id => postSlug(id) !== null
 
 // Only known entries, with whole positive counts: whatever else the stored document holds
 const cleanCounts = data => {
