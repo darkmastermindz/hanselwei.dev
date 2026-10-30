@@ -193,7 +193,7 @@ RSS: `/rss.xml` (everything) and `/feed.xml` (Curiosity Feed only).
 ## Glossary terms
 Acronyms, lingo and jargon in the site's own text (MLH, SPI, TIAA, CI/CD, SUP, Guide Mode…) have a dotted underline. Hover, focus or tap one for a short definition and a link to where it comes from.
 - The terms are in `data/glossary.js` (term, short definition, link, other spellings).
-- `<Term id="mlh">` marks fixed text and `<TermText :text>` marks data-driven text (the About card's plain-English lines, gear tags and notes). `glossaryHtml` (`server/utils/glossaryHtml.js`) marks the bio's markdown, and blog posts that set `glossary: true` in front matter, after sanitizing. Only the first use of a term in each piece of text is marked.
+- `<Term id="mlh">` marks fixed text and `<TermText :text>` marks data-driven text (the About card's plain-English lines, gear tags and notes). `glossaryHtml` (`server/utils/glossaryHtml.js`) marks the bio's markdown and every blog post (on its own page and in the Curiosity Feed), after sanitizing. A post can opt out with `glossary: false` in its front matter. Only the first use of a term in each piece of text is marked.
 - `<TermTip>` (in the default layout) is the one definition bubble for every term. It opens on hover, focus (Enter moves into its link) and tap, stays while the pointer is on it, and closes on Escape, a tap elsewhere or scrolling (WCAG 1.4.13). Screen readers get the definition as the term's description.
 - `tests/app/glossary.test.mjs` fails on an acronym in the display text that has no definition; the fix is a glossary entry or plain words (CLAUDE.md "Display text").
 
