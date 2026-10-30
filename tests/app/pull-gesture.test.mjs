@@ -14,6 +14,16 @@ test('only starts at the top of the page, away from sideways strips and the toke
   assert.equal(canStartPull(0, null), true) // e.g. the document itself
 })
 
+test('only starts between the nav bar and the name, around the coin', () => {
+  const zone = { top: 80, bottom: 300 }
+  assert.equal(canStartPull(0, target(false), 120, zone), true)
+  assert.equal(canStartPull(0, target(false), 80, zone), true)
+  assert.equal(canStartPull(0, target(false), 300, zone), true)
+  assert.equal(canStartPull(0, target(false), 40, zone), false) // on the nav bar
+  assert.equal(canStartPull(0, target(false), 301, zone), false) // below the name: reading, not resetting
+  assert.equal(canStartPull(0, target(false), 10, { top: Infinity, bottom: -Infinity }), false) // no zone on the page: never
+})
+
 test('decides pull vs scroll vs swipe', () => {
   assert.equal(pullIntent(2, 3), 'undecided')
   assert.equal(pullIntent(0, 20), 'pull')

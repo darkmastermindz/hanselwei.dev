@@ -3,7 +3,7 @@
     <a
       v-if="unlocked"
       href="/connect"
-      target="_blank"
+      :target="installed ? undefined : '_blank'"
       rel="noopener nofollow"
       class="contact-card__button contact-card__button--unlocked"
     >Open Apple Contact Card ✨</a>
@@ -22,9 +22,16 @@ defineProps({
 // The contact card opens straight into Contacts on iPhone only, so the button is
 // added in the browser once we know the device (it's never in the prerendered HTML).
 // It links to /connect, which Netlify redirects to the card and robots.txt blocks.
+// In a browser tab it opens in a new tab. Installed on the home screen, a new tab isn't something
+// the app can open with a tap (only a long press's menu could), so there it opens in place: the
+// redirect leaves the app's site, and iOS shows the card over the app.
+import { isInstalled } from '~/utils/installed.js'
+
 const isIPhone = ref(false)
+const installed = ref(false)
 onMounted(() => {
   isIPhone.value = /iPhone|iPod/.test(navigator.userAgent)
+  installed.value = isInstalled({ matchMedia: query => window.matchMedia(query), standalone: navigator.standalone })
 })
 </script>
 

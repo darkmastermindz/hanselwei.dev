@@ -158,3 +158,60 @@ test('a definition in a blog post opens with a tap, and a tap on it poofs it awa
   await expect(tip).toBeHidden({ timeout: 2000 })
   expect(await page.evaluate(() => location.pathname), 'the tap stayed on the page').toBe('/blog/hello-world')
 })
+
+// Pull to reset, home page only and around the coin: a pull down from the top, starting between the
+// nav bar and the name, starts the coin over; one starting on the nav, or below the name (reading,
+// scrolling back up), does not. The pill comes out from under the nav bar.
+test('pull to reset: only around the coin, between the nav bar and the name, on the home page', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'Pixel 7', 'one phone is enough')
+  await open(page, '/')
+  const hint = page.locator('.home__intro .hint')
+  const box = await page.locator('.token').boundingBox()
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+  await expect(hint).toContainText('1 spin')
+  await page.waitForTimeout(1500) // let the coin settle
+
+  const nav = await page.locator('.app-nav').boundingBox()
+  await swipe(page, 20, nav.y + nav.height / 2, 260)
+  await expect(hint, 'a pull from the nav bar leaves the coin alone').toContainText('1 spin')
+
+  const name = await page.locator('.home__name').boundingBox()
+  await swipe(page, 20, name.y + name.height + 40, 260)
+  expect(await scrollY(page)).toBe(0)
+  await expect(hint, 'a pull from below the name leaves the coin alone').toContainText('1 spin')
+
+  // Held at full stretch: the pill shows below the nav bar, not over it
+  const cdp = await page.context().newCDPSession(page)
+  const y0 = box.y + 10
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 20, y: y0 }] })
+  for (let y = y0 + 20; y <= y0 + 260; y += 20) await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 20, y }] })
+  await page.waitForTimeout(100)
+  const pill = page.locator('.ptr')
+  await expect(pill).toHaveText(/Release to reset/)
+  expect((await pill.boundingBox()).y, 'the pill sits under the nav bar').toBeGreaterThanOrEqual(nav.y + nav.height - 1)
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await cdp.detach()
+  await expect(hint, 'a pull from around the coin starts it over').toContainText('the coin · discover a new fact')
+
+  await open(page, '/blog')
+  await expect(page.locator('.ptr')).toHaveCount(0)
+})
+
+// The contact card (iPhone only): a new tab in the browser; installed on the home screen, it opens
+// in place, since the app can't open a new tab with a tap
+for (const installed of [false, true]) {
+  test(`the contact card opens with a tap ${installed ? 'in the installed app' : 'in the browser'}`, async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Pixel 7', 'one phone is enough')
+    await page.addInitScript(standalone => {
+      Object.defineProperty(navigator, 'userAgent', { get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1' })
+      if (standalone) Object.defineProperty(navigator, 'standalone', { get: () => true })
+    }, installed)
+    await open(page, '/')
+    const box = await page.locator('.token').boundingBox()
+    await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2)
+    const card = page.locator('a.contact-card__button--unlocked')
+    await expect(card).toBeVisible()
+    if (installed) await expect(card).not.toHaveAttribute('target')
+    else await expect(card).toHaveAttribute('target', '_blank')
+  })
+}

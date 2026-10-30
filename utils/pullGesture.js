@@ -9,7 +9,11 @@ const DECIDE_PX = 8 // movement before we decide whether it's a pull or a scroll
 // and form fields
 export const NO_PULL = '.chip-strip.is-scroll, .socials.is-lens, .token, input, textarea, select, [data-no-pull]'
 
-export const canStartPull = (scrollY, target) => scrollY <= 0 && !target?.closest?.(NO_PULL)
+// A pull also has to start inside `zone` ({ top, bottom } in viewport px): on the home page, the
+// coin's stretch between the nav bar and the name. A drag on the nav is for the nav, and one further
+// down is someone reading or scrolling, not reaching for the reset.
+export const canStartPull = (scrollY, target, startY = 0, zone = { top: -Infinity, bottom: Infinity }) =>
+  scrollY <= 0 && startY >= zone.top && startY <= zone.bottom && !target?.closest?.(NO_PULL)
 
 // 'undecided' until the finger has moved a little; then 'pull' only for a clearly
 // downward drag, 'ignore' for sideways swipes and upward scrolls

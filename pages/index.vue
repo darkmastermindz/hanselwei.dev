@@ -1,5 +1,7 @@
 <template>
   <main class="outer home">
+    <!-- Pull down around the coin (between the nav bar and the name) to start it over -->
+    <PullToRefresh from=".home__hero" to=".home__name" />
     <!-- Two plain groups (no change to the usual layout) that foldables split across the fold:
          the hero and, below it, the deck (see the "Foldables" styles) -->
     <div class="home__hero">
@@ -18,7 +20,7 @@
         </p>
         <!-- iPhone Duo only (<html data-device>, utils/foldMode.mjs): a little celebration -->
         <p class="duo-badge">✨ Hello, iPhone Duo</p>
-        <h1 class="title text-4xl md:text-5xl lg:text-6xl">
+        <h1 class="home__name title text-4xl md:text-5xl lg:text-6xl">
           <strong>Hansel Wei</strong>
         </h1>
         <ContactCardButton :unlocked="humanVerified" />
