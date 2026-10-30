@@ -97,8 +97,11 @@ test("I'm Feeling Lucky: a blog post opens, after time to cancel", async ({ page
   await expect(leaving.locator('.lucky-leave__fill')).toBeVisible()
   await expect(leaving.getByRole('button', { name: 'Cancel' })).toBeFocused()
   expect(page.url(), 'not yet').toMatch(/no-such-page$/)
-  // Left alone, it goes when the bar runs out
-  await expect(page).toHaveURL(/\/blog\/[a-z0-9_-]+$/, { timeout: 10_000 })
+  // Left alone, when the bar runs out the helper climbs out of its hole and presses Go now
+  const helper = leaving.getByRole('img', { name: /octopus cat that looks like Hansel/ })
+  await expect(helper).toBeVisible({ timeout: 7000 })
+  await expect(leaving.getByRole('button', { name: 'Go now' })).toHaveClass(/pressed/, { timeout: 3000 })
+  await expect(page).toHaveURL(/\/blog\/[a-z0-9_-]+$/, { timeout: 5000 })
   await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('404 · Page not found')
 })
 
@@ -113,6 +116,13 @@ test("I'm Feeling Lucky: Cancel stays on the page, and Go now goes straight away
   await expect(lucky).toBeFocused()
   await page.waitForTimeout(6000)
   expect(page.url(), 'still here once the time would have run out').toMatch(/no-such-page$/)
+  // Cancelling still works once the helper is out, until it presses the button
+  await lucky.click()
+  await expect(leaving.getByRole('img', { name: /octopus cat/ })).toBeVisible({ timeout: 7000 })
+  await leaving.getByRole('button', { name: 'Cancel' }).click()
+  await expect(leaving).toBeHidden()
+  await page.waitForTimeout(2500)
+  expect(page.url(), 'the helper went back in its hole').toMatch(/no-such-page$/)
   // Escape cancels too
   await lucky.click()
   await page.keyboard.press('Escape')

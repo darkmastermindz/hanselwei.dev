@@ -1,22 +1,40 @@
 <template>
   <!-- Before I'm Feeling Lucky leaves the page: a bubble like a definition's (components/TermTip.vue)
        saying where it's going, and a bar in the XP timeline's colours (components/AboutCard.vue)
-       that empties as the time runs out. Go now, or Cancel (or Escape) to stay. -->
-  <div class="lucky-leave" role="dialog" aria-label="Leaving this page" @keydown.esc.stop="cancel">
+       that empties as the time runs out. Go now, or Cancel (or Escape) to stay. Not cancelled in
+       time, a helper who looks like Hansel pops out of a hole and presses Go now for you
+       (components/OctoHelper.vue), which can still be cancelled until it does. -->
+  <div
+    class="lucky-leave"
+    :class="{ 'lucky-leave--helping': helper }"
+    role="dialog"
+    aria-label="Leaving this page"
+    @keydown.esc.stop="cancel"
+  >
     <p class="lucky-leave__where">{{ where }}</p>
     <p class="lucky-leave__title">{{ title }}</p>
     <div class="lucky-leave__bar" aria-hidden="true">
       <span class="lucky-leave__fill" :style="{ '--leave-ms': `${ms}ms` }" />
     </div>
-    <p class="lucky-leave__time" aria-live="polite">Going in {{ left }} {{ left === 1 ? 'second' : 'seconds' }}</p>
+    <p class="lucky-leave__time" aria-live="polite">{{ helper ? 'Out of time! A little helper is pressing Go now for you' : `Going in ${left} ${left === 1 ? 'second' : 'seconds'}` }}</p>
     <div class="lucky-leave__buttons">
-      <button type="button" class="lucky-leave__button lucky-leave__button--go" @click="go">Go now</button>
+      <span class="lucky-leave__go">
+        <button
+          type="button"
+          class="lucky-leave__button lucky-leave__button--go"
+          :class="{ 'lucky-leave__button--pressed': pressed }"
+          @click="go"
+        >Go now</button>
+        <OctoHelper v-if="helper" :personality="helper" @press="pressed = true" @done="go" />
+      </span>
       <button ref="cancelButton" type="button" class="lucky-leave__button" @click="cancel">Cancel</button>
     </div>
   </div>
 </template>
 
 <script setup>
+import { pickPersonality } from '~/utils/octoHelper.mjs'
+
 // title: what's there; where: where that is; ms: how long until it goes (the parent goes on `go`)
 const props = defineProps({
   title: { type: String, required: true },
@@ -27,6 +45,8 @@ const emit = defineEmits(['go', 'cancel'])
 
 const cancelButton = ref(null)
 const left = ref(Math.ceil(props.ms / 1000))
+const helper = ref(null) // the personality pressing Go now, once time's up
+const pressed = ref(false)
 let timer = 0
 let ticker = 0
 let done = false
@@ -34,6 +54,7 @@ let done = false
 const finish = kind => {
   if (done) return
   done = true
+  if (kind === 'cancel') helper.value = null
   clearTimeout(timer)
   clearInterval(ticker)
   emit(kind)
@@ -43,7 +64,10 @@ const cancel = () => finish('cancel')
 
 onMounted(() => {
   const start = Date.now()
-  timer = setTimeout(go, props.ms)
+  // Time's up: the helper comes out to press Go now (it calls go() when it has)
+  timer = setTimeout(() => {
+    if (!done) helper.value = pickPersonality()
+  }, props.ms)
   ticker = setInterval(() => (left.value = Math.max(0, Math.ceil((props.ms - (Date.now() - start)) / 1000))), 250)
   // Ready to cancel straight away, with a key or a tap
   cancelButton.value?.focus()
@@ -126,6 +150,26 @@ onBeforeUnmount(() => {
 .lucky-leave__button--go {
   border-color: #9dff5c;
   color: #9dff5c;
+  transition: transform 0.1s, background-color 0.1s;
+}
+
+.lucky-leave__button--pressed {
+  transform: translateY(1px) scale(0.92);
+  background: #1d5c3f;
+}
+
+/* Go now holds the helper's hole underneath it */
+.lucky-leave__go {
+  position: relative;
+}
+
+/* Room under the buttons for the hole and the helper climbing out of it */
+.lucky-leave {
+  transition: padding-bottom 0.25s ease-out;
+}
+
+.lucky-leave--helping {
+  padding-bottom: 5.2rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {

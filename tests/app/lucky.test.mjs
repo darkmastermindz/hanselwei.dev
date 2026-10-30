@@ -65,3 +65,17 @@ test('slide to unlock: progress from 0 to 1, unlocking near the end', () => {
   assert.equal(unlockProgress(10, 0), 0)
   assert.ok(UNLOCK_AT > 0.5 && UNLOCK_AT < 1)
 })
+
+test('the helper who presses Go now: several personalities, each pressing before it is over', async () => {
+  const { PERSONALITIES, pickPersonality, REDUCED } = await import('../../utils/octoHelper.mjs')
+  assert.ok(PERSONALITIES.length >= 3)
+  assert.equal(new Set(PERSONALITIES.map(p => p.id)).size, PERSONALITIES.length)
+  for (const p of [...PERSONALITIES, REDUCED]) assert.ok(p.pressAt > 0 && p.pressAt < p.ms && p.ms <= 2500, p.id)
+  for (const p of PERSONALITIES) {
+    assert.ok(p.line, p.id)
+    // Each has its own animation in the component
+    assert.match(read('components/OctoHelper.vue'), new RegExp(`\\.octo-pit--${p.id} `), p.id)
+  }
+  assert.equal(pickPersonality(() => 0), PERSONALITIES[0])
+  assert.equal(pickPersonality(() => 1), PERSONALITIES.at(-1), 'never past the end')
+})
