@@ -1,4 +1,4 @@
-// Block Breaker (components/LostArcade.vue, on the 404 page): knock out every brick with the ball,
+// Brick Bash (components/LostArcade.vue, on the 404 page): knock out every brick with the ball,
 // bouncing it off your paddle along the bottom. Three lives.
 //
 // Like utils/foldPong.mjs, everything is in CSS pixels and seconds on a plain court (x across,

@@ -1,4 +1,4 @@
-// I'm Feeling Lucky (utils/lucky.mjs): blog slugs (some mirrored from dev.to) become a path to go
+// Surprise me (utils/lucky.mjs): blog slugs (some mirrored from dev.to) become a path to go
 // to, and config.toml [lucky] search_engine_id goes into a script URL. Neither may lead off the
 // site or load anything else; facts and definitions stay plain text for Vue to escape.
 import { test } from 'node:test'

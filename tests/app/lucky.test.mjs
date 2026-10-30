@@ -49,7 +49,7 @@ test('what gets searched: a short first sentence, or a term and what it stands f
 })
 
 test('decoupled: the button only reads /lucky.json, and the list is built from data alone', () => {
-  const button = read('components/FeelingLucky.vue')
+  const button = read('components/SurpriseMe.vue')
   assert.match(button, /\$fetch\('\/lucky\.json'\)/)
   assert.doesNotMatch(button, /from '~\/(components|data|composables)\//)
   const route = read('server/routes/lucky.json.js')

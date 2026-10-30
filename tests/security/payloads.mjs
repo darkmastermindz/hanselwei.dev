@@ -249,7 +249,7 @@ export const KUDOS_IPS = [
   'x'.repeat(10_000)
 ]
 
-// Blog slugs as I'm Feeling Lucky would turn them into a path (utils/lucky.mjs luckyPool): anything
+// Blog slugs as Surprise me would turn them into a path (utils/lucky.mjs luckyPool): anything
 // that could leave the site, climb out of /blog or carry markup
 export const LUCKY_SLUGS = [
   '//evil.example',

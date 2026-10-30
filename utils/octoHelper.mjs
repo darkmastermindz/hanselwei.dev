@@ -1,4 +1,4 @@
-// The helper who presses Go now for you when I'm Feeling Lucky's countdown runs out
+// The helper who presses Go now for you when Surprise me's countdown runs out
 // (components/LuckyLeave.vue, components/OctoHelper.vue): a little octopus-cat that looks like
 // Hansel pops out of a hole 🕳️ under the button. Each time it's one of several personalities, each
 // with its own way out of the hole, its own line, and when in the animation the button is pressed.

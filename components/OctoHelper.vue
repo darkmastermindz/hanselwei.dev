@@ -1,7 +1,7 @@
 <template>
   <!-- A little octopus-cat that looks like Hansel (black messy hair, glasses, stubble, his blue
        hoodie) pops out of a hole 🕳️ under Go now and presses it for you, in one of several
-       personalities (utils/octoHelper.mjs). It's drawn here, not GitHub's own Octocat artwork. -->
+       personalities (utils/octoHelper.mjs). It's an original character, drawn here. -->
   <div
     class="octo-pit"
     :class="`octo-pit--${personality.id}`"

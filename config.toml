@@ -53,8 +53,8 @@ home_title = "Hansel Wei, Senior Software Engineer"  # up to 80 characters
 footer_code = "WKZBHNUJRETD"  # up to 40 characters
 
 [lucky]
-# I'm Feeling Lucky on the 404 page (utils/lucky.mjs): a random blog post opens, or a home page
-# fact or a definition is searched for you, Let Me Google That For You style, in the page.
+# Surprise me on the 404 page (utils/lucky.mjs): a random blog post opens, or a home page
+# fact or a definition is searched for you, shown being typed and searched, in the page.
 # To show Google's results in the page, make a Programmable Search Engine set to search the whole
 # web (https://programmablesearchengine.google.com) and put its Search engine ID here. The site's
 # Content-Security-Policy then allows Google's search scripts and frames (scripts/lib/csp.mjs).

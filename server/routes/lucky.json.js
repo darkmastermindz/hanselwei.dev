@@ -1,4 +1,4 @@
-// /lucky.json: everything I'm Feeling Lucky can land on (utils/lucky.mjs), prerendered with the
+// /lucky.json: everything Surprise me can land on (utils/lucky.mjs), prerendered with the
 // site. Built from the data alone: the blog posts, the home page facts and the glossary, never
 // from the components that show them. luckyPool() leaves out anything that doesn't look right,
 // and the blog, read from storage, sits the draw out if it can't be read.

@@ -26,7 +26,7 @@ for (const file of files) {
 
 const mode = process.env.CSP_MODE || (!process.env.CONTEXT || process.env.CONTEXT === 'production' ? 'enforce' : 'report-only')
 const header = mode === 'report-only' ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy'
-// Google's search, only with a search engine set for I'm Feeling Lucky (config.toml [lucky])
+// Google's search, only with a search engine set for Surprise me (config.toml [lucky])
 const toml = parse(await readFile(new URL('../config.toml', import.meta.url), 'utf8').catch(() => ''))
 const googleSearch = Boolean(luckyConfig(toml).config.searchEngineId)
 const policy = buildCsp({ scripts, handlers, reportOnly: mode === 'report-only', googleSearch })

@@ -1,4 +1,4 @@
-// Space Invaders (components/LostArcade.vue, on the 404 page): a block of invaders marches side to
+// Alien Attack (components/LostArcade.vue, on the 404 page): a block of invaders marches side to
 // side, stepping down at each edge. Shoot them all before they land; their bombs cost a life.
 //
 // Like utils/foldPong.mjs, everything is in CSS pixels and seconds (x across, y down, the

@@ -1,5 +1,5 @@
 <template>
-  <!-- Before I'm Feeling Lucky leaves the page: a bubble like a definition's (components/TermTip.vue)
+  <!-- Before Surprise me leaves the page: a bubble like a definition's (components/TermTip.vue)
        saying where it's going, and a bar in the XP timeline's colours (components/AboutCard.vue)
        that empties as the time runs out. Go now, or Cancel (or Escape) to stay. Not cancelled in
        time, a helper who looks like Hansel pops out of a hole and presses Go now for you
