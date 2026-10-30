@@ -1,5 +1,5 @@
 <template>
-  <!-- Let Me Google That For You, in the page: a pointer types the question into a search box and
+  <!-- Searched for you, in the page: a pointer types the question into a search box and
        presses Search, then the results show right here. With config.toml [lucky] search_engine_id
        they're Google's own (its Programmable Search Element, the official way to put Google results
        in a page); without one, a link to the same search on Google. -->

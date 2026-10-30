@@ -40,7 +40,7 @@ export const ANALYTICS_CONNECT = ['https://queue.simpleanalyticscdn.com']
 // The projects page lists repos from the GitHub API
 export const CONNECT = ['https://api.github.com', ...ANALYTICS_CONNECT]
 
-// Google's Programmable Search Element (I'm Feeling Lucky's in-page results, components/LetMeSearch.vue),
+// Google's Programmable Search Element (Surprise me's in-page results, components/LetMeSearch.vue),
 // only allowed when config.toml [lucky] sets a search engine: its script, the scripts it loads,
 // its result requests, styles and the frames it draws ads and image results in
 export const GOOGLE_SEARCH = ['https://cse.google.com', 'https://www.google.com']

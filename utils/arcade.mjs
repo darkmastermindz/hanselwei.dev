@@ -2,7 +2,7 @@
 // game's rules are a pure module with newGame(), step() and scoreText().
 
 export const GAMES = [
-  { id: 'pong', name: 'Pong', emoji: '🏓', howTo: 'Slide along the bottom, or ← →. First to 5' },
-  { id: 'blocks', name: 'Block Breaker', emoji: '🧱', howTo: 'Slide along the bottom, or ← →. Clear every brick' },
-  { id: 'invaders', name: 'Space Invaders', emoji: '👾', howTo: 'Hold and slide to move and shoot, or ← → and Space' }
+  { id: 'paddle', name: 'Paddle Ball', emoji: '🏓', howTo: 'Slide along the bottom, or ← →. First to 5' },
+  { id: 'bricks', name: 'Brick Bash', emoji: '🧱', howTo: 'Slide along the bottom, or ← →. Clear every brick' },
+  { id: 'aliens', name: 'Alien Attack', emoji: '👾', howTo: 'Hold and slide to move and shoot, or ← → and Space' }
 ]

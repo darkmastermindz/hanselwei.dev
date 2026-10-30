@@ -1,6 +1,6 @@
 <template>
   <!-- The 404 page's easter egg: every classic game in the arcade (utils/arcade.mjs), in the same
-       style as Fold Pong (components/FoldPong.vue) -->
+       style as Fold Paddle Ball (components/FoldPaddleBall.vue) -->
   <div class="lost-arcade">
     <button
       v-for="g in GAMES"
@@ -35,11 +35,11 @@
 
 <script setup>
 import { GAMES } from '~/utils/arcade.mjs'
-import * as pong from '~/utils/foldPong.mjs'
-import * as blocks from '~/utils/blockBreaker.mjs'
-import * as invaders from '~/utils/spaceInvaders.mjs'
+import * as paddle from '~/utils/foldPaddleBall.mjs' // the same rules as Fold Paddle Ball
+import * as bricks from '~/utils/brickBash.mjs'
+import * as aliens from '~/utils/alienAttack.mjs'
 
-const RULES = { pong, blocks, invaders }
+const RULES = { paddle, bricks, aliens }
 
 // autofocus: put focus on the first Play button once they show (after the 404 page's slide to unlock)
 const props = defineProps({ autofocus: { type: Boolean, default: false } })
@@ -61,7 +61,7 @@ let last = 0
 
 const rules = () => RULES[game.value.id]
 
-// Colours from Fold Pong: you green, the other side purple, the ball a gold coin
+// Colours from Fold Paddle Ball: you green, the other side purple, the ball a gold coin
 const BG = '#1d232a'
 const YOU = '#7cfc00'
 const THEM = '#c084fc'
@@ -74,18 +74,28 @@ const setUp = () => {
   el.width = Math.round(innerWidth * dpr)
   el.height = Math.round(innerHeight * dpr)
   el.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0)
-  // Pong's court runs along `u` (utils/foldPong.mjs): here up the screen, with you at the bottom,
+  // The play starts below the score and how to play, however many lines they take on this screen
+  courtTop = hudBottom()
+  // Paddle Ball's court runs along `u` (utils/foldPaddleBall.mjs): here up the screen, with you at the bottom,
   // the computer's end below the score and how to play
-  return game.value.id === 'pong' ? { length: innerHeight - PONG_TOP - PONG_BOTTOM, breadth: innerWidth } : { width: innerWidth, height: innerHeight }
+  return game.value.id === 'paddle'
+    ? { length: innerHeight - courtTop - PADDLE_BOTTOM, breadth: innerWidth }
+    : { width: innerWidth, height: innerHeight, top: courtTop }
 }
 
-// Where Pong's court ends, from the top and bottom of the screen
-const PONG_TOP = 64
-const PONG_BOTTOM = 24
+// Where the score and how to play end (with a little room), so nothing is drawn under them
+const hudBottom = () => {
+  const lines = [...document.querySelectorAll('.lost-arcade__score, .lost-arcade__how')]
+  return Math.ceil(Math.max(48, ...lines.map(el => el.getBoundingClientRect().bottom))) + 12
+}
 
-const drawPong = ctx => {
+// Where Paddle Ball's court ends at the bottom of the screen (its top is courtTop)
+const PADDLE_BOTTOM = 24
+let courtTop = 64
+
+const drawPaddle = ctx => {
   const w = innerWidth
-  const end = innerHeight - PONG_BOTTOM // your end, where u = 0
+  const end = innerHeight - PADDLE_BOTTOM // your end, where u = 0
   const net = end - state.length / 2
   ctx.strokeStyle = 'rgba(192, 132, 252, 0.7)'
   ctx.lineWidth = 3
@@ -99,11 +109,11 @@ const drawPong = ctx => {
   ctx.fillStyle = YOU
   ctx.fillRect(state.you.v - state.you.size / 2, end - 4 - thick, state.you.size, thick)
   ctx.fillStyle = THEM
-  ctx.fillRect(state.cpu.v - state.cpu.size / 2, PONG_TOP + 4, state.cpu.size, thick)
+  ctx.fillRect(state.cpu.v - state.cpu.size / 2, courtTop + 4, state.cpu.size, thick)
   coin(ctx, state.ball.v, end - state.ball.u, state.ball.r)
 }
 
-const drawBlocks = ctx => {
+const drawBricks = ctx => {
   for (const b of state.bricks) {
     ctx.fillStyle = ROW_COLOURS[b.row % ROW_COLOURS.length]
     ctx.fillRect(b.x, b.y, b.w, b.h)
@@ -114,9 +124,9 @@ const drawBlocks = ctx => {
   coin(ctx, state.ball.x, state.ball.y, state.ball.r)
 }
 
-const drawInvaders = ctx => {
+const drawAliens = ctx => {
   for (const i of state.invaders) {
-    const b = invaders.invaderBox(state, i)
+    const b = aliens.invaderBox(state, i)
     ctx.fillStyle = ROW_COLOURS[i.row % ROW_COLOURS.length]
     // A little invader: a body, two eyes cut out, and legs that swap as the block marches
     ctx.fillRect(b.x, b.y, b.w, b.h * 0.7)
@@ -149,7 +159,7 @@ const coin = (ctx, x, y, r) => {
   ctx.fill()
 }
 
-const DRAW = { pong: drawPong, blocks: drawBlocks, invaders: drawInvaders }
+const DRAW = { paddle: drawPaddle, bricks: drawBricks, aliens: drawAliens }
 
 const draw = () => {
   const ctx = canvas.value?.getContext('2d')
@@ -173,7 +183,7 @@ const tick = now => {
 }
 
 const begin = () => {
-  state = game.value.id === 'invaders' ? invaders.newGame(setUp(), Date.now()) : rules().newGame(setUp())
+  state = game.value.id === 'aliens' ? aliens.newGame(setUp(), Date.now()) : rules().newGame(setUp())
   target = null
   last = 0
   score.value = rules().scoreText(state)
@@ -219,8 +229,8 @@ const release = () => (firing = false)
 
 const onKey = event => {
   if (event.key === 'Escape') return stop()
-  // Space shoots in Space Invaders, even with focus on Close (Enter and Escape still work there)
-  if (event.key === ' ' && game.value.id === 'invaders') {
+  // Space shoots in Alien Attack, even with focus on Close (Enter and Escape still work there)
+  if (event.key === ' ' && game.value.id === 'aliens') {
     event.preventDefault()
     firing = true
     return
@@ -302,11 +312,17 @@ onBeforeUnmount(() => {
   left: 0;
   right: 0;
   margin: 0;
-  padding: 0 5.5rem; /* clear of the buttons */
+  padding: 0 5rem; /* clear of the buttons */
   text-align: center;
   color: #eee;
   font-family: "Nova Mono", monospace;
-  font-size: 1.1rem;
+  /* One line, smaller on narrow phones, so it never runs into how to play or the game */
+  font-size: clamp(0.8rem, 3.6vw, 1.1rem);
+  line-height: 1.4;
+  min-height: 1.4em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   pointer-events: none;
 }
 

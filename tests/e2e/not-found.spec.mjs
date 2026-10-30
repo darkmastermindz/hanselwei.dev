@@ -1,13 +1,13 @@
-// The 404 page (error.vue): a way home, I'm Feeling Lucky (components/FeelingLucky.vue,
+// The 404 page (error.vue): a way home, Surprise me (components/SurpriseMe.vue,
 // utils/lucky.mjs), and the classic games (components/LostArcade.vue, utils/arcade.mjs)
 // behind slide to unlock (components/SwipeToUnlock.vue), which shows every game. Lucky picks are
 // made here by pinning Math.random. A phone is enough.
 import { expect, test } from '@playwright/test'
 
 const GAMES = [
-  ['Pong', 'You 0 – 0 Computer'],
-  ['Block Breaker', 'Score 0 · 3 lives'],
-  ['Space Invaders', 'Score 0 · 3 lives']
+  ['Paddle Ball', 'You 0 – 0 Computer'],
+  ['Brick Bash', 'Score 0 · 3 lives'],
+  ['Alien Attack', 'Score 0 · 3 lives']
 ]
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -55,7 +55,7 @@ for (const [name, startScore] of GAMES) {
     await expect(court.locator('canvas')).toBeVisible()
     await expect(court.locator('.lost-arcade__score')).toHaveText(startScore)
     await expect(page.getByRole('button', { name: 'Close' })).toBeFocused()
-    // A finger held on the court moves you (and shoots, in Space Invaders); the page doesn't scroll
+    // A finger held on the court moves you (and shoots, in Alien Attack); the page doesn't scroll
     const box = await court.locator('canvas').boundingBox()
     await page.mouse.move(box.width * 0.5, box.height * 0.7)
     await page.mouse.down()
@@ -88,10 +88,10 @@ test('let go of the knob early and it springs back; the keyboard unlocks it too'
   await expect(page.locator('.lost-arcade__play').first()).toBeFocused()
 })
 
-test("I'm Feeling Lucky: a blog post opens, after time to cancel", async ({ page }) => {
+test("Surprise me: a blog post opens, after time to cancel", async ({ page }) => {
   await page.addInitScript(() => (Math.random = () => 0))
   await page.goto('/no-such-page', { waitUntil: 'networkidle' })
-  await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+  await page.getByRole('button', { name: "🍀 Surprise me" }).click()
   const leaving = page.getByRole('dialog', { name: 'Leaving this page' })
   await expect(leaving).toContainText('Taking you to a blog post')
   await expect(leaving.locator('.lucky-leave__fill')).toBeVisible()
@@ -105,10 +105,10 @@ test("I'm Feeling Lucky: a blog post opens, after time to cancel", async ({ page
   await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('404 · Page not found')
 })
 
-test("I'm Feeling Lucky: Cancel stays on the page, and Go now goes straight away", async ({ page }) => {
+test("Surprise me: Cancel stays on the page, and Go now goes straight away", async ({ page }) => {
   await page.addInitScript(() => (Math.random = () => 0))
   await page.goto('/no-such-page', { waitUntil: 'networkidle' })
-  const lucky = page.getByRole('button', { name: "🍀 I'm Feeling Lucky" })
+  const lucky = page.getByRole('button', { name: "🍀 Surprise me" })
   await lucky.click()
   const leaving = page.getByRole('dialog', { name: 'Leaving this page' })
   await leaving.getByRole('button', { name: 'Cancel' }).click()
@@ -133,10 +133,10 @@ test("I'm Feeling Lucky: Cancel stays on the page, and Go now goes straight away
 })
 
 for (const [what, random] of [['a home page fact', 0.5], ['a definition', 0.9]]) {
-  test(`I'm Feeling Lucky: ${what} is searched for you, in the page`, async ({ page }) => {
+  test(`Surprise me: ${what} is searched for you, in the page`, async ({ page }) => {
     await page.addInitScript(value => (Math.random = () => value), random)
     await page.goto('/no-such-page', { waitUntil: 'networkidle' })
-    await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+    await page.getByRole('button', { name: "🍀 Surprise me" }).click()
     const panel = page.getByRole('region', { name: 'Let me search that for you' })
     await expect(panel).toBeVisible()
     await expect(panel.locator('.let-me-search__step')).toHaveText('Step 1: Click the search box')
@@ -155,6 +155,6 @@ test('with reduced motion the answer shows straight away', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.addInitScript(() => (Math.random = () => 0.5))
   await page.goto('/no-such-page', { waitUntil: 'networkidle' })
-  await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+  await page.getByRole('button', { name: "🍀 Surprise me" }).click()
   await expect(page.locator('.let-me-search__step')).toHaveText('Was that so hard? 😉')
 })

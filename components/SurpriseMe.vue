@@ -1,10 +1,10 @@
 <template>
-  <!-- I'm Feeling Lucky: a random blog post, home page fact or definition (utils/lucky.mjs). It only
+  <!-- Surprise me: a random blog post, home page fact or definition (utils/lucky.mjs). It only
        reads /lucky.json, so it keeps working whatever the pages and components that show those
        things look like. -->
   <div class="feeling-lucky">
     <button ref="luckyButton" type="button" class="feeling-lucky__button liquid-glass liquid-glass-interactive rounded-full" :disabled="busy" @click="feelLucky">
-      🍀 I'm Feeling Lucky
+      🍀 Surprise me
     </button>
     <!-- Leaving the page: time to see where, and to cancel -->
     <LuckyLeave

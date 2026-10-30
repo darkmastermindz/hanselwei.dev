@@ -1,6 +1,6 @@
 <template>
   <!-- Nuxt's error page: a page that isn't here (prerendered as 404.html, which Netlify serves for
-       unknown paths), or one that failed. Lost? Feel lucky (components/FeelingLucky.vue), or slide
+       unknown paths), or one that failed. Lost? Feel lucky (components/SurpriseMe.vue), or slide
        to unlock the classic games (components/SwipeToUnlock.vue, components/LostArcade.vue). -->
   <NuxtLayout>
     <main class="page lost">
@@ -13,7 +13,7 @@
           <NuxtLink to="/blog" class="button--grey" @click="clearError()">Read the blog 📰</NuxtLink>
         </div>
       </section>
-      <FeelingLucky />
+      <SurpriseMe />
       <p class="lost__hint">While you're here:</p>
       <SwipeToUnlock v-if="!unlocked" label="slide to unlock the arcade" @unlock="unlocked = true" />
       <LostArcade v-else autofocus />

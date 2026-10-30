@@ -1,6 +1,6 @@
-// I'm Feeling Lucky (components/FeelingLucky.vue, on the 404 page): somewhere at random on the site.
-// A blog post opens; a home page fact or a glossary definition is searched for you, Let Me Google
-// That For You style, in the page (components/LetMeSearch.vue).
+// Surprise me (components/SurpriseMe.vue, on the 404 page): somewhere at random on the site.
+// A blog post opens; a home page fact or a glossary definition is searched for you, shown being
+// typed and searched, in the page (components/LetMeSearch.vue).
 //
 // Decoupled from the rest of the site on purpose: the button only reads /lucky.json
 // (server/routes/lucky.json.js), a plain list built from the data itself (the blog posts,
