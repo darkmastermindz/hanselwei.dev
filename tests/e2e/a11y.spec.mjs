@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 const PROJECTS = new Set(['Pixel 7', 'Galaxy Tab S9 landscape'])
-const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious']
+const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious', '/no-such-page']
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -150,4 +150,22 @@ test.describe('Kudos', () => {
     await settled(page)
     await check(page, 'a blog post after sharing')
   })
+})
+
+test("the 404 page has none with I'm Feeling Lucky's search open", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.addInitScript(() => (Math.random = () => 0.5))
+  await open(page, '/no-such-page')
+  await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+  await page.getByRole('region', { name: 'Let me search that for you' }).waitFor()
+  await check(page, "I'm Feeling Lucky's search")
+})
+
+test("the 404 page has none while I'm Feeling Lucky counts down to leaving", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.addInitScript(() => (Math.random = () => 0))
+  await open(page, '/no-such-page')
+  await page.getByRole('button', { name: "🍀 I'm Feeling Lucky" }).click()
+  await page.getByRole('dialog', { name: 'Leaving this page' }).waitFor()
+  await check(page, "I'm Feeling Lucky's countdown")
 })

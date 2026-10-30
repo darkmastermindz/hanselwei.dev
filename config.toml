@@ -51,3 +51,12 @@ qr = "https://hanselwei.dev"  # where the QR on the coin's tails side points (ht
 # Also during the event: the home page title, and a line at the top of the footer on every page
 home_title = "Hansel Wei, Senior Software Engineer"  # up to 80 characters
 footer_code = "WKZBHNUJRETD"  # up to 40 characters
+
+[lucky]
+# I'm Feeling Lucky on the 404 page (utils/lucky.mjs): a random blog post opens, or a home page
+# fact or a definition is searched for you, Let Me Google That For You style, in the page.
+# To show Google's results in the page, make a Programmable Search Engine set to search the whole
+# web (https://programmablesearchengine.google.com) and put its Search engine ID here. The site's
+# Content-Security-Policy then allows Google's search scripts and frames (scripts/lib/csp.mjs).
+# Empty: the search ends with a link to the same search on Google.
+search_engine_id = ""
