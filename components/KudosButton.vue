@@ -18,7 +18,7 @@
 
 <script setup>
 const props = defineProps({
-  // The kudos id: an XP entry's (data/xp.mjs) or `post-<slug>`
+  // The kudos id: `post-<slug>`
   id: { type: String, required: true },
   // What the kudos is for, in the button's label
   name: { type: String, required: true }

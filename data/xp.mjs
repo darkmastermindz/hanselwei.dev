@@ -1,6 +1,5 @@
 // The About card's XP timeline (components/AboutCard.vue): certifications and education, work
-// history and achievements. Shared with the kudos function (netlify/functions/kudos.mjs), which
-// only counts kudos for an entry listed here.
+// history and achievements. Also read by the glossary test (tests/app/glossary.test.mjs).
 
 // XP: certifications and education, then work history (newest first). `readable` and
 // `highlight` are the plain-English text; the JSON view uses the fields only.
@@ -134,14 +133,3 @@ export const achievements = [
     readable: 'First 10K: Around the Crown 10K in Charlotte, NC.'
   }
 ]
-
-// A stable id for each entry, from the fields that name it (not its wording, so rewording a
-// line keeps its kudos): the kudos counts are keyed by these
-const slug = text => String(text).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
-export const xpId = entry => {
-  if (entry.category === 'Achievement') return `achievement-${slug(entry.event)}`
-  if (entry.role) return `${entry.category === 'Volunteer' ? 'volunteer' : 'work'}-${slug(`${entry.role} ${entry.company ?? ''} ${entry.start}`)}`
-  return `education-${slug(entry.program ?? entry.certification)}`
-}
-
-export const XP_IDS = new Set([...education, ...experience, ...achievements].map(xpId))

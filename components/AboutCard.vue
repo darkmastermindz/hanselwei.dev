@@ -126,7 +126,6 @@
                 <span class="xp-entry__count" aria-hidden="true">{{ i + 1 }}/{{ yearEntries.length }}</span>
                 <span class="visually-hidden">Entry {{ i + 1 }} of {{ yearEntries.length }}, {{ entry.category }}: </span>
                 <strong>{{ entry.label }}</strong> · <TermText :text="entry.text" />
-                <KudosButton :id="entry.id" :name="entry.name" />
               </li>
             </ul>
             <p v-else key="edu-json" class="json json--edu json--xp soft-pulse">{{ yearJson }}</p>
@@ -163,8 +162,7 @@ import { languageName, translateTarget, translateUrl } from '~/utils/translate.j
 import { swipeIntent, swipeYears, WHEEL_STEP_PX, wheelDx, wheelDy } from '~/utils/swipe.js'
 import { isActionTarget } from '~/utils/actionTarget.js'
 import { opensXp } from '~/utils/aboutCard.js'
-import { achievements, education, experience, xpId } from '~/data/xp.mjs'
-import { useKudos } from '~/composables/useKudos.js'
+import { achievements, education, experience } from '~/data/xp.mjs'
 
 // One card under the contact button: the token's latest fact, or the "I am a"
 // (skills), hobbies and education JSON, switched with the toggle on top.
@@ -240,8 +238,6 @@ const timeline = [
   ...education.map(entry => {
     const to = yearOf(entry.graduated ?? entry.passed)
     return {
-      id: xpId(entry),
-      name: entry.program === 'YTT200' ? 'Yoga Teacher Training' : entry.program ?? entry.certification,
       from: entry.started ?? to,
       to,
       label: entry.date,
@@ -251,8 +247,6 @@ const timeline = [
     }
   }),
   ...experience.map(job => ({
-    id: xpId(job),
-    name: job.company ? `${job.role} at ${job.company}` : job.role,
     from: yearOf(job.start),
     to: job.end === 'Present' ? CURRENT_YEAR : yearOf(job.end),
     label: job.start === job.end ? job.start : `${job.start} – ${job.end}`,
@@ -261,8 +255,6 @@ const timeline = [
     json: `{ "experience" : ${jsonValue(job.highlight ? job : { ...job, highlight: undefined })} }`
   })),
   ...achievements.map(item => ({
-    id: xpId(item),
-    name: item.event,
     from: yearOf(item.date),
     to: yearOf(item.date),
     label: item.date,
@@ -372,17 +364,15 @@ const onWheel = event => {
   releaseSocials()
 }
 
-// Press and hold (or Shift+Enter) flips the JSON views into plain English with a
+// The card opens in plain English. Press and hold (or Shift+Enter) flips it into JSON with a
 // "poof": the old words fall away and sparkles burst from the press. It stays through
 // scrolling and taps on the background; holding again, or a real action elsewhere (a link,
-// a button, tabbing away, leaving the page), flips back.
+// a button, tabbing away, leaving the page), flips back to plain English.
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
-const readable = ref(false)
-// Kudos on each plain-English XP entry, live while that list is on screen
-const kudos = useKudos()
-kudos.watchActive(() => view.value === 'edu' && readable.value)
+const READABLE_FIRST = true // plain English is where the card starts and comes back to
+const readable = ref(READABLE_FIRST)
 const charging = ref(false)
 const transitionName = ref('swap')
 const cardEl = ref(null)
@@ -454,7 +444,7 @@ const onTranslate = event => {
   const href = safeUrl(translateUrl(text, translateTo.value.code))
   if (href) event.currentTarget.href = href
 }
-const revert = options => setReadable(false, options)
+const revert = options => setReadable(READABLE_FIRST, options)
 
 const cancelHold = () => {
   clearTimeout(holdTimer)
@@ -533,7 +523,7 @@ const onPressEndAnywhere = () => {
   if (held) endPause()
 }
 
-// Back to JSON once the visitor does something else. A click (not a pointerdown) so a scroll
+// Back to plain English once the visitor does something else. A click (not a pointerdown) so a scroll
 // that starts on a link doesn't count.
 const onClickAnywhere = event => {
   if (cardEl.value?.contains(event.target)) return
@@ -604,7 +594,7 @@ const onCardKey = event => {
   if (event.key === 'PageUp' || event.key === 'PageDown') {
     event.preventDefault()
     next(event.key === 'PageDown' ? 1 : -1)
-  } else if (event.key === 'Escape' && readable.value) {
+  } else if (event.key === 'Escape' && readable.value !== READABLE_FIRST) {
     event.preventDefault()
     revert()
   }

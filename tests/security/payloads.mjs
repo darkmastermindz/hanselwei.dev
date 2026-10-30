@@ -164,26 +164,26 @@ export const GEAR_TEXT = [
   'x'.repeat(10_000)
 ]
 
-// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a known XP entry id counts
+// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a real post id counts
 export const KUDOS_BODIES = [
   '',
   'null',
   '[]',
-  '"education-ytt200"',
+  '"post-hello-world"',
   '{"id":null}',
   '{"id":1}',
-  '{"id":["education-ytt200"]}',
-  '{"id":{"toString":"education-ytt200"}}',
+  '{"id":["post-hello-world"]}',
+  '{"id":{"toString":"post-hello-world"}}',
   '{"id":"__proto__"}',
-  '{"__proto__":{"id":"education-ytt200"}}',
+  '{"__proto__":{"id":"post-hello-world"}}',
   '{"id":"constructor"}',
-  '{"id":"education-ytt200 "}',
-  '{"id":"EDUCATION-YTT200"}',
+  '{"id":"post-hello-world "}',
+  '{"id":"POST-HELLO-WORLD"}',
   '{"id":"../counts"}',
   '{"id":"counts"}',
   '{"id":"seen/2026-10-25/x"}',
   '{"id":"<img src=x onerror=alert(1)>"}',
-  '{id:"education-ytt200"}'
+  '{id:"post-hello-world"}'
 ]
 
 // Post ids for kudos (`post-<slug>`): only a plain slug, and only for a post the site has

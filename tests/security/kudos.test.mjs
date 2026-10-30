@@ -1,10 +1,9 @@
-// Kudos on the About card's XP entries (netlify/functions/kudos.mjs): only known entries count,
-// once per visitor per entry per day, hostile bodies and stored data can't add keys or crash it,
-// and kudos sent at the same moment are all counted
+// Kudos on blog posts and Curiosity Feed entries (netlify/functions/kudos.mjs): only real posts
+// count, once per visitor per post per day, hostile bodies and stored data can't add keys or crash
+// it, and kudos sent at the same moment are all counted
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cachedPostExists, handleKudos, visitorNet } from '../../netlify/functions/kudos.mjs'
-import { XP_IDS } from '../../data/xp.mjs'
+import { cachedPostExists, handleKudos as realHandleKudos, visitorNet } from '../../netlify/functions/kudos.mjs'
 import { KUDOS_BODIES, KUDOS_IPS, KUDOS_POST_IDS, PROTOTYPE_KEYS, XSS_HTML } from './payloads.mjs'
 
 // An in-memory stand-in for a Netlify Blobs store, with its conditional writes
@@ -47,13 +46,19 @@ const memoryStore = () => {
   }
 }
 
-const ID = 'education-ytt200'
+const ID = 'post-hello-world'
+// The site has one post, hello-world, unless a test says otherwise (no network in tests)
+const handleKudos = (req, options) => realHandleKudos(req, { postExists: async slug => slug === 'hello-world', ...options })
 const post = (body, headers = {}) => new Request('https://www.hanselwei.dev/api/kudos', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://www.hanselwei.dev', 'sec-fetch-site': 'same-origin', ...headers }, body })
 const get = () => new Request('https://www.hanselwei.dev/api/kudos')
 
-test('every XP entry has a unique id, and the ids stay the same shape', () => {
-  assert.ok(XP_IDS.has(ID))
-  for (const id of XP_IDS) assert.match(id, /^(education|work|volunteer|achievement)-[a-z0-9]+(?:-[a-z0-9]+)*$/, id)
+test('XP entries no longer take kudos: their old ids are refused and dropped from stored counts', async () => {
+  const store = memoryStore()
+  for (const id of ['education-ytt200', 'work-senior-software-engineer-wells-fargo-sep-2025', 'achievement-around-the-crown-10k']) {
+    assert.equal((await handleKudos(post(JSON.stringify({ id })), { store, ip: '1.1.1.1' })).status, 404, id)
+  }
+  store.blobs.set('counts', { etag: '"x"', text: JSON.stringify({ 'education-ytt200': 4, [ID]: 1 }) })
+  assert.deepEqual((await (await handleKudos(get(), { store })).json()).counts, { [ID]: 1 })
 })
 
 test('a kudos counts once per visitor per entry per day', async () => {

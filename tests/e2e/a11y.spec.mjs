@@ -50,18 +50,20 @@ for (const path of PAGES) {
   })
 }
 
-test('the About card has none on any tab, in plain English, or on XP', async ({ page }) => {
+test('the About card has none on any tab, in plain English (where it starts), in JSON, or on XP', async ({ page }) => {
   await open(page, '/')
+  await expect(page.locator('.about-card [data-content].prose-line'), 'the card opens in plain English').toBeVisible()
   for (const tab of await page.locator('[role="tab"]').all()) {
     await tab.click()
     await settled(page)
     await check(page, `the ${(await tab.textContent()).trim()} tab`)
   }
-  // Plain English: alt-click the card (the desktop shortcut for press-and-hold)
+  // JSON: alt-click the card (the desktop shortcut for press-and-hold)
   await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
   // The old words fall away first (aria-hidden, fading out): check once they're gone
   await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
-  await check(page, 'the card in plain English')
+  await expect(page.locator('.about-card .json').first()).toBeVisible()
+  await check(page, 'the card in JSON')
 })
 
 test('the Instagram menu has none when open', async ({ page }) => {
@@ -100,25 +102,6 @@ const checkKudosTap = async (page, button, sent, id, what) => {
 
 test.describe('Kudos', () => {
   test.use({ serviceWorkers: 'block' })
-
-  test('the kudos buttons have none, and a tap counts without leaving plain English', async ({ page }) => {
-    const sent = []
-    await standInKudos(page, sent)
-    await open(page, '/#xp')
-    await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
-    await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
-    const button = page.locator('.edu-list .kudos').first()
-    await expect(button).toBeVisible({ timeout: 5000 })
-    await check(page, 'the XP list with kudos')
-
-    await button.click()
-    await expect(button).toHaveClass(/kudos--given/)
-    await expect(button).toContainText('1')
-    expect(sent).toHaveLength(1)
-    await expect(page.locator('.edu-list')).toBeVisible()
-    await settled(page)
-    await check(page, 'the XP list after a kudos')
-  })
 
   test('a blog post has a kudos button with none, and a tap counts for that post', async ({ page }) => {
     const sent = []
