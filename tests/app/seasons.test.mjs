@@ -45,7 +45,19 @@ test('GitHub Universe takes over Oct 28–30, 2026, and Halloween is still Hallo
   assert.notEqual(themeFor(config, '2027-10-29').name, 'GitHub Universe') // dated: one year only
 })
 
+// PREVIEW ONLY (do not merge): config.toml turns the Halloween look on for the rest of 2026, so
+// these checks run on the real settings: the weeks without the preview event, and the real window
+const PREVIEW = 'Halloween preview'
+const real = { ...config, events: config.events.filter(e => e.name !== PREVIEW), spooky: { from: '10-30 12:00', to: '10-31 23:59' } }
+
+test('preview: the Halloween look is on now', async () => {
+  const { spookyAt } = await import('../../utils/seasons.mjs')
+  assert.equal(spookyAt(config, new Date('2026-11-01T16:00:00Z')), true)
+  assert.equal(themeFor(config, '2026-11-01').name, PREVIEW)
+})
+
 test('a few holidays land in their week', () => {
+  const config = real
   assert.match(themeFor(config, '2026-01-01').name, /New Year/)
   assert.match(themeFor(config, '2026-02-14').name, /Valentine/)
   assert.match(themeFor(config, '2026-03-17').name, /Patrick/)
@@ -87,7 +99,7 @@ test('particles cycle through the emoji and stay on screen', () => {
 // through the end of Halloween, every year
 test('spooky from noon on Oct 30 through Halloween, Eastern time, every year', async () => {
   const { spookyAt, momentIn } = await import('../../utils/seasons.mjs')
-  assert.deepEqual(config.spooky, { from: '10-30 12:00', to: '10-31 23:59' })
+  const config = real
   // EDT is UTC-4 in late October
   assert.equal(momentIn(new Date('2026-10-30T16:00:00Z')), '10-30 12:00')
   assert.equal(spookyAt(config, new Date('2026-10-30T15:59:00Z')), false) // 11:59 am the day before

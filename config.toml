@@ -65,8 +65,9 @@ particles = 12  # how many emoji at once (0–40; phones show at most 8)
 # Halloween, every year: the home page coin turns into a blinking neon jack-o'-lantern, bat or
 # ghost (a new one on each heads landing), and mist and fog drift over the background on every
 # page. Eastern time, "month-day hour:minute"; `to` is the last minute. Leave it out to skip it.
-from = "10-30 12:00"  # the half day before
-to = "10-31 23:59"
+# PREVIEW ONLY: do not merge. All year, so the deploy preview is spooky now (real: "10-30 12:00" to "10-31 23:59")
+from = "01-01 00:00"
+to = "12-31 23:59"
 
 # A theme for every week of the year, in order from Jan 1. Each runs from its `from` day
 # (month-day) until the next one starts. emoji: up to 8; colors: the topographic lines'
@@ -413,6 +414,15 @@ from = 2026-10-28
 to = 2026-10-30  # GitHub Universe 2026, San Francisco (October 28–29), plus a day of cooldown
 emoji = ["🐙", "🐱", "🚀", "🌌", "🤖", "🌉", "✨"]  # 🐙🐱 the Octocat, 🤖 Copilot, 🌉 San Francisco
 colors = ["#a371f7", "#3fb950"]  # GitHub's purple and green
+motion = "rise"
+
+# PREVIEW ONLY: do not merge. The Halloween week's look for the rest of 2026, for the deploy preview
+[[seasons.event]]
+name = "Halloween preview"
+from = 2026-11-01
+to = 2026-12-31
+emoji = ["🎃", "👻", "🦇", "🍬", "💀"]
+colors = ["#f97316", "#a855f7"]
 motion = "rise"
 
 [lucky]
