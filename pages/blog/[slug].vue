@@ -66,22 +66,61 @@ const markTables = () => {
     wrap.toggleAttribute('data-more-right', scroller.scrollLeft < more - 1)
   }
 }
-let resizes
+// The first time an overflowing table comes into view (or gets keyboard focus), it peeks a little
+// way right and back so it's obvious it scrolls, and the hint's arrow nudges. Never with reduced
+// motion, and never once the reader has started scrolling it themselves.
+const PEEK = 56
+const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const touched = new WeakSet()
+const peek = scroller => {
+  const wrap = scroller.closest('.table-wrap')
+  if (!wrap.hasAttribute('data-overflow') || wrap.hasAttribute('data-peeked')) return
+  wrap.setAttribute('data-peeked', '')
+  if (reducedMotion() || touched.has(scroller) || scroller.scrollLeft > 1) return
+  scroller.scrollTo({ left: Math.min(PEEK, scroller.scrollWidth - scroller.clientWidth), behavior: 'smooth' })
+  setTimeout(() => {
+    if (!touched.has(scroller)) scroller.scrollTo({ left: 0, behavior: 'smooth' })
+  }, 700)
+}
+let resizes, sightings
 onMounted(() => {
   resizes = new ResizeObserver(markTables)
+  sightings = new IntersectionObserver(
+    entries => entries.filter(e => e.isIntersecting).forEach(e => peek(e.target)),
+    { threshold: 0.6 }
+  )
   for (const scroller of body.value?.querySelectorAll('.table-scroll') ?? []) {
     resizes.observe(scroller)
+    sightings.observe(scroller)
     scroller.addEventListener('scroll', markTables, { passive: true })
+    for (const type of ['pointerdown', 'wheel', 'touchstart', 'keydown']) {
+      scroller.addEventListener(type, () => touched.add(scroller), { passive: true })
+    }
+    scroller.addEventListener('focus', () => scroller.matches(':focus-visible') && peek(scroller))
   }
   markTables()
 })
-onBeforeUnmount(() => resizes?.disconnect())
+onBeforeUnmount(() => {
+  resizes?.disconnect()
+  sightings?.disconnect()
+})
 
 const formatDate = iso =>
   new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
 </script>
 
 <style lang="scss" scoped>
+@keyframes table-hint-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(0.35rem);
+  }
+}
+
 .post {
   max-width: 46rem;
   margin: 0 auto;
@@ -124,6 +163,20 @@ const formatDate = iso =>
 
   :deep(.table-wrap[data-overflow] .table-hint) {
     display: block;
+  }
+
+  :deep(.table-hint-arrow) {
+    display: inline-block;
+  }
+
+  :deep(.table-wrap[data-peeked] .table-hint-arrow) {
+    animation: table-hint-nudge 0.7s ease-in-out 3;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :deep(.table-wrap[data-peeked] .table-hint-arrow) {
+      animation: none;
+    }
   }
 
   :deep(.table-frame) {

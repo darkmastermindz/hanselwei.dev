@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 const PROJECTS = new Set(['Pixel 7', 'Galaxy Tab S9 landscape'])
-const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious', '/no-such-page']
+const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/tuning-actions-runner-controller-flag-ratios', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious', '/no-such-page']
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
 test.beforeEach(async ({ page }, testInfo) => {
