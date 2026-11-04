@@ -9,12 +9,14 @@ tags: [kubernetes, github-actions, arc, devops]
 
 The flags are easy to raise one at a time and hard to raise *together*. This post is the set of ratios I use to keep them in proportion, and four sizing profiles to start from.
 
-Everything here comes from reading my fork, [darkmastermindz/actions-runner-controller](https://github.com/darkmastermindz/actions-runner-controller) (a fork of [actions/actions-runner-controller](https://github.com/actions/actions-runner-controller)):
+> **Version:** everything here is from **ARC 0.15.1** (the `gha-runner-scale-set-controller` chart and controller image, released October 2026), read from the upstream source at the [`gha-runner-scale-set-0.15.1`](https://github.com/actions/actions-runner-controller/tree/gha-runner-scale-set-0.15.1) tag. Flags and defaults move between releases, so check `main.go` for the version you run.
 
-- [`main.go` lines 129-171](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/main.go#L129-L171): the flags
-- [`main.go` lines 243-245](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/main.go#L243-L245): where the client QPS and burst are applied
-- [`controllers/actions.github.com/options.go` lines 45-52](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/controllers/actions.github.com/options.go#L45-L52): the shipped defaults
-- [`controllers/actions.github.com/options.go` lines 87-99](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/controllers/actions.github.com/options.go#L87-L99): the workqueue rate limiter notes
+The code behind it, in [actions/actions-runner-controller](https://github.com/actions/actions-runner-controller):
+
+- [`main.go` lines 129-171](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/main.go#L129-L171): the flags
+- [`main.go` lines 243-245](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/main.go#L243-L245): where the client QPS and burst are applied
+- [`controllers/actions.github.com/options.go` lines 45-52](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/controllers/actions.github.com/options.go#L45-L52): the shipped defaults
+- [`controllers/actions.github.com/options.go` lines 87-99](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/controllers/actions.github.com/options.go#L87-L99): the workqueue rate limiter notes
 
 The background discussion lives upstream in [actions/actions-runner-controller#3021](https://github.com/actions/actions-runner-controller/issues/3021).
 
@@ -37,10 +39,15 @@ effective parallelism = min(flag, number of distinct objects with pending work)
 
 That is why EphemeralRunner is the only controller with a higher default. It reconciles one object per runner, so a scale set with `maxRunners: 50` really can have 50 independent pieces of work in flight, each going create → running → finished → delete. The other three reconcile one object per *scale set*. With three scale sets, setting `--ephemeral-runner-set-max-concurrent-reconciles` to 16 still means at most three busy workers; the other thirteen sit idle.
 
+<figure>
+<a href="/images/blog/tuning-actions-runner-controller-flag-ratios/set-level-workers.svg"><img src="/images/blog/tuning-actions-runner-controller-flag-ratios/set-level-workers.svg" alt="Line chart: busy workers against the set-level flag from 1 to 32. With 3, 10 and 30 scale sets, each line rises one for one and then goes flat at the scale set count. Everything above the line is idle workers." width="720" height="440" loading="lazy"></a>
+<figcaption>Busy workers = min(flag, scale sets). Past the knee, each extra set-level worker adds nothing.</figcaption>
+</figure>
+
 Two more things to know before tuning:
 
 - **Zero doesn't mean "off".** Any value of zero or less is swapped for the shipped default before it reaches controller-runtime, so you can't use 0 to disable a controller's concurrency.
-- **The runner flag sizes a second pool.** `--ephemeral-runner-max-concurrent-reconciles` also sets the number of background workers that remove runner registrations from GitHub after a job ([`main.go` lines 364-368](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/main.go#L364-L368)). Raising it speeds up GitHub-side cleanup too, and adds GitHub calls in parallel.
+- **The runner flag sizes a second pool.** `--ephemeral-runner-max-concurrent-reconciles` also sets the number of background workers that remove runner registrations from GitHub after a job ([`main.go` lines 364-368](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/main.go#L364-L368)). Raising it speeds up GitHub-side cleanup too, and adds GitHub calls in parallel.
 
 ## Sizing profiles
 
@@ -86,7 +93,7 @@ And the set-level flags should never go above your scale set count: past that, t
 
 ### 2. Client QPS to workers: about two writes in flight per worker
 
-The controller's Kubernetes client has its own rate limiter (`--k8s-client-rate-limiter-qps` and `--k8s-client-rate-limiter-burst`), applied once to the client config in [`main.go` lines 243-245](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/main.go#L243-L245). All four controllers share it.
+The controller's Kubernetes client has its own rate limiter (`--k8s-client-rate-limiter-qps` and `--k8s-client-rate-limiter-burst`), applied once to the client config in [`main.go` lines 243-245](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/main.go#L243-L245). All four controllers share it.
 
 The good news is that reads are free: `Get` and `List` are served from the informer cache, a local copy of the objects kept up to date by a watch, and never touch the client limiter. Only **writes** do: Create, Patch, Delete and status patches. For an EphemeralRunner that's about **1-4 writes per reconcile** (add the finalizer, create the registration secret, create the pod, patch status), and **6-10 writes over one runner's life** once cleanup (delete the pod and secret, remove the finalizer) is counted.
 
@@ -104,13 +111,20 @@ Worked through for the profiles, taking the top of each range:
 | Large | 32 + 16 + 8 + 4 = 60 | 120 | 100-150 / 200 |
 | XL | 64 + 32 + 16 + 8 = 120 | 240 | 200+ / 300-400 |
 
+Plotted, the rule is a set of knees. Each worker adds about two writes a second until the client limiter is full; after that, more workers just wait in line for it:
+
+<figure>
+<a href="/images/blog/tuning-actions-runner-controller-flag-ratios/workers-vs-qps.svg"><img src="/images/blog/tuning-actions-runner-controller-flag-ratios/workers-vs-qps.svg" alt="Line chart: Kubernetes writes per second against EphemeralRunner workers from 0 to 64, at QPS 20, 50 and 100. Each line climbs at about 2 writes per second per worker, then flattens at its QPS: near 10 workers for QPS 20, 25 for QPS 50 and 50 for QPS 100. 64 workers at QPS 20 gets about 20 writes a second, less than 16 workers at QPS 50 (about 31)." width="720" height="440" loading="lazy"></a>
+<figcaption>An illustrative model built from the ratios above (about 2 writes a second per worker, capped at QPS), not a benchmark. The point is where the curves bend: about QPS ÷ 2 workers.</figcaption>
+</figure>
+
 The limiter only protects the controller from itself. The API server is the real ceiling: 150 writes a second is meaningful load, so on a small or shared control plane check the API server's own request latency before going higher.
 
 ### 3. Workqueue limiter: `typed_rate_limiter` once you pass ~16 workers
 
-The flag's help text and the [`options.go` notes](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/controllers/actions.github.com/options.go#L87-L99) describe the default as controller-runtime's limiter: per-item exponential backoff plus a token bucket of 10 adds per second (burst 100) shared by every item in a controller's queue. With a few workers you never notice that bucket. Above roughly **16 total workers**, a burst of new runners empties it and items wait for tokens while workers sit idle. `--workqueue-rate-limiter=typed_rate_limiter` removes the shared bucket and keeps per-item backoff, so one failing object still backs off on its own without slowing the rest.
+The flag's help text and the [`options.go` notes](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/controllers/actions.github.com/options.go#L87-L99) describe the default as controller-runtime's limiter: per-item exponential backoff plus a token bucket of 10 adds per second (burst 100) shared by every item in a controller's queue. With a few workers you never notice that bucket. Above roughly **16 total workers**, a burst of new runners empties it and items wait for tokens while workers sit idle. `--workqueue-rate-limiter=typed_rate_limiter` removes the shared bucket and keeps per-item backoff, so one failing object still backs off on its own without slowing the rest.
 
-One caveat from reading the code at this commit: when no limiter is passed, [`newControllerOptions` (`options.go` lines 115-130)](https://github.com/darkmastermindz/actions-runner-controller/blob/89f34c4f782d4b488e6aecb66146407fee8eb3af/controllers/actions.github.com/options.go#L115-L130) only uses that bucket if controller-runtime's priority queue is explicitly turned off. Otherwise the default is already per-item backoff only (5ms up to 30s), and every limiter is capped at a 30-second wait. So on current builds, `typed_rate_limiter` changes the backoff curve more than it removes a bottleneck. Set it at Large and above anyway (it makes the no-shared-bucket behaviour explicit, whatever the build), and treat the queue as a bottleneck only if `workqueue_depth` says so.
+One caveat from reading the 0.15.1 code: when no limiter is passed, [`newControllerOptions` (`options.go` lines 115-130)](https://github.com/actions/actions-runner-controller/blob/gha-runner-scale-set-0.15.1/controllers/actions.github.com/options.go#L115-L130) only uses that bucket if controller-runtime's priority queue is explicitly turned off. Otherwise the default is already per-item backoff only (5ms up to 30s), and every limiter is capped at a 30-second wait. So in 0.15.1, `typed_rate_limiter` changes the backoff curve more than it removes a bottleneck. Set it at Large and above anyway (it makes the no-shared-bucket behaviour explicit, whatever the build), and treat the queue as a bottleneck only if `workqueue_depth` says so.
 
 ### 4. Sync period vs. scale-down delay
 
@@ -119,6 +133,11 @@ Where scale-down waits for a reconcile, the effective scale-down latency is abou
 ```text
 scale-down latency ≈ max(scale-down-delay, sync-period)
 ```
+
+<figure>
+<a href="/images/blog/tuning-actions-runner-controller-flag-ratios/scale-down-latency.svg"><img src="/images/blog/tuning-actions-runner-controller-flag-ratios/scale-down-latency.svg" alt="Line chart: scale-down latency against sync period from 0 to 10 minutes, for 1 and 5 minute delays. Each line stays flat at its delay until the sync period passes it, then rises with it; a 1 minute delay with a 10 minute sync period takes about 10 minutes." width="720" height="440" loading="lazy"></a>
+<figcaption>Once the sync period is longer than the delay, the sync period sets the latency.</figcaption>
+</figure>
 
 If you raise `--sync-period` to cut background work at scale, raise `--default-scale-down-delay` with it, or the delay you configured is not the one you get.
 
@@ -131,7 +150,14 @@ The Kubernetes side is only half of it. Runner registration (the just-in-time ru
 | Personal access token (PAT) | ~5,000 requests/hour | ~80 runner transitions/minute |
 | GitHub App | up to ~15,000 requests/hour | ~250 runner transitions/minute |
 
-Those per-minute figures assume about one GitHub call per transition; divide by however many your runners really make. 64 runner workers (and 64 cleanup workers) can burst well past a token's budget, so at that size **GitHub App authentication is effectively required**.
+Those per-minute figures assume about one GitHub call per transition, and they drop fast as that number grows. Divide by however many calls your runners really make:
+
+<figure>
+<a href="/images/blog/tuning-actions-runner-controller-flag-ratios/github-budget.svg"><img src="/images/blog/tuning-actions-runner-controller-flag-ratios/github-budget.svg" alt="Line chart: runner transitions per minute against GitHub API calls per transition from 1 to 6. A PAT (5,000 requests an hour) allows about 83 a minute at 1 call and 28 at 3 calls; a GitHub App (15,000 an hour) allows 250 at 1 call and 83 at 3." width="720" height="440" loading="lazy"></a>
+<figcaption>Transitions a minute = hourly budget ÷ 60 ÷ calls per transition. At three calls each, a GitHub App gives you what a PAT gives at one.</figcaption>
+</figure>
+
+64 runner workers (and 64 cleanup workers) can burst well past a token's budget, so at that size **GitHub App authentication is effectively required**.
 
 ## Anti-patterns
 

@@ -18,7 +18,7 @@
         Originally published on
         <a :href="post.canonical" target="_blank" rel="noopener">dev.to</a>.
       </p>
-      <div class="prose prose-invert prose-purple max-w-none" v-html="post.html" />
+      <div ref="body" class="prose prose-invert prose-purple max-w-none" v-html="post.html" />
       <p class="post-actions">
         <span v-if="kudos.available.value">Enjoyed this post?</span>
         <KudosButton :id="`post-${slug}`" :name="post.title" />
@@ -54,6 +54,29 @@ useHead({
 const kudos = useKudos()
 kudos.watchActive(() => true)
 
+// Tables wider than the post scroll sideways (server/utils/blog.js wraps them): flag the ones
+// that overflow so they show a hint and an edge fade, and which ends still have more to see
+const body = ref(null)
+const markTables = () => {
+  for (const scroller of body.value?.querySelectorAll('.table-scroll') ?? []) {
+    const more = scroller.scrollWidth - scroller.clientWidth
+    const wrap = scroller.closest('.table-wrap')
+    wrap.toggleAttribute('data-overflow', more > 1)
+    wrap.toggleAttribute('data-more-left', scroller.scrollLeft > 1)
+    wrap.toggleAttribute('data-more-right', scroller.scrollLeft < more - 1)
+  }
+}
+let resizes
+onMounted(() => {
+  resizes = new ResizeObserver(markTables)
+  for (const scroller of body.value?.querySelectorAll('.table-scroll') ?? []) {
+    resizes.observe(scroller)
+    scroller.addEventListener('scroll', markTables, { passive: true })
+  }
+  markTables()
+})
+onBeforeUnmount(() => resizes?.disconnect())
+
 const formatDate = iso =>
   new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
 </script>
@@ -75,13 +98,107 @@ const formatDate = iso =>
     overflow-x: auto;
   }
 
-  :deep(table) {
-    display: block;
-    overflow-x: auto;
-    overflow-wrap: normal;
+  :deep(.table-wrap) {
+    margin: 1.5em 0;
+
+    table {
+      margin: 0;
+      overflow-wrap: normal;
+    }
 
     code {
       white-space: nowrap;
+    }
+  }
+
+  // Shown (with the fades and a roomier scrollbar) only on tables that overflow
+  :deep(.table-hint) {
+    display: none;
+    margin: 0 0 0.4rem;
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #c084fc;
+  }
+
+  :deep(.table-wrap[data-overflow] .table-hint) {
+    display: block;
+  }
+
+  :deep(.table-frame) {
+    position: relative;
+
+    // Edge fades over whichever side has more table to scroll to
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0.9rem;
+      width: 3rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 1;
+    }
+
+    &::before {
+      left: 0;
+      background: linear-gradient(to right, #2c2f33, transparent);
+    }
+
+    &::after {
+      right: 0;
+      background: linear-gradient(to left, #2c2f33, transparent);
+    }
+  }
+
+  :deep(.table-wrap[data-more-left] .table-frame::before),
+  :deep(.table-wrap[data-more-right] .table-frame::after) {
+    opacity: 1;
+  }
+
+  :deep(.table-scroll) {
+    overflow-x: auto;
+    scrollbar-color: #c084fc rgba(192, 132, 252, 0.15);
+
+    &::-webkit-scrollbar {
+      height: 0.5rem;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(192, 132, 252, 0.15);
+      border-radius: 1rem;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c084fc;
+      border-radius: 1rem;
+    }
+
+    &:focus-visible {
+      outline: 2px solid #c084fc;
+      outline-offset: 2px;
+    }
+  }
+
+  :deep(.table-wrap[data-overflow] .table-scroll) {
+    padding-bottom: 0.4rem;
+  }
+
+  :deep(figure) {
+    margin: 2em 0;
+
+    img {
+      width: 100%;
+      border-radius: 0.875rem;
+    }
+
+    figcaption {
+      color: #a8a3b8;
+      font-size: 0.85rem;
+      margin-top: 0.6em;
     }
   }
 
