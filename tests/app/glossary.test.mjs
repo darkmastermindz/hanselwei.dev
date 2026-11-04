@@ -12,7 +12,7 @@ import { achievements, education, experience } from '../../data/xp.mjs'
 const read = path => readFileSync(new URL(`../../${path}`, import.meta.url), 'utf8')
 
 // Everyday acronyms, places and model numbers: no definition needed
-const EVERYDAY = new Set(['NC', 'SC', 'VA', 'GA', 'US', 'USA', 'MIT', 'AI', 'GPS', 'TV', 'CS', 'NET', 'T5', 'HW', 'BS'])
+const EVERYDAY = new Set(['NC', 'SC', 'VA', 'GA', 'US', 'USA', 'MIT', 'AI', 'GPS', 'TV', 'CS', 'NET', 'T5', 'HW', 'BS', 'XL'])
 
 // The display text the site writes itself: the About card's plain-English lines (the XP ones
 // live in data/xp.mjs), the gear lists' tags and notes, the hobby facts, the bio and the blog
@@ -30,7 +30,9 @@ test('every acronym in the display text is in the glossary (or everyday)', () =>
   const known = new Set(Object.values(glossary).flatMap(e => [e.term, ...(e.aliases ?? [])]).flatMap(t => t.split(' ')))
   const missing = new Set()
   for (const text of displayText()) {
-    for (const [token] of text.matchAll(/(?<![A-Za-z0-9])[A-Z][A-Z0-9]+(?:\/[A-Z0-9]+)?(?![A-Za-z0-9])/g)) {
+    // Link targets aren't display text (GitHub line anchors such as #L129-L171)
+    const shown = text.replace(/\]\([^)\s]*\)/g, ']')
+    for (const [token] of shown.matchAll(/(?<![A-Za-z0-9])[A-Z][A-Z0-9]+(?:\/[A-Z0-9]+)?(?![A-Za-z0-9])/g)) {
       if (!known.has(token) && !EVERYDAY.has(token)) missing.add(token)
     }
   }

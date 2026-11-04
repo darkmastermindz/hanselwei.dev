@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<title id="t">Scale-down latency ≈ max(delay, sync period)</title><desc id="d">Effective scale-down latency in minutes against sync period from 0 to 10 minutes, for scale-down delays of 1 and 5 minutes. Each line is flat at its delay until the sync period passes it, then rises with the sync period: with a 1 minute delay and a 10 minute sync period, scale-down takes about 10 minutes.</desc>
+<rect width="720" height="440" rx="14" fill="#15131c"/>
+<text x="92" y="38" fill="#e5e5e5" font-size="22" font-weight="600">Scale-down latency ≈ max(delay, sync period)</text>
+<line x1="92" x2="688" y1="350.0" y2="350.0" stroke="#2c2838"/>
+<text x="82" y="355.0" fill="#a8a3b8" font-size="17" text-anchor="end">0</text>
+<line x1="92" x2="688" y1="220.9" y2="220.9" stroke="#2c2838"/>
+<text x="82" y="225.9" fill="#a8a3b8" font-size="17" text-anchor="end">5</text>
+<line x1="92" x2="688" y1="91.8" y2="91.8" stroke="#2c2838"/>
+<text x="82" y="96.8" fill="#a8a3b8" font-size="17" text-anchor="end">10</text>
+<line x1="92.0" x2="92.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="92.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">0</text>
+<line x1="211.2" x2="211.2" y1="350" y2="356" stroke="#6b6680"/>
+<text x="211.2" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">2</text>
+<line x1="330.4" x2="330.4" y1="350" y2="356" stroke="#6b6680"/>
+<text x="330.4" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">4</text>
+<line x1="449.6" x2="449.6" y1="350" y2="356" stroke="#6b6680"/>
+<text x="449.6" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">6</text>
+<line x1="568.8" x2="568.8" y1="350" y2="356" stroke="#6b6680"/>
+<text x="568.8" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">8</text>
+<line x1="688.0" x2="688.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="688.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">10</text>
+<line x1="92" x2="688" y1="350" y2="350" stroke="#6b6680"/>
+<text x="390.0" y="422" fill="#e5e5e5" font-size="18" text-anchor="middle">Sync period (minutes)</text>
+<text transform="translate(26 208.0) rotate(-90)" fill="#e5e5e5" font-size="18" text-anchor="middle">Latency (minutes)</text>
+<path d="M92.0,220.9 L98.0,220.9 L103.9,220.9 L109.9,220.9 L115.8,220.9 L121.8,220.9 L127.8,220.9 L133.7,220.9 L139.7,220.9 L145.6,220.9 L151.6,220.9 L157.6,220.9 L163.5,220.9 L169.5,220.9 L175.4,220.9 L181.4,220.9 L187.4,220.9 L193.3,220.9 L199.3,220.9 L205.2,220.9 L211.2,220.9 L217.2,220.9 L223.1,220.9 L229.1,220.9 L235.0,220.9 L241.0,220.9 L247.0,220.9 L252.9,220.9 L258.9,220.9 L264.8,220.9 L270.8,220.9 L276.8,220.9 L282.7,220.9 L288.7,220.9 L294.6,220.9 L300.6,220.9 L306.6,220.9 L312.5,220.9 L318.5,220.9 L324.4,220.9 L330.4,220.9 L336.4,220.9 L342.3,220.9 L348.3,220.9 L354.2,220.9 L360.2,220.9 L366.2,220.9 L372.1,220.9 L378.1,220.9 L384.0,220.9 L390.0,220.9 L396.0,218.3 L401.9,215.7 L407.9,213.2 L413.8,210.6 L419.8,208.0 L425.8,205.4 L431.7,202.8 L437.7,200.3 L443.6,197.7 L449.6,195.1 L455.6,192.5 L461.5,189.9 L467.5,187.3 L473.4,184.8 L479.4,182.2 L485.4,179.6 L491.3,177.0 L497.3,174.4 L503.2,171.9 L509.2,169.3 L515.2,166.7 L521.1,164.1 L527.1,161.5 L533.0,158.9 L539.0,156.4 L545.0,153.8 L550.9,151.2 L556.9,148.6 L562.8,146.0 L568.8,143.5 L574.8,140.9 L580.7,138.3 L586.7,135.7 L592.6,133.1 L598.6,130.5 L604.6,128.0 L610.5,125.4 L616.5,122.8 L622.4,120.2 L628.4,117.6 L634.4,115.1 L640.3,112.5 L646.3,109.9 L652.2,107.3 L658.2,104.7 L664.2,102.1 L670.1,99.6 L676.1,97.0 L682.0,94.4 L688.0,91.8" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="100.9" y="210.9" fill="#38bdf8" font-size="17" font-weight="600" text-anchor="start">delay 5m</text>
+<path d="M92.0,324.2 L98.0,324.2 L103.9,324.2 L109.9,324.2 L115.8,324.2 L121.8,324.2 L127.8,324.2 L133.7,324.2 L139.7,324.2 L145.6,324.2 L151.6,324.2 L157.6,321.6 L163.5,319.0 L169.5,316.4 L175.4,313.9 L181.4,311.3 L187.4,308.7 L193.3,306.1 L199.3,303.5 L205.2,300.9 L211.2,298.4 L217.2,295.8 L223.1,293.2 L229.1,290.6 L235.0,288.0 L241.0,285.5 L247.0,282.9 L252.9,280.3 L258.9,277.7 L264.8,275.1 L270.8,272.5 L276.8,270.0 L282.7,267.4 L288.7,264.8 L294.6,262.2 L300.6,259.6 L306.6,257.1 L312.5,254.5 L318.5,251.9 L324.4,249.3 L330.4,246.7 L336.4,244.1 L342.3,241.6 L348.3,239.0 L354.2,236.4 L360.2,233.8 L366.2,231.2 L372.1,228.7 L378.1,226.1 L384.0,223.5 L390.0,220.9 L396.0,218.3 L401.9,215.7 L407.9,213.2 L413.8,210.6 L419.8,208.0 L425.8,205.4 L431.7,202.8 L437.7,200.3 L443.6,197.7 L449.6,195.1 L455.6,192.5 L461.5,189.9 L467.5,187.3 L473.4,184.8 L479.4,182.2 L485.4,179.6 L491.3,177.0 L497.3,174.4 L503.2,171.9 L509.2,169.3 L515.2,166.7 L521.1,164.1 L527.1,161.5 L533.0,158.9 L539.0,156.4 L545.0,153.8 L550.9,151.2 L556.9,148.6 L562.8,146.0 L568.8,143.5 L574.8,140.9 L580.7,138.3 L586.7,135.7 L592.6,133.1 L598.6,130.5 L604.6,128.0 L610.5,125.4 L616.5,122.8 L622.4,120.2 L628.4,117.6 L634.4,115.1 L640.3,112.5 L646.3,109.9 L652.2,107.3 L658.2,104.7 L664.2,102.1 L670.1,99.6 L676.1,97.0 L682.0,94.4 L688.0,91.8" fill="none" stroke="#fb923c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<text x="100.9" y="314.2" fill="#fb923c" font-size="17" font-weight="600" text-anchor="start">delay 1m</text>
+<circle cx="688.0" cy="91.8" r="6" fill="#fb923c" stroke="#15131c" stroke-width="2"/>
+<text x="674.0" y="97.8" fill="#fb923c" font-size="17" font-weight="500" text-anchor="end">1m delay, 10m sync: ~10m</text>
+</svg>

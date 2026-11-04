@@ -140,4 +140,17 @@ const SANITIZE = {
   }
 }
 
-export const renderMarkdown = content => sanitizeHtml(marked.parse(content, { renderer, gfm: true }), SANITIZE)
+// Tables go in a focusable scroll box and code blocks get focus too (after sanitizing, so posts can't set these attributes);
+// pages/blog/[slug].vue shows a "scroll sideways" hint on the ones wider than the post
+const wrapTables = html =>
+  html
+    .replaceAll(
+      '<table>',
+      '<div class="table-wrap"><p class="table-hint" aria-hidden="true">Scroll sideways <span class="table-hint-arrow">→</span></p><div class="table-frame">' +
+        '<div class="table-scroll" role="region" aria-label="Table" tabindex="0"><table>'
+    )
+    .replaceAll('</table>', '</table></div></div></div>')
+    // Code blocks scroll sideways too, so they need to be reachable by keyboard
+    .replaceAll('<pre>', '<pre tabindex="0">')
+
+export const renderMarkdown = content => wrapTables(sanitizeHtml(marked.parse(content, { renderer, gfm: true }), SANITIZE))

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<title id="t">GitHub budget: runner transitions per minute</title><desc id="d">Runner transitions per minute that a GitHub token can sustain against GitHub API calls per transition from 1 to 6. A personal access token (5,000 requests an hour) allows about 83 a minute at 1 call and 28 at 3 calls; a GitHub App (15,000 an hour) allows 250 at 1 call and 83 at 3 calls.</desc>
+<rect width="720" height="440" rx="14" fill="#15131c"/>
+<text x="92" y="38" fill="#e5e5e5" font-size="22" font-weight="600">GitHub budget: runner transitions per minute</text>
+<line x1="92" x2="688" y1="350.0" y2="350.0" stroke="#2c2838"/>
+<text x="82" y="355.0" fill="#a8a3b8" font-size="17" text-anchor="end">0</text>
+<line x1="92" x2="688" y1="244.8" y2="244.8" stroke="#2c2838"/>
+<text x="82" y="249.8" fill="#a8a3b8" font-size="17" text-anchor="end">100</text>
+<line x1="92" x2="688" y1="139.6" y2="139.6" stroke="#2c2838"/>
+<text x="82" y="144.6" fill="#a8a3b8" font-size="17" text-anchor="end">200</text>
+<line x1="191.3" x2="191.3" y1="350" y2="356" stroke="#6b6680"/>
+<text x="191.3" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">1</text>
+<line x1="290.7" x2="290.7" y1="350" y2="356" stroke="#6b6680"/>
+<text x="290.7" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">2</text>
+<line x1="390.0" x2="390.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="390.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">3</text>
+<line x1="489.3" x2="489.3" y1="350" y2="356" stroke="#6b6680"/>
+<text x="489.3" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">4</text>
+<line x1="588.7" x2="588.7" y1="350" y2="356" stroke="#6b6680"/>
+<text x="588.7" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">5</text>
+<line x1="688.0" x2="688.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="688.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">6</text>
+<line x1="92" x2="688" y1="350" y2="350" stroke="#6b6680"/>
+<text x="390.0" y="422" fill="#e5e5e5" font-size="18" text-anchor="middle">GitHub calls per runner transition</text>
+<text transform="translate(26 208.0) rotate(-90)" fill="#e5e5e5" font-size="18" text-anchor="middle">Transitions / minute</text>
+<path d="M191.3,87.0 L196.3,99.6 L201.3,110.9 L206.2,121.3 L211.2,130.9 L216.2,139.6 L221.1,147.7 L226.1,155.2 L231.1,162.2 L236.0,168.6 L241.0,174.7 L246.0,180.3 L250.9,185.6 L255.9,190.6 L260.9,195.3 L265.8,199.7 L270.8,203.9 L275.8,207.9 L280.7,211.6 L285.7,215.1 L290.7,218.5 L295.6,221.7 L300.6,224.8 L305.6,227.7 L310.5,230.5 L315.5,233.1 L320.5,235.7 L325.4,238.1 L330.4,240.4 L335.4,242.7 L340.3,244.8 L345.3,246.9 L350.3,248.9 L355.2,250.8 L360.2,252.6 L365.2,254.4 L370.1,256.1 L375.1,257.7 L380.1,259.3 L385.0,260.9 L390.0,262.3 L395.0,263.8 L399.9,265.2 L404.9,266.5 L409.9,267.8 L414.8,269.1 L419.8,270.3 L424.8,271.5 L429.7,272.7 L434.7,273.8 L439.7,274.9 L444.6,275.9 L449.6,277.0 L454.6,278.0 L459.5,278.9 L464.5,279.9 L469.5,280.8 L474.4,281.7 L479.4,282.6 L484.4,283.4 L489.3,284.3 L494.3,285.1 L499.3,285.9 L504.2,286.6 L509.2,287.4 L514.2,288.1 L519.1,288.8 L524.1,289.5 L529.1,290.2 L534.0,290.9 L539.0,291.6 L544.0,292.2 L548.9,292.8 L553.9,293.4 L558.9,294.1 L563.8,294.6 L568.8,295.2 L573.8,295.8 L578.7,296.3 L583.7,296.9 L588.7,297.4 L593.6,297.9 L598.6,298.4 L603.6,298.9 L608.5,299.4 L613.5,299.9 L618.5,300.4 L623.4,300.8 L628.4,301.3 L633.4,301.7 L638.3,302.2 L643.3,302.6 L648.3,303.0 L653.2,303.5 L658.2,303.9 L663.2,304.3 L668.1,304.7 L673.1,305.0 L678.1,305.4 L683.0,305.8 L688.0,306.2" fill="none" stroke="#9dff5c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="191.3" cy="87.0" r="6" fill="#9dff5c" stroke="#15131c" stroke-width="2"/>
+<text x="201.3" y="79.0" fill="#9dff5c" font-size="17" font-weight="600" text-anchor="start">250</text>
+<circle cx="390.0" cy="262.3" r="6" fill="#9dff5c" stroke="#15131c" stroke-width="2"/>
+<text x="400.0" y="254.3" fill="#9dff5c" font-size="17" font-weight="600" text-anchor="start">83</text>
+<text x="688.0" y="294.2" fill="#9dff5c" font-size="17" font-weight="600" text-anchor="end">GitHub App (15k/h)</text>
+<path d="M191.3,262.3 L196.3,266.5 L201.3,270.3 L206.2,273.8 L211.2,277.0 L216.2,279.9 L221.1,282.6 L226.1,285.1 L231.1,287.4 L236.0,289.5 L241.0,291.6 L246.0,293.4 L250.9,295.2 L255.9,296.9 L260.9,298.4 L265.8,299.9 L270.8,301.3 L275.8,302.6 L280.7,303.9 L285.7,305.0 L290.7,306.2 L295.6,307.2 L300.6,308.3 L305.6,309.2 L310.5,310.2 L315.5,311.0 L320.5,311.9 L325.4,312.7 L330.4,313.5 L335.4,314.2 L340.3,314.9 L345.3,315.6 L350.3,316.3 L355.2,316.9 L360.2,317.5 L365.2,318.1 L370.1,318.7 L375.1,319.2 L380.1,319.8 L385.0,320.3 L390.0,320.8 L395.0,321.3 L399.9,321.7 L404.9,322.2 L409.9,322.6 L414.8,323.0 L419.8,323.4 L424.8,323.8 L429.7,324.2 L434.7,324.6 L439.7,325.0 L444.6,325.3 L449.6,325.7 L454.6,326.0 L459.5,326.3 L464.5,326.6 L469.5,326.9 L474.4,327.2 L479.4,327.5 L484.4,327.8 L489.3,328.1 L494.3,328.4 L499.3,328.6 L504.2,328.9 L509.2,329.1 L514.2,329.4 L519.1,329.6 L524.1,329.8 L529.1,330.1 L534.0,330.3 L539.0,330.5 L544.0,330.7 L548.9,330.9 L553.9,331.1 L558.9,331.4 L563.8,331.5 L568.8,331.7 L573.8,331.9 L578.7,332.1 L583.7,332.3 L588.7,332.5 L593.6,332.6 L598.6,332.8 L603.6,333.0 L608.5,333.1 L613.5,333.3 L618.5,333.5 L623.4,333.6 L628.4,333.8 L633.4,333.9 L638.3,334.1 L643.3,334.2 L648.3,334.3 L653.2,334.5 L658.2,334.6 L663.2,334.8 L668.1,334.9 L673.1,335.0 L678.1,335.1 L683.0,335.3 L688.0,335.4" fill="none" stroke="#fb923c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="191.3" cy="262.3" r="6" fill="#fb923c" stroke="#15131c" stroke-width="2"/>
+<text x="201.3" y="254.3" fill="#fb923c" font-size="17" font-weight="600" text-anchor="start">83</text>
+<circle cx="390.0" cy="320.8" r="6" fill="#fb923c" stroke="#15131c" stroke-width="2"/>
+<text x="400.0" y="312.8" fill="#fb923c" font-size="17" font-weight="600" text-anchor="start">28</text>
+<text x="688.0" y="323.4" fill="#fb923c" font-size="17" font-weight="600" text-anchor="end">PAT (5k/h)</text>
+</svg>
