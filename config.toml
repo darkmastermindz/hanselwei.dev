@@ -17,9 +17,9 @@ darkmastermindz = "hello@hanselwei.dev"
 # `featured` and `hackathon` add a tag to repos that are already shown (a name here
 # never adds a hidden repo). Names are GitHub repo names (case doesn't matter).
 wip = []
-forks = ["HackNC2019", "iole-python"]
+forks = ["HackNC2019", "iole-python","ThunderNation"]
 featured = []
-hackathon = ["HackNC2019"]
+hackathon = ["HackNC2019","iole-python","ThunderNation"]
 
 [background]
 # The faint topographic lines behind every page (purple-to-green, or the season's colours from
