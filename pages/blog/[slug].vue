@@ -75,6 +75,16 @@ const formatDate = iso =>
     overflow-x: auto;
   }
 
+  :deep(table) {
+    display: block;
+    overflow-x: auto;
+    overflow-wrap: normal;
+
+    code {
+      white-space: nowrap;
+    }
+  }
+
   :deep(img) {
     max-width: 100%;
     height: auto;

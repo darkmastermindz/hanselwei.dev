@@ -224,6 +224,11 @@ export const glossary = {
     short: 'Red Hat\'s Kubernetes platform for running apps in containers.',
     href: 'https://www.redhat.com/en/technologies/cloud-computing/openshift'
   },
+  pat: {
+    term: 'PAT',
+    short: 'Personal access token: a password-like token for your GitHub account that a script or tool uses to call the GitHub API as you.',
+    href: 'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens'
+  },
   pfd: {
     term: 'PFD',
     short: 'Personal flotation device: a life jacket or inflatable belt pack worn on the water.',
@@ -239,6 +244,11 @@ export const glossary = {
     short: 'Progressive web app: a website you can install and use like an app, even offline.',
     href: 'https://web.dev/explore/progressive-web-apps',
     aliases: ['PWAs']
+  },
+  qps: {
+    term: 'QPS',
+    short: 'Queries per second: how many requests a client may send each second before it starts waiting.',
+    href: 'https://en.wikipedia.org/wiki/Queries_per_second'
   },
   rag: {
     term: 'RAG',
