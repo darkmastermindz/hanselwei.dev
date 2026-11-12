@@ -21,6 +21,11 @@ forks = ["HackNC2019", "iole-python"]
 featured = []
 hackathon = ["HackNC2019"]
 
+[about_card]
+# The About card on the home page shows each tab as plain English or as JSON; pressing and holding
+# the card flips between them. `first` is the side it opens on and comes back to: "text" or "json".
+first = "text"
+
 [background]
 # The faint topographic lines behind every page (purple-to-green, or the season's colours from
 # [seasons] below, drawing in as visitors stay).
