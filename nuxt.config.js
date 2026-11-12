@@ -6,10 +6,15 @@ import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
 import { OUTBOUND } from './utils/outbound.js'
 import { parse } from 'smol-toml'
 import { luckyConfig } from './utils/lucky.mjs'
+import { aboutCardConfig } from './utils/aboutCard.js'
 
 // config.toml [lucky]: the Programmable Search Engine for Surprise me (a bad ID fails the build)
-const lucky = luckyConfig(parse(readFileSync(new URL('./config.toml', import.meta.url), 'utf8')))
-if (lucky.problems.length) throw new Error(`config.toml: ${lucky.problems.join('; ')}`)
+const toml = parse(readFileSync(new URL('./config.toml', import.meta.url), 'utf8'))
+const lucky = luckyConfig(toml)
+// config.toml [about_card]: whether the home page's About card opens in plain English or JSON
+const aboutCard = aboutCardConfig(toml)
+const problems = [...lucky.problems, ...aboutCard.problems]
+if (problems.length) throw new Error(`config.toml: ${problems.join('; ')}`)
 
 export default defineNuxtConfig({
   nitro: {
@@ -83,6 +88,8 @@ export default defineNuxtConfig({
       // (components/SiteFooter.vue, utils/buildCommit.mjs)
       // Surprise me's in-page Google results (config.toml [lucky], components/LetMeSearch.vue)
       searchEngineId: lucky.config.searchEngineId,
+      // The About card's first side (config.toml [about_card], components/AboutCard.vue)
+      aboutFirst: aboutCard.config.first,
       commit: buildCommit(process.env, () => execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString()) || ''
     }
   },

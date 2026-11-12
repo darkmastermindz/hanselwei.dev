@@ -296,3 +296,6 @@ export const BAD_SEARCH_ENGINE_IDS = [
   ['abc'],
   { id: 'abc' }
 ]
+
+// config.toml [about_card] first: only "text" or "json" (utils/aboutCard.js aboutCardConfig)
+export const BAD_ABOUT_FIRST = ['JSON', 'Text', ' json', 'yaml', '', '__proto__', 'constructor', 'toString', '<script>alert(1)</script>', 1, 0, true, false, ['json'], { json: true }]

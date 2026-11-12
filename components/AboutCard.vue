@@ -364,14 +364,15 @@ const onWheel = event => {
   releaseSocials()
 }
 
-// The card opens in plain English. Press and hold (or Shift+Enter) flips it into JSON with a
-// "poof": the old words fall away and sparkles burst from the press. It stays through
-// scrolling and taps on the background; holding again, or a real action elsewhere (a link,
-// a button, tabbing away, leaving the page), flips back to plain English.
+// The card opens in plain English (or JSON, with config.toml [about_card] first = "json"). Press
+// and hold (or Shift+Enter) flips it to the other side with a "poof": the old words fall away and
+// sparkles burst from the press. It stays through scrolling and taps on the background; holding
+// again, or a real action elsewhere (a link, a button, tabbing away, leaving the page), flips back.
 const HOLD_MS = 900
 const HOLD_SLOP_PX = 10 // moving further than this (e.g. scrolling) cancels the hold
 const TAP_MAX_MS = 300 // a press longer than this that lets go early is an abandoned hold, not a tap
-const READABLE_FIRST = true // plain English is where the card starts and comes back to
+// Where the card starts and comes back to: plain English unless config.toml says "json"
+const READABLE_FIRST = useRuntimeConfig().public.aboutFirst !== 'json'
 const readable = ref(READABLE_FIRST)
 const charging = ref(false)
 const transitionName = ref('swap')
@@ -523,7 +524,7 @@ const onPressEndAnywhere = () => {
   if (held) endPause()
 }
 
-// Back to plain English once the visitor does something else. A click (not a pointerdown) so a scroll
+// Back to the first side (plain English by default) once the visitor does something else. A click (not a pointerdown) so a scroll
 // that starts on a link doesn't count.
 const onClickAnywhere = event => {
   if (cardEl.value?.contains(event.target)) return
@@ -580,8 +581,8 @@ const next = (step = 1) => {
 }
 
 // Keyboard and controller (plugins/navigation.client.js): Left/Right move between the tabs,
-// PageUp/PageDown (the bumpers) switch tabs from anywhere on the card, and Escape takes plain
-// English back to JSON before it goes back a page
+// PageUp/PageDown (the bumpers) switch tabs from anywhere on the card, and Escape flips the card
+// back to its first side before it goes back a page
 const onTabsKey = event => {
   const step = { ArrowLeft: -1, ArrowRight: 1 }[event.key]
   if (!step) return
