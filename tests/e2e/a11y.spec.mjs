@@ -4,6 +4,9 @@
 // scripts failed would be checked as plain HTML.
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { readFileSync } from 'node:fs'
+import { parse } from 'smol-toml'
+import { aboutCardConfig } from '../../utils/aboutCard.js'
 
 const PROJECTS = new Set(['Pixel 7', 'Galaxy Tab S9 landscape'])
 const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/tuning-actions-runner-controller-flag-ratios', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious', '/no-such-page']
@@ -50,20 +53,26 @@ for (const path of PAGES) {
   })
 }
 
-test('the About card has none on any tab, in plain English (where it starts), in JSON, or on XP', async ({ page }) => {
+// The side the card opens on: config.toml [about_card] first, "text" (plain English) or "json"
+const ABOUT_FIRST = aboutCardConfig(parse(readFileSync(new URL('../../config.toml', import.meta.url), 'utf8'))).config.first
+const SIDES = { text: ['plain English', '.about-card .prose-line'], json: ['JSON', '.about-card .json'] }
+const [firstName, firstSel] = SIDES[ABOUT_FIRST]
+const [otherName, otherSel] = SIDES[ABOUT_FIRST === 'json' ? 'text' : 'json']
+
+test('the About card has none on any tab, on the side it opens on (config.toml), on the other side, or on XP', async ({ page }) => {
   await open(page, '/')
-  await expect(page.locator('.about-card [data-content].prose-line'), 'the card opens in plain English').toBeVisible()
+  await expect(page.locator(firstSel).first(), `the card opens in ${firstName}`).toBeVisible()
   for (const tab of await page.locator('[role="tab"]').all()) {
     await tab.click()
     await settled(page)
     await check(page, `the ${(await tab.textContent()).trim()} tab`)
   }
-  // JSON: alt-click the card (the desktop shortcut for press-and-hold)
+  // The other side: alt-click the card (the desktop shortcut for press-and-hold)
   await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
   // The old words fall away first (aria-hidden, fading out): check once they're gone
   await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
-  await expect(page.locator('.about-card .json').first()).toBeVisible()
-  await check(page, 'the card in JSON')
+  await expect(page.locator(otherSel).first()).toBeVisible()
+  await check(page, `the card in ${otherName}`)
 })
 
 test('the Instagram menu has none when open', async ({ page }) => {
