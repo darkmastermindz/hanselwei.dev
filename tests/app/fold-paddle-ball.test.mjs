@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { newGame, step, scoreText, WIN_SCORE } from '../../utils/foldPong.mjs'
+import { newGame, step, scoreText, WIN_SCORE } from '../../utils/foldPaddleBall.mjs'
 
 const court = { length: 900, breadth: 600 }
 const run = (state, seconds, input) => {

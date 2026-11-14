@@ -10,8 +10,8 @@
     <template v-if="topo">
       <defs>
         <linearGradient id="topo-gradient" gradientUnits="userSpaceOnUse" x1="0" y1="0" :x2="topo.width" :y2="topo.height">
-          <stop offset="0" stop-color="#c084fc" />
-          <stop offset="1" stop-color="#41b883" />
+          <stop offset="0" :stop-color="season?.colors[0] ?? '#c084fc'" />
+          <stop offset="1" :stop-color="season?.colors[1] ?? '#41b883'" />
         </linearGradient>
       </defs>
       <path
@@ -40,6 +40,9 @@ import { buildTopo, easeDraw, levelProgress, trailOpacity } from '~/utils/topo.m
 import { topoOptions, wantsLessData } from '~/utils/background.mjs'
 // config.toml [background], checked at build time (scripts/build-background.mjs)
 import settings from '~/data/background.generated.mjs'
+
+// This week's theme (config.toml [seasons]) colours the lines; purple to green otherwise
+const season = useSeason()
 
 // The lines draw in as the visitor stays: the whole pattern takes this long with the tab visible
 const FULL_DRAW_MS = settings.drawSeconds * 1000

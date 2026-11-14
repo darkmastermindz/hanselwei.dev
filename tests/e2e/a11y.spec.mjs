@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 const PROJECTS = new Set(['Pixel 7', 'Galaxy Tab S9 landscape'])
-const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious']
+const PAGES = ['/', '/bio', '/blog', '/blog/hello-world', '/blog/tuning-actions-runner-controller-flag-ratios', '/blog/feed', '/projects', '/gear', '/gear/outdoor', '/gear/camera', '/terms', '/credits', '/StayCurious', '/no-such-page']
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']
 
 test.beforeEach(async ({ page }, testInfo) => {
@@ -50,18 +50,20 @@ for (const path of PAGES) {
   })
 }
 
-test('the About card has none on any tab, in plain English, or on XP', async ({ page }) => {
+test('the About card has none on any tab, in plain English (where it starts), in JSON, or on XP', async ({ page }) => {
   await open(page, '/')
+  await expect(page.locator('.about-card [data-content].prose-line'), 'the card opens in plain English').toBeVisible()
   for (const tab of await page.locator('[role="tab"]').all()) {
     await tab.click()
     await settled(page)
     await check(page, `the ${(await tab.textContent()).trim()} tab`)
   }
-  // Plain English: alt-click the card (the desktop shortcut for press-and-hold)
+  // JSON: alt-click the card (the desktop shortcut for press-and-hold)
   await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
   // The old words fall away first (aria-hidden, fading out): check once they're gone
   await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
-  await check(page, 'the card in plain English')
+  await expect(page.locator('.about-card .json').first()).toBeVisible()
+  await check(page, 'the card in JSON')
 })
 
 test('the Instagram menu has none when open', async ({ page }) => {
@@ -101,25 +103,6 @@ const checkKudosTap = async (page, button, sent, id, what) => {
 test.describe('Kudos', () => {
   test.use({ serviceWorkers: 'block' })
 
-  test('the kudos buttons have none, and a tap counts without leaving plain English', async ({ page }) => {
-    const sent = []
-    await standInKudos(page, sent)
-    await open(page, '/#xp')
-    await page.locator('.about-card [role="tabpanel"]').click({ modifiers: ['Alt'] })
-    await expect(page.locator('.poof-word')).toHaveCount(0, { timeout: 5000 })
-    const button = page.locator('.edu-list .kudos').first()
-    await expect(button).toBeVisible({ timeout: 5000 })
-    await check(page, 'the XP list with kudos')
-
-    await button.click()
-    await expect(button).toHaveClass(/kudos--given/)
-    await expect(button).toContainText('1')
-    expect(sent).toHaveLength(1)
-    await expect(page.locator('.edu-list')).toBeVisible()
-    await settled(page)
-    await check(page, 'the XP list after a kudos')
-  })
-
   test('a blog post has a kudos button with none, and a tap counts for that post', async ({ page }) => {
     const sent = []
     await standInKudos(page, sent)
@@ -151,3 +134,32 @@ test.describe('Kudos', () => {
     await check(page, 'a blog post after sharing')
   })
 })
+
+test("the 404 page has none with Surprise me's search open", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.addInitScript(() => (Math.random = () => 0.5))
+  await open(page, '/no-such-page')
+  await page.getByRole('button', { name: "🍀 Surprise me" }).click()
+  await page.getByRole('region', { name: 'Let me search that for you' }).waitFor()
+  await check(page, "Surprise me's search")
+})
+
+test("the 404 page has none while Surprise me counts down to leaving", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.addInitScript(() => (Math.random = () => 0))
+  await open(page, '/no-such-page')
+  await page.getByRole('button', { name: "🍀 Surprise me" }).click()
+  await page.getByRole('dialog', { name: 'Leaving this page' }).waitFor()
+  await check(page, "Surprise me's countdown")
+})
+
+// Halloween (config.toml [seasons.spooky]): the neon coin and the fog over the background must
+// leave every page as readable as ever. Only the date is set; timers still run.
+for (const path of ['/', '/blog']) {
+  test(`${path} has none on Halloween, with the neon coin and the fog`, async ({ page }) => {
+    await page.clock.setFixedTime(new Date('2026-10-31T20:00:00Z'))
+    await open(page, path)
+    await expect(page.locator('.fog')).toHaveCount(1)
+    await check(page, `${path} on Halloween`)
+  })
+}

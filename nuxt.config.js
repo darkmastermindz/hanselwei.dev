@@ -1,8 +1,20 @@
 import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { buildCommit } from './utils/buildCommit.mjs'
 import { FLAT_QUERY, foldMode, watchFold } from './utils/foldMode.mjs'
 import { OUTBOUND } from './utils/outbound.js'
+import { parse } from 'smol-toml'
+import { luckyConfig } from './utils/lucky.mjs'
+import { aboutCardConfig } from './utils/aboutCard.js'
+
+// config.toml [lucky]: the Programmable Search Engine for Surprise me (a bad ID fails the build)
+const toml = parse(readFileSync(new URL('./config.toml', import.meta.url), 'utf8'))
+const lucky = luckyConfig(toml)
+// config.toml [about_card]: whether the home page's About card opens in plain English or JSON
+const aboutCard = aboutCardConfig(toml)
+const problems = [...lucky.problems, ...aboutCard.problems]
+if (problems.length) throw new Error(`config.toml: ${problems.join('; ')}`)
 
 export default defineNuxtConfig({
   nitro: {
@@ -15,7 +27,7 @@ export default defineNuxtConfig({
     ],
     prerender: {
       crawlLinks: true,
-      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml'],
+      routes: ['/', '/bio', '/blog', '/blog/feed', '/gear', '/projects', ...Object.keys(OUTBOUND).map(id => `/out/${id}`), '/rss.xml', '/feed.xml', '/lucky.json'],
       // Served by the Netlify function at runtime, not prerendered
       ignore: ['/api/inventory']
     }
@@ -74,6 +86,10 @@ export default defineNuxtConfig({
       imageCdn: process.env.NETLIFY === 'true',
       // The commit this build was made from, shown in the footer to the signed-in owner only
       // (components/SiteFooter.vue, utils/buildCommit.mjs)
+      // Surprise me's in-page Google results (config.toml [lucky], components/LetMeSearch.vue)
+      searchEngineId: lucky.config.searchEngineId,
+      // The About card's first side (config.toml [about_card], components/AboutCard.vue)
+      aboutFirst: aboutCard.config.first,
       commit: buildCommit(process.env, () => execSync('git rev-parse HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString()) || ''
     }
   },

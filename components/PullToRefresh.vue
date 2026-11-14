@@ -2,7 +2,7 @@
   <div
     class="ptr"
     :class="{ 'is-armed': armed || done, 'is-shown': shown, 'is-pulling': pulling }"
-    :style="{ '--pull': `${done ? PULL_THRESHOLD : distance}px` }"
+    :style="{ '--pull': `${done ? PULL_THRESHOLD : distance}px`, top: `${top}px` }"
     role="status"
     aria-live="polite"
   >
@@ -12,10 +12,25 @@
 </template>
 
 <script setup>
-// App-style pull-down "hard refresh" (touch only, no page reload): drag down from the
-// top of the page and let go past the threshold to start the token over and hide
-// Sign in (composables/useHardRefresh.js)
+// App-style pull-down "hard refresh" (touch only, no page reload), on the home page only: at the
+// top of the page, drag down from the coin's stretch (from the top of `from`, just under the nav
+// bar, to the bottom of `to`, the name) and let go past the threshold to start the token over and
+// hide Sign in (composables/useHardRefresh.js). The pill slides out from under the nav bar, over
+// the coin.
 import { canStartPull, isPullArmed, pullDistance, pullIntent, PULL_THRESHOLD } from '~/utils/pullGesture.js'
+
+const props = defineProps({
+  // A pull starts at or below the top of `from` and at or above the bottom of `to` (both
+  // selectors; without them on the page, no pull)
+  from: { type: String, required: true },
+  to: { type: String, required: true }
+})
+const top = ref(0) // where the pill comes out: the top of the zone
+const zone = () => {
+  const from = document.querySelector(props.from)?.getBoundingClientRect().top
+  const to = document.querySelector(props.to)?.getBoundingClientRect().bottom
+  return from === undefined || to === undefined ? { top: Infinity, bottom: -Infinity } : { top: from, bottom: to }
+}
 
 const hardRefresh = useHardRefresh()
 const distance = ref(0)
@@ -49,7 +64,9 @@ const stop = () => {
 }
 
 const onStart = event => {
-  if (event.touches.length !== 1 || !canStartPull(window.scrollY, event.target)) return stop()
+  const area = zone()
+  if (event.touches.length !== 1 || !canStartPull(window.scrollY, event.target, event.touches[0].clientY, area)) return stop()
+  top.value = Math.max(0, area.top)
   start = { x: event.touches[0].clientX, y: event.touches[0].clientY }
   mode = 'undecided'
 }
@@ -100,7 +117,8 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 0;
   left: 50%;
-  z-index: 40;
+  /* Under the nav bar (z-index 20), so the pill comes out from beneath it */
+  z-index: 15;
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -126,7 +144,6 @@ onBeforeUnmount(() => {
 
 .ptr.is-shown {
   opacity: 1;
-  margin-top: env(safe-area-inset-top);
 }
 
 .ptr.is-armed {

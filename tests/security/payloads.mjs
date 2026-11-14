@@ -121,6 +121,19 @@ export const HOSTILE_README = [
 // Long input for catastrophic-backtracking checks
 export const REDOS = 'a'.repeat(50_000) + '!'
 
+// Colours from config.toml [seasons], bound into the background's SVG gradient
+export const HOSTILE_COLORS = [
+  'red',
+  '#fff',
+  '#ffffff;}',
+  '#12345g',
+  'url(javascript:alert(1))',
+  'expression(alert(1))',
+  '#ffffff" onload="alert(1)',
+  'var(--x)',
+  ' #ffffff',
+]
+
 // The id on the social link hand-off page (/out/<id>): only known ids lead anywhere
 export const OUTBOUND_IDS = [
   'https://evil.example',
@@ -151,26 +164,26 @@ export const GEAR_TEXT = [
   'x'.repeat(10_000)
 ]
 
-// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a known XP entry id counts
+// POST /api/kudos bodies (netlify/functions/kudos.mjs): only a real post id counts
 export const KUDOS_BODIES = [
   '',
   'null',
   '[]',
-  '"education-ytt200"',
+  '"post-hello-world"',
   '{"id":null}',
   '{"id":1}',
-  '{"id":["education-ytt200"]}',
-  '{"id":{"toString":"education-ytt200"}}',
+  '{"id":["post-hello-world"]}',
+  '{"id":{"toString":"post-hello-world"}}',
   '{"id":"__proto__"}',
-  '{"__proto__":{"id":"education-ytt200"}}',
+  '{"__proto__":{"id":"post-hello-world"}}',
   '{"id":"constructor"}',
-  '{"id":"education-ytt200 "}',
-  '{"id":"EDUCATION-YTT200"}',
+  '{"id":"post-hello-world "}',
+  '{"id":"POST-HELLO-WORLD"}',
   '{"id":"../counts"}',
   '{"id":"counts"}',
   '{"id":"seen/2026-10-25/x"}',
   '{"id":"<img src=x onerror=alert(1)>"}',
-  '{id:"education-ytt200"}'
+  '{id:"post-hello-world"}'
 ]
 
 // Post ids for kudos (`post-<slug>`): only a plain slug, and only for a post the site has
@@ -248,3 +261,41 @@ export const KUDOS_IPS = [
   '../../seen',
   'x'.repeat(10_000)
 ]
+
+// Blog slugs as Surprise me would turn them into a path (utils/lucky.mjs luckyPool): anything
+// that could leave the site, climb out of /blog or carry markup
+export const LUCKY_SLUGS = [
+  '//evil.example',
+  'https://evil.example',
+  'javascript:alert(1)',
+  '../../admin',
+  '..',
+  'a/b',
+  'hello world',
+  'x?redirect=https://evil.example',
+  'x#frag',
+  '%2F%2Fevil.example',
+  '<img src=x onerror=alert(1)>',
+  '\\\\evil.example',
+  '-leading-dash',
+  ''
+]
+
+// config.toml [lucky] search_engine_id goes into the cse.js script URL (components/LetMeSearch.vue)
+export const BAD_SEARCH_ENGINE_IDS = [
+  'abc&cx=other',
+  'abc"><script>alert(1)</script>',
+  'abc/../../evil.js',
+  'abc?x=1',
+  'abc#x',
+  'abc def',
+  'https://evil.example/x.js',
+  'a'.repeat(65),
+  42,
+  true,
+  ['abc'],
+  { id: 'abc' }
+]
+
+// config.toml [about_card] first: only "text" or "json" (utils/aboutCard.js aboutCardConfig)
+export const BAD_ABOUT_FIRST = ['JSON', 'Text', ' json', 'yaml', '', '__proto__', 'constructor', 'toString', '<script>alert(1)</script>', 1, 0, true, false, ['json'], { json: true }]
