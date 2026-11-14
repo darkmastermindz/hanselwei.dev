@@ -1,5 +1,4 @@
-// Kudos (netlify/functions/kudos.mjs) for the About card's XP entries, blog posts and Curiosity
-// Feed entries. Counts are shared by everyone, kept once for the whole app (useState) and
+// Kudos (netlify/functions/kudos.mjs) for blog posts and Curiosity Feed entries. Counts are shared by everyone, kept once for the whole app (useState) and
 // refreshed while a page's buttons are on screen; which ones this browser has already given
 // kudos to is remembered locally, so the button shows it. Where the function isn't there (local
 // preview), `available` stays false and the buttons don't show.

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 440" role="img" aria-labelledby="t d" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+<title id="t">Set-level workers stop helping at your scale set count</title><desc id="d">Busy workers against the set-level max-concurrent-reconciles flag from 1 to 32, for 3, 10 and 30 scale sets. Each line rises one for one, then goes flat at the number of scale sets; workers above that line are idle.</desc>
+<rect width="720" height="440" rx="14" fill="#15131c"/>
+<text x="92" y="38" fill="#e5e5e5" font-size="22" font-weight="600">Set-level workers stop helping at your scale set count</text>
+<line x1="92" x2="688" y1="350.0" y2="350.0" stroke="#2c2838"/>
+<text x="82" y="355.0" fill="#a8a3b8" font-size="17" text-anchor="end">0</text>
+<line x1="92" x2="688" y1="266.5" y2="266.5" stroke="#2c2838"/>
+<text x="82" y="271.5" fill="#a8a3b8" font-size="17" text-anchor="end">10</text>
+<line x1="92" x2="688" y1="182.9" y2="182.9" stroke="#2c2838"/>
+<text x="82" y="187.9" fill="#a8a3b8" font-size="17" text-anchor="end">20</text>
+<line x1="92" x2="688" y1="99.4" y2="99.4" stroke="#2c2838"/>
+<text x="82" y="104.4" fill="#a8a3b8" font-size="17" text-anchor="end">30</text>
+<line x1="110.6" x2="110.6" y1="350" y2="356" stroke="#6b6680"/>
+<text x="110.6" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">1</text>
+<line x1="241.0" x2="241.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="241.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">8</text>
+<line x1="390.0" x2="390.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="390.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">16</text>
+<line x1="539.0" x2="539.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="539.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">24</text>
+<line x1="688.0" x2="688.0" y1="350" y2="356" stroke="#6b6680"/>
+<text x="688.0" y="377" fill="#a8a3b8" font-size="17" text-anchor="middle">32</text>
+<line x1="92" x2="688" y1="350" y2="350" stroke="#6b6680"/>
+<text x="390.0" y="422" fill="#e5e5e5" font-size="18" text-anchor="middle">Set-level max-concurrent-reconciles</text>
+<text transform="translate(26 208.0) rotate(-90)" fill="#e5e5e5" font-size="18" text-anchor="middle">Busy workers (at most)</text>
+<path d="M110.6,341.6 L129.2,333.3 L147.9,324.9 L166.5,316.6 L185.1,308.2 L203.8,299.9 L222.4,291.5 L241.0,283.2 L259.6,274.8 L278.2,266.5 L296.9,258.1 L315.5,249.8 L334.1,241.4 L352.8,233.1 L371.4,224.7 L390.0,216.4 L408.6,208.0 L427.2,199.6 L445.9,191.3 L464.5,182.9 L483.1,174.6 L501.8,166.2 L520.4,157.9 L539.0,149.5 L557.6,141.2 L576.2,132.8 L594.9,124.5 L613.5,116.1 L632.1,107.8 L650.8,99.4 L669.4,91.1 L688.0,82.7 L688.0,324.9 L669.4,324.9 L650.8,324.9 L632.1,324.9 L613.5,324.9 L594.9,324.9 L576.2,324.9 L557.6,324.9 L539.0,324.9 L520.4,324.9 L501.8,324.9 L483.1,324.9 L464.5,324.9 L445.9,324.9 L427.2,324.9 L408.6,324.9 L390.0,324.9 L371.4,324.9 L352.8,324.9 L334.1,324.9 L315.5,324.9 L296.9,324.9 L278.2,324.9 L259.6,324.9 L241.0,324.9 L222.4,324.9 L203.8,324.9 L185.1,324.9 L166.5,324.9 L147.9,324.9 L129.2,333.3 L110.6,341.6 Z" fill="#a8a3b8" fill-opacity="0.12"/>
+<text x="520.4" y="216.4" fill="#a8a3b8" font-size="15" font-weight="500" text-anchor="middle">idle (3 scale sets)</text>
+<path d="M110.6,341.6 L129.2,333.3 L147.9,324.9 L166.5,316.6 L185.1,308.2 L203.8,299.9 L222.4,291.5 L241.0,283.2 L259.6,274.8 L278.2,266.5 L296.9,258.1 L315.5,249.8 L334.1,241.4 L352.8,233.1 L371.4,224.7 L390.0,216.4 L408.6,208.0 L427.2,199.6 L445.9,191.3 L464.5,182.9 L483.1,174.6 L501.8,166.2 L520.4,157.9 L539.0,149.5 L557.6,141.2 L576.2,132.8 L594.9,124.5 L613.5,116.1 L632.1,107.8 L650.8,99.4 L669.4,91.1 L688.0,82.7" fill="none" stroke="#a8a3b8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="5 6"/>
+<path d="M110.6,341.6 L129.2,333.3 L147.9,324.9 L166.5,316.6 L185.1,308.2 L203.8,299.9 L222.4,291.5 L241.0,283.2 L259.6,274.8 L278.2,266.5 L296.9,258.1 L315.5,249.8 L334.1,241.4 L352.8,233.1 L371.4,224.7 L390.0,216.4 L408.6,208.0 L427.2,199.6 L445.9,191.3 L464.5,182.9 L483.1,174.6 L501.8,166.2 L520.4,157.9 L539.0,149.5 L557.6,141.2 L576.2,132.8 L594.9,124.5 L613.5,116.1 L632.1,107.8 L650.8,99.4 L669.4,99.4 L688.0,99.4" fill="none" stroke="#9dff5c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="650.8" cy="99.4" r="6" fill="#9dff5c" stroke="#15131c" stroke-width="2"/>
+<text x="688.0" y="123.4" fill="#9dff5c" font-size="17" font-weight="600" text-anchor="end">30 scale sets</text>
+<path d="M110.6,341.6 L129.2,333.3 L147.9,324.9 L166.5,316.6 L185.1,308.2 L203.8,299.9 L222.4,291.5 L241.0,283.2 L259.6,274.8 L278.2,266.5 L296.9,266.5 L315.5,266.5 L334.1,266.5 L352.8,266.5 L371.4,266.5 L390.0,266.5 L408.6,266.5 L427.2,266.5 L445.9,266.5 L464.5,266.5 L483.1,266.5 L501.8,266.5 L520.4,266.5 L539.0,266.5 L557.6,266.5 L576.2,266.5 L594.9,266.5 L613.5,266.5 L632.1,266.5 L650.8,266.5 L669.4,266.5 L688.0,266.5" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="278.2" cy="266.5" r="6" fill="#38bdf8" stroke="#15131c" stroke-width="2"/>
+<text x="688.0" y="256.5" fill="#38bdf8" font-size="17" font-weight="600" text-anchor="end">10 scale sets</text>
+<path d="M110.6,341.6 L129.2,333.3 L147.9,324.9 L166.5,324.9 L185.1,324.9 L203.8,324.9 L222.4,324.9 L241.0,324.9 L259.6,324.9 L278.2,324.9 L296.9,324.9 L315.5,324.9 L334.1,324.9 L352.8,324.9 L371.4,324.9 L390.0,324.9 L408.6,324.9 L427.2,324.9 L445.9,324.9 L464.5,324.9 L483.1,324.9 L501.8,324.9 L520.4,324.9 L539.0,324.9 L557.6,324.9 L576.2,324.9 L594.9,324.9 L613.5,324.9 L632.1,324.9 L650.8,324.9 L669.4,324.9 L688.0,324.9" fill="none" stroke="#fb923c" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="147.9" cy="324.9" r="6" fill="#fb923c" stroke="#15131c" stroke-width="2"/>
+<text x="688.0" y="314.9" fill="#fb923c" font-size="17" font-weight="600" text-anchor="end">3 scale sets</text>
+</svg>

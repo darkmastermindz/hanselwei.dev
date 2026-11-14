@@ -2,7 +2,8 @@
 // - The focus ring shows only once a keyboard or controller is in use (html[data-input], see
 //   layouts/default.vue); a pointer hides it again.
 // - Arrow keys / D-pad move focus to the nearest control in that direction (utils/spatialNav.js),
-//   once something is focused (until then arrows scroll the page as usual).
+//   once something is focused (until then arrows scroll the page as usual). A focused wide table
+//   or code block scrolls left / right first.
 // - Enter / A activates, Escape / B goes back (closing a popup first), PageUp/PageDown / the
 //   bumpers switch the About card's tabs or XP years. The right stick scrolls.
 // - With a keyboard or controller in use, the mouse wheel moves focus to the next / previous
@@ -23,6 +24,7 @@ const KEYS = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'Arro
 // selects (its synthetic arrows can't move a caret or change a select, so it would be stuck)
 const OWN_ARROWS = 'input, select, textarea, [contenteditable], [role="slider"], [data-own-arrows]'
 const FIELDS = 'input, select, textarea, [contenteditable]'
+const SIDEWAYS_PX = 80 // left / right step in a box that scrolls sideways (a wide table, a code block)
 
 export default defineNuxtPlugin(() => {
   const router = useRouter()
@@ -62,6 +64,16 @@ export default defineNuxtPlugin(() => {
     const index = pickNext(from.getBoundingClientRect(), candidates.map(el => el.getBoundingClientRect()), direction)
     return index < 0 ? null : candidates[index]
   }
+  // Left / right scroll a focused box that's wider than its space while it has more to show that
+  // way; at the end, they move on like anywhere else
+  const scrollSideways = (el, direction) => {
+    if (direction !== 'left' && direction !== 'right') return false
+    const more = el.scrollWidth - el.clientWidth
+    if (more <= 1 || !/auto|scroll/.test(getComputedStyle(el).overflowX)) return false
+    if (direction === 'right' ? el.scrollLeft >= more - 1 : el.scrollLeft <= 1) return false
+    el.scrollBy({ left: direction === 'right' ? SIDEWAYS_PX : -SIDEWAYS_PX, behavior: 'smooth' })
+    return true
+  }
   // Focus it; false when there's none (the page scrolls instead)
   const move = direction => {
     const el = nextFrom(direction)
@@ -88,7 +100,7 @@ export default defineNuxtPlugin(() => {
     if (direction) {
       const from = focused()
       if (event.shiftKey || !from || from.matches(OWN_ARROWS) || from.closest('[data-own-arrows]')) return
-      if (move(direction)) event.preventDefault()
+      if (scrollSideways(from, direction) || move(direction)) event.preventDefault()
     } else if (event.key === 'Escape') {
       if (goBack()) event.preventDefault()
     }

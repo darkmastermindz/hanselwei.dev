@@ -30,3 +30,10 @@ test('long hostile input stays fast', () => {
   excerptOf(`[a](${REDOS}`)
   assert.ok(performance.now() - started < 500)
 })
+
+test('every post gets glossary terms, like the bio, unless it opts out', () => {
+  assert.equal(toPost('x.md', '---\ntitle: "x"\n---\n\nBody').glossary, true)
+  assert.equal(toPost('devto:x.md', 'No front matter at all').glossary, true)
+  assert.equal(toPost('x.md', '---\nglossary: true\n---\n\nBody').glossary, true)
+  assert.equal(toPost('x.md', '---\nglossary: false\n---\n\nBody').glossary, false)
+})

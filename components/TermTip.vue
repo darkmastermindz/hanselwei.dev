@@ -2,11 +2,14 @@
   <!-- The one definition bubble for every glossary term on the page (README "Glossary terms"):
        <Term> in Vue text and the <abbr data-term> in rendered markdown alike. Opens on hover, on
        focus and on tap; stays while the pointer is on it; Escape, a tap elsewhere or scrolling
-       closes it (WCAG 1.4.13). -->
+       closes it (WCAG 1.4.13). A tap on the bubble itself dismisses it too, as its hint says, and
+       a dismissal goes "poof". -->
   <div
     v-if="entry"
     ref="tipEl"
     class="term-tip"
+    :class="{ 'term-tip--poof': poofing }"
+    tabindex="-1"
     role="dialog"
     :aria-label="`${entry.term}: what it means`"
     :style="position"
@@ -22,6 +25,13 @@
       :href="link.href"
       v-bind="link.external ? { target: '_blank', rel: 'noopener' } : {}"
     >{{ link.external ? 'Source ↗' : 'More →' }}</a>
+    <p class="term-tip__hint" aria-hidden="true">
+      <span class="term-tip__hint--touch">Tap to dismiss</span><span class="term-tip__hint--mouse">Click to dismiss</span>
+    </p>
+    <!-- The poof: little puffs of smoke flying out as it goes -->
+    <template v-if="poofing">
+      <span v-for="n in 8" :key="n" class="term-tip__puff" :style="{ '--puff-angle': `${n * 45}deg` }" aria-hidden="true" />
+    </template>
   </div>
 </template>
 
@@ -37,6 +47,8 @@ const termEl = shallowRef(null)
 const tipEl = ref(null)
 const linkEl = ref(null)
 const pinned = ref(false) // opened by a tap, a click or a key: stays until dismissed
+const poofing = ref(false) // going away in a puff of smoke (then close())
+const POOF_MS = 320
 const position = ref({ left: '0px', top: '0px', visibility: 'hidden' })
 const entry = computed(() => glossaryEntry(termEl.value?.dataset.term))
 const link = computed(() => {
@@ -46,6 +58,7 @@ const link = computed(() => {
 
 let openTimer = 0
 let closeTimer = 0
+let poofTimer = 0
 let quietFocus = null
 const termOf = target => target?.closest?.('[data-term]') ?? null
 const inTip = target => Boolean(target && tipEl.value?.contains(target))
@@ -66,6 +79,8 @@ const place = async () => {
 const open = (el, { pin = false, focusLink = false } = {}) => {
   clearTimeout(openTimer)
   clearTimeout(closeTimer)
+  clearTimeout(poofTimer)
+  poofing.value = false
   if (!glossaryEntry(el?.dataset.term)) return
   termEl.value?.removeAttribute('data-open')
   termEl.value = el
@@ -78,6 +93,8 @@ const open = (el, { pin = false, focusLink = false } = {}) => {
 const close = ({ refocus = false } = {}) => {
   clearTimeout(openTimer)
   clearTimeout(closeTimer)
+  clearTimeout(poofTimer)
+  poofing.value = false
   const el = termEl.value
   el?.removeAttribute('data-open')
   termEl.value = null
@@ -87,6 +104,16 @@ const close = ({ refocus = false } = {}) => {
     quietFocus = el
     el.focus()
   }
+}
+
+// Dismissed on purpose (a tap or a click, Escape): poof, then gone. With reduced motion the
+// puffs are left out and it just fades.
+const poof = (options = {}) => {
+  if (!termEl.value || poofing.value) return
+  clearTimeout(openTimer)
+  clearTimeout(closeTimer)
+  poofing.value = true
+  poofTimer = setTimeout(() => close(options), POOF_MS)
 }
 
 const cancelClose = () => clearTimeout(closeTimer)
@@ -116,10 +143,13 @@ const onPointerOut = event => {
 const onClick = event => {
   const el = termOf(event.target)
   if (el) {
-    if (el === termEl.value && pinned.value) close()
+    if (el === termEl.value && pinned.value) poof()
     else open(el, { pin: true })
-  } else if (termEl.value && !inTip(event.target)) {
-    close()
+  } else if (inTip(event.target)) {
+    // On the bubble, anywhere but its link: dismissed
+    if (!event.target.closest('a')) poof()
+  } else if (termEl.value) {
+    poof()
   }
 }
 const onFocusIn = event => {
@@ -130,11 +160,11 @@ const onFocusIn = event => {
 }
 const onFocusOut = event => {
   const next = event.relatedTarget
-  if (termEl.value && !inTip(next) && termOf(next) !== termEl.value) close()
+  if (termEl.value && !inTip(next) && termOf(next) !== termEl.value) poof()
 }
 const onKeyDown = event => {
   if (event.key === 'Escape' && termEl.value) {
-    close({ refocus: true })
+    poof({ refocus: true })
     return
   }
   const el = termOf(event.target)
@@ -166,6 +196,7 @@ onBeforeUnmount(() => {
   removeEventListener('resize', onScroll)
   clearTimeout(openTimer)
   clearTimeout(closeTimer)
+  clearTimeout(poofTimer)
 })
 
 // A new page: nothing stays open
@@ -222,6 +253,93 @@ watch(() => route.fullPath, () => close())
   margin-top: 0.35rem;
   color: #9dff5c;
   text-decoration: underline;
+}
+
+/* How to make it go away: "Tap" on touch screens, "Click" with a mouse */
+.term-tip__hint {
+  margin-top: 0.35rem;
+  color: #9a9a9a;
+  font-size: 0.72rem;
+}
+
+.term-tip__hint--mouse {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .term-tip__hint--touch {
+    display: none;
+  }
+
+  .term-tip__hint--mouse {
+    display: inline;
+  }
+}
+
+.term-tip {
+  cursor: pointer;
+}
+
+/* Focusable only so a tap on it keeps focus inside (and doesn't close it before the tap lands) */
+.term-tip:focus {
+  outline: none;
+}
+
+.term-tip__link {
+  cursor: revert;
+}
+
+/* Poof: the bubble swells, blurs and fades while puffs of smoke fly out */
+.term-tip.term-tip--poof {
+  pointer-events: none;
+  animation: term-tip-poof 0.32s ease-out forwards;
+}
+
+@keyframes term-tip-poof {
+  to {
+    opacity: 0;
+    transform: scale(1.12);
+    filter: blur(4px);
+  }
+}
+
+.term-tip__puff {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: -0.55rem 0 0 -0.55rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(238 238 238 / 0.9), rgb(157 255 92 / 0.35) 60%, transparent 70%);
+  animation: term-tip-puff 0.32s ease-out forwards;
+}
+
+@keyframes term-tip-puff {
+  from {
+    opacity: 0.9;
+    transform: rotate(var(--puff-angle)) translateY(0) scale(0.4);
+  }
+  to {
+    opacity: 0;
+    transform: rotate(var(--puff-angle)) translateY(-2.6rem) scale(1.4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .term-tip.term-tip--poof {
+    animation: term-tip-fade 0.2s ease-out forwards;
+  }
+
+  .term-tip__puff {
+    display: none;
+  }
+}
+
+@keyframes term-tip-fade {
+  to {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

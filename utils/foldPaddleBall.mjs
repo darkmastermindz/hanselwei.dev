@@ -1,4 +1,4 @@
-// Fold Pong (components/FoldPong.vue): a little game for iPhone Duo's inner screen, where the fold
+// Fold Paddle Ball (components/FoldPaddleBall.vue): a little game for iPhone Duo's inner screen, where the fold
 // is the net. You against the computer, first to WIN_SCORE.
 //
 // The rules work on a plain court, whatever way the phone is held: the ball travels along `u`,

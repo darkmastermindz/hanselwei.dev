@@ -12,7 +12,7 @@
 // - iPad held sideways (900px or more wide): no fold, but the menu offers the book layout with a
 //   📖 button (components/BookToggle.vue). Chosen, the spine is the middle of the screen.
 // It also names iPhone Duo's screens (data-device="iphone-duo" inside, "iphone-duo-cover" on the
-// front), for the touches made just for it (components/DuoLaptopLid.vue, components/FoldPong.vue),
+// front), for the touches made just for it (components/DuoLaptopLid.vue, components/FoldPaddleBall.vue),
 // and an iPad held sideways (data-device="ipad"), where the 📖 button shows.
 //
 // The script in the page head (nuxt.config.js) runs foldMode before the first paint and again on
