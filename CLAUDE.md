@@ -15,3 +15,6 @@
   - In Vue templates, wrap fixed text in `<Term id="...">` and render data-driven text through `<TermText :text="...">`. Rendered markdown gets terms from `glossaryHtml` (the bio and every blog post; a post opts out with `glossary: false` in front matter). `<TermTip>` (in the default layout) shows the definition on hover, focus and tap.
   - Not inside buttons, links, chips or headings (nothing interactive inside something interactive): reword those instead.
 - `npm test` fails on an acronym in the display text that isn't in the glossary or the everyday list in `tests/app/glossary.test.mjs`.
+
+## Local Claude settings
+- Never commit `.claude/settings.local.json` (personal permissions, may hold secrets). Keep it in `.gitignore`; if it is ever tracked, run `git rm --cached .claude/settings.local.json`.
