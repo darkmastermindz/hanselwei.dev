@@ -378,6 +378,7 @@ const openAfterAnimation = event => {
     background-size: 13px 13px, 21px 21px;
     background-position: 0 0, 6px 9px;
     animation: glitter 1.4s linear infinite, twinkle-dots 0.9s ease-in-out infinite alternate;
+    animation-play-state: paused; /* only while the back is showing (below) */
     pointer-events: none;
   }
 
@@ -389,7 +390,29 @@ const openAfterAnimation = event => {
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 48%, transparent 66%);
     transform: translateX(-120%);
     animation: shimmer 1.6s ease-in-out infinite;
+    animation-play-state: paused; /* only while the back is showing (below) */
     pointer-events: none;
+  }
+}
+
+/* The glitter and shimmer play only while the back is showing: hovered, focused, held or spinning.
+   Moving a background repaints the page every frame, and with seven links doing it all the time
+   behind their front faces, the page was repainting about 60 times a second while sitting still. */
+.flip-link:focus-visible .flip-link__face--back,
+.flip-link.is-held .flip-link__face--back,
+.flip-link.is-spinning .flip-link__face--back {
+  &::before,
+  &::after {
+    animation-play-state: running;
+  }
+}
+
+@media (hover: hover) {
+  .flip-link:hover .flip-link__face--back {
+    &::before,
+    &::after {
+      animation-play-state: running;
+    }
   }
 }
 
