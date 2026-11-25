@@ -8,7 +8,6 @@ module.exports = {
   ],
 
   daisyui: {
-    darkTheme: false,
     themes: [{
       dark: {
         'color-scheme': 'dark',
