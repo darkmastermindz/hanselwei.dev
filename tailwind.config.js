@@ -8,6 +8,23 @@ module.exports = {
   ],
 
   daisyui: {
-    themes: ['dark', 'night'],
+    darkTheme: false,
+    themes: [{
+      dark: {
+        'color-scheme': 'dark',
+        primary: '#661AE6',
+        'primary-content': '#ffffff',
+        secondary: '#D926AA',
+        'secondary-content': '#ffffff',
+        accent: '#1FB2A5',
+        'accent-content': '#ffffff',
+        neutral: '#2a323c',
+        'neutral-content': '#A6ADBB',
+        'base-100': '#1d232a',
+        'base-200': '#191e24',
+        'base-300': '#15191e',
+        'base-content': '#A6ADBB'
+      }
+    }]
   },
 }
