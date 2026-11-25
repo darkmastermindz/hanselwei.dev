@@ -22,7 +22,15 @@ module.exports = {
         'base-100': '#1d232a',
         'base-200': '#191e24',
         'base-300': '#15191e',
-        'base-content': '#A6ADBB'
+        'base-content': '#A6ADBB',
+        info: '#3abff8',
+        'info-content': '#002b3d',
+        success: '#36d399',
+        'success-content': '#003320',
+        warning: '#fbbd23',
+        'warning-content': '#382800',
+        error: '#f87272',
+        'error-content': '#470000'
       }
     }]
   },
